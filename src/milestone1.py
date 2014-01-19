@@ -39,6 +39,11 @@ class Robot:
     def reverse(self, left=SPEED, right=SPEED):
         self.run(-left, -right)
 
+    def rotate_left(left=SPEED, right=SPEED):
+        self.run(-left, right)
+
+    def rotate_right(self, left=SPEED, right=SPEED):
+        self.run(left, -right)
 
 
 class Attack(Robot):
@@ -66,6 +71,13 @@ class Attack(Robot):
                 idle()
                 print 'Border Found!'
                 return True
+
+    def align_to_border(self, left=False, right=False):
+        if not (left or right):
+            return
+        self.reverse(10,10)
+        self.run()
+
 
 
 
