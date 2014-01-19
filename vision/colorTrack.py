@@ -57,9 +57,15 @@ while(1):
     cv2.drawContours(pitch, contoursz3, -1, (0,255,0), 3,offset=(270,0))    
     cv2.drawContours(pitch, contoursz4, -1, (0,255,0), 3,offset=(420,0))
 
+    #(x,y),(MA,ma),angle = 
+    #print contoursz4[0][0][0]
+
+    #print cv2.fitEllipse(contoursz4)
+    #print (x,y)
+    #print angle
     cv2.imshow("img",pitch)
 
-    k = cv2.waitKey(5) & 0xFF
+    k = cv2.waitKey(5) & 0xFF # press ESC to end
     if k == 27:
         break
 
