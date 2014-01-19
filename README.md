@@ -1,5 +1,4 @@
-Systems Design Project - Group 7
-===
+##Systems Design Project - Group 7##
 
 ###Installation
 
