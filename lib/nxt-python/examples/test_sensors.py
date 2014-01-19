@@ -4,13 +4,13 @@ import nxt.locator
 from nxt.sensor import *
 from nxt.motor import *
 
-b = nxt.locator.find_one_brick(name="NXT")
-m_left = Motor(b, PORT_B)
-m_right = Motor(b, PORT_A)
+b = nxt.locator.find_one_brick(name="GRP7D")
+m_left = Motor(b, PORT_C)
+m_right = Motor(b, PORT_B)
 # print 'Touch:', Touch(b, PORT_1).get_sample()
 # print 'Sound:', Sound(b, PORT_2).get_sample()
-l1 = Light(b, PORT_2)
-l2 = Light(b, PORT_3)
+l1 = Light(b, PORT_3)
+l2 = Light(b, PORT_2)
 l1.set_illuminated(True)
 l2.set_illuminated(True)
 val_right_light = l1.get_sample()
@@ -23,19 +23,19 @@ while True:
     if val_right_light > 390 and val_left_light > 390:
     	m_right.brake()
         m_left.brake()
-        m_left.turn(-127,360)
+        m_left.turn(85,45)
         m_left.run(35,True)
         m_right.run(35,True)
     elif val_right_light > 390:
         m_right.brake()
         m_left.brake()
-        m_left.turn(-127,90)
+        m_left.turn(85,45)
         m_left.run(35,True)
         m_right.run(35,True)
     elif val_left_light > 390:
     	m_right.brake()
         m_left.brake()
-        m_right.turn(-127,90)
+        m_right.turn(85,45)
         m_left.run(35,True)
         m_right.run(35,True)
     val_right_light = l1.get_sample()
