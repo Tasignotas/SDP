@@ -7,24 +7,39 @@ connection = Connection(name='NXT')
 BRICK = connection.brick
 MOTOR_L = Motor(BRICK, PORT_C)
 MOTOR_R = Motor(BRICK, PORT_B)
-LIGHT = Light(BRICK, PORT_4)
+LIGHT = Light(BRICK, PORT_A)
 
 THRESHOLD_WHITE = 390
+SPEED_FACTOR = 7
+SPEED = 5 * SPEED_FACTOR
+
+
+LIGHT.set_illuminated(True)
+
+
 
 def stop():
+    MOTOR_R.brake()
+    MOTOR_L.brake()
+
+def idle():
     MOTOR_R.idle()
     MOTOR_L.idle()
 
 def turn_left(left=15, right=35):
     green_found = False
     while not green_found:
-        MOTOR_L.run(left, True)
-        MOTOR_R.run(right, True)
         intensity = LIGHT.get_sample()
+        print intensity
 
-        if intensity > THRESHOLD_WHITE:
+        if intensity <   THRESHOLD_WHITE:
             # run(left, right)
-            stop()
+            # stop()
+            idle()
+            green_found = True
+            return True
+        else:
+            run(-left, right)
 
 def turn_right(left=35, right=15):
     MOTOR_L.run(left, True)
@@ -45,18 +60,22 @@ def forward(speed=35):
 def follow_border():
     intensity = LIGHT.get_sample()
 
+def is_border(intensity):
+    return intensity > THRESHOLD_WHITE
+
 def find_border():
     intensity = LIGHT.get_sample()
 
     border_found = False
     while not border_found:
         intensity = LIGHT.get_sample()
-
+        print intensity
         if intensity < THRESHOLD_WHITE:
-            forward()
+            run(SPEED, SPEED)
         else:
             border_found = True
-            # turn_right(70, -15)
-            turn_left()
             # stop()
+            idle()
             print 'Border Found!'
+            return True
+
