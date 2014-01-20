@@ -1,4 +1,4 @@
-# openCVbuilder.sh - A shell script to build a local copy of openCV in DICE.
+# openCVbuilder.sh - A shell script to build a local copy of openCV in DICE..
 unzip opencv-2.4.8
 cd opencv-2.4.8
 mkdir build
