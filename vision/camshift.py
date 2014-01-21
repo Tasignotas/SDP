@@ -12,6 +12,8 @@ cap = cv2.VideoCapture(0)
 
 # take first frame of the video
 ret,frame = cap.read()
+cv2.normalize(frame,frame,0,255,cv2.NORM_MINMAX)
+
 
 # setup initial location of window
 r,h,c,w = 70,400,420,150  # simply hardcoded the values
@@ -20,8 +22,9 @@ track_window = (c,r,w,h)
 # set up the ROI for tracking
 roi = frame[r:r+h, c:c+w]
 hsv_roi =  cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-#mask = cv2.inRange(hsv_roi, np.array((0., 60.,32.)), np.array((180.,255.,255.)))
-mask = cv2.inRange(hsv_roi, np.array((100., 50.,50.)), np.array((150.,255.,255.))) # blue objects
+mask = cv2.inRange(hsv_roi, np.array((18., 84.,32.)), np.array((360.,97.,80.)))
+
+#mask = cv2.inRange(hsv_roi, np.array((100., 50.,50.)), np.array((150.,255.,255.))) # blue objects
 roi_hist = cv2.calcHist([hsv_roi],[0],mask,[180],[0,180])
 cv2.normalize(roi_hist,roi_hist,0,255,cv2.NORM_MINMAX)
 
@@ -30,6 +33,7 @@ term_crit = ( cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 1 )
 
 while(1):
     ret ,frame = cap.read()
+    frame2= frame[:,:,2]
 
     if ret == True:
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -42,14 +46,18 @@ while(1):
         #pts = ret.points
         #pts = np.int0(pts)
         pos,dim, angle = ret
+        print pos
+        print angle
         x,y = pos
         w2,h2 = dim
         points = np.array([[x,y],[x+w2,y],[x,y+h2],[x+w2,y+h2]])
         
         cv2.ellipse(frame, ret, (0, 0, 255), 2)
-        #img2 = cv2.polylines(frame,[points],True, 255,2)
-        cv2.imshow('img2',frame)
-
+        #img2 = cv2.polylines(frame,points,True, 255,2)
+        #cv2.rectangle(frame,(x,y),(x+w2,y+h2),(0,255,0))
+        cv2.imshow('img',frame)
+        cv2.imshow('img2',frame2)
+        
         k = cv2.waitKey(60) & 0xff
         if k == 27:
             break
