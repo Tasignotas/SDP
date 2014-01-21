@@ -3,6 +3,7 @@
 from nxt.sensor import *
 from nxt.motor import *
 from common import Connection
+import time
 
 
 # Connect to the brick
@@ -48,20 +49,35 @@ class Robot:
 
     def rotate_right(self, left=SPEED, right=SPEED):
         self.run(left, -right)
-        
+
     def turn(self, left, right):
         self.MOTOR_L.run(left, True)
         self.MOTOR_R.run(right, True)
-        
+
 
 class Attack(Robot):
 
 
-    def run_boundry(self):        
+    def align_for_boundry(self):
+        intensity_left = self.LIGHT_L.get_sample()
+        while intensity_left < THRESHOLD_WHITE:
+            self.run(SPEED, SPEED)
+            intensity_left = self.LIGHT_L.get_sample()
+        while intensity_left >= THRESHOLD_WHITE:
+            self.turn(5, -5)
+            intensity_left = self.LIGHT_L.get_sample()
+
+
+    def run_boundry(self):
+        self.align_for_boundry()
+        timeout = time.time() + 37
         while True:
+            if time.time() > timeout:
+                break
             intensity_left = self.LIGHT_L.get_sample()
             print 'LIGHT L:', intensity_left
             if intensity_left < THRESHOLD_WHITE:
-                self.run(SPEED, SPEED + 1)    
+                self.run(SPEED, SPEED + 1)
             else:
                 self.turn(5, -5)
+        self.stop()
