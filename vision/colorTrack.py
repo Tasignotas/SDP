@@ -8,7 +8,7 @@ while(1):
     # Take each frame
     _, frame = cap.read()
     frame = cv2.GaussianBlur(frame,(5,5),0)
-    print frame.size
+    #print frame.size
 
     # crop to size of table
     pitch = frame[80:390,50:600]
@@ -28,8 +28,10 @@ while(1):
     zone4_hsv = cv2.cvtColor(zone4, cv2.COLOR_BGR2HSV)
 
     # define range of blue color in HSV define thresholds - need to check these values
-    lower_blue = np.array([100,50,50])
-    upper_blue = np.array([150,255,255])
+    #lower_blue = np.array([100,50,50])
+    #upper_blue = np.array([150,255,255])
+    lower_blue = np.array([1,0,100])
+    upper_blue = np.array([36,255,255])
     lower_red = np.array([200,100,100])
     upper_red = np.array([250,255,255])
 
@@ -41,9 +43,10 @@ while(1):
     maskz2 = cv2.inRange(zone2_hsv, lower_blue, upper_blue)
     maskz3 = cv2.inRange(zone3_hsv, lower_blue, upper_blue)
     maskz4 = cv2.inRange(zone4_hsv, lower_blue, upper_blue)
+    mask = cv2.inRange(hsv, lower_blue, upper_blue)
 
     # Bitwise-AND mask and original image
-#    res = cv2.bitwise_and(pitch,pitch, mask= mask)
+    res = cv2.bitwise_and(frame,frame, mask= mask)
 
     # get contours from thresholded masks
     contoursz1, h  = cv2.findContours(maskz1,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
@@ -66,12 +69,13 @@ while(1):
     #print cv2.fitEllipse(contoursz4)
     #print (x,y)
     #print angle
-    cv2.imshow("edges",pitch_edges)
-    cv2.imshow("z1",zone1)
-    cv2.imshow("z2",zone2)
-    cv2.imshow("z3",zone3)
-    cv2.imshow("z4",zone4)
-    cv2.imshow("img",pitch)
+    #cv2.imshow("edges",pitch_edges)
+    #cv2.imshow("z1",zone1)
+    #cv2.imshow("z2",zone2)
+    #cv2.imshow("z3",zone3)
+    #cv2.imshow("z4",zone4)
+    #cv2.imshow("img",pitch)
+    cv2.imshow("res",res)
 
     k = cv2.waitKey(5) & 0xFF # press ESC to end
     if k == 27:
