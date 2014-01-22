@@ -27,6 +27,10 @@ def get_crop_coordinates(frame, width=520, height=285):
     y_remaining = (height - y_delta) / 2
 
     return (
+<<<<<<< HEAD
+        x_min - tolerance, x_max + tolerance,
+        y_min - tolerance, y_max + tolerance)
+=======
         x_min + x_remaining, x_max + x_remaining,
         y_min + y_remaining, y_max + y_remaining)
-
+>>>>>>> 52363f045ead266950478916b60cd5e783a1f9d8
