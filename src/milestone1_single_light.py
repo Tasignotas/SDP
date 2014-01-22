@@ -12,7 +12,7 @@ BRICK = connection.brick
 
 # Constants
 THRESHOLD_WHITE = 325
-SPEED_FACTOR = 6
+SPEED_FACTOR = 5
 SPEED = 5 * SPEED_FACTOR
 
 
@@ -55,22 +55,19 @@ class Robot:
         self.MOTOR_R.run(right, True)
 
 
-class Attack(Robot):
-
-
-    def align_for_boundry(self):
+    def align_for_boundary(self):
         intensity_left = self.LIGHT_L.get_sample()
         while intensity_left < THRESHOLD_WHITE:
             self.run(SPEED, SPEED)
             intensity_left = self.LIGHT_L.get_sample()
         while intensity_left >= THRESHOLD_WHITE:
-            self.turn(5, -5)
+            self.turn(4, -4)
             intensity_left = self.LIGHT_L.get_sample()
+	self.stop()
 
 
-    def run_boundry(self):
-        self.align_for_boundry()
-        timeout = time.time() + 37
+    def run_boundary(self, time_to_run):
+        timeout = time.time() + time_to_run
         while True:
             if time.time() > timeout:
                 break
@@ -79,5 +76,20 @@ class Attack(Robot):
             if intensity_left < THRESHOLD_WHITE:
                 self.run(SPEED, SPEED + 1)
             else:
-                self.turn(5, -5)
+                self.turn(4, -4)
         self.stop()
+
+class Attack(Robot):
+
+
+    def complete_a_lap(self):
+        self.align_for_boundary()
+        self.run_boundary(46)
+
+
+class Defence(Robot):
+
+
+    def complete_a_lap(self):
+        self.align_for_boundary()
+        self.run_boundary(41.5)
