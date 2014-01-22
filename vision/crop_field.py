@@ -30,3 +30,7 @@ def get_crop_coordinates(frame, width=520, height=285):
         x_min + x_remaining, x_max + x_remaining,
         y_min + y_remaining, y_max + y_remaining)
 
+def crop(frame):
+    x_min, x_max, y_min, y_max = get_crop_coordinates(frame)
+    return frame[y_min:y_max, x_min:x_max]
+
