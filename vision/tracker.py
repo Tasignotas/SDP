@@ -11,7 +11,7 @@ class Tracker():
     def __init__(self,frame,color,col,row,width,height):
         self.colors = {"blue":(np.array((95., 50.,50.)), np.array((110.,255.,255.))),
                        "red":(np.array((0., 240.,140.)), np.array((9.,255.,255.))),
-                       "yellow":(np.array((20., 95.,  78.)), np.array((40., 95., 78.))),
+                       "yellow":(np.array((9., 50.,  50.)), np.array((11., 255., 255.))),
                        "white":(BLUE_LOWER, BLUE_HIGHER)}
         self.lower,self.upper = self.colors[color]
         print self.upper
@@ -23,7 +23,7 @@ class Tracker():
         self.window = (col,row,width,height)
         self.term_crit = ( 
             cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 
-            50, 5 )
+            100, 5 )
         c,r,w,h = col,row,width,height
         roi = frame[r:r+h,c:c+w]
         hsv_roi = cv2.cvtColor(roi,cv2.COLOR_BGR2HSV)

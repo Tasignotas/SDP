@@ -3,7 +3,7 @@ import numpy as np
 
 WHITE_LOWER = np.array([1,0,100])
 WHITE_HIGHER = np.array([36, 255, 255])
-
+            
 BLUE_LOWER = np.array((213, 32,  54))
 BLUE_HIGHER = np.array((255, 32,  54))
 
@@ -28,4 +28,4 @@ def normalize(img):
 def brighten(img, alpha, beta):
     mul_img = cv2.multiply(img, np.array([alpha]))
     new_img = cv2.add(mul_img,np.array([beta]))
-    return new_img
+    return new_img  
