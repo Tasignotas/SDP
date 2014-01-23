@@ -31,7 +31,7 @@ def run():
     width = (xmax - xmin)#/4
     height = ymax - ymin
 
-    tracker = Tracker(frame, "yellow", int(width * 3 / 4), 0, int(width * 4 / 4), int(height))
+    tracker = Tracker(frame, "blue", int(width * 3 / 4), 0, int(width * 4 / 4), int(height))
     tracker.update(frame)
     
     while(1):

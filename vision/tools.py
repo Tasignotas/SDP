@@ -6,8 +6,14 @@ import cv2
 WHITE_LOWER = np.array([1,0,100])
 WHITE_HIGHER = np.array([36, 255, 255])
 
-BLUE_LOWER = np.array((213, 32,  54))
-BLUE_HIGHER = np.array((255, 32,  54))
+BLUE_LOWER = np.array([95., 50.,50.])
+BLUE_HIGHER = np.array([110.,255.,255.])
+
+RED_LOWER = np.array([0, 240, 140])
+RED_HIGHER = np.array([9, 255, 255])
+
+YELLOW_LOWER = np.array([9, 50, 50])
+YELLOW_HIGHER = np.array([11, 255, 255]) 
 
 def find_crop_coordinates(frame, width=520, height=285):
     """
