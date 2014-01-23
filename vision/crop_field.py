@@ -6,6 +6,7 @@ def get_crop_coordinates(frame, width=520, height=285):
 
     Threshold: By how much to adjust the values
     """
+
     # Smoothen and apply white mask
     mask = mask_field(frame)
 

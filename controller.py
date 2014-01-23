@@ -13,9 +13,20 @@ def brighten(img, alpha=1.0, beta=10.0):
     new_img = cv2.add(mul_img,np.array([beta]))
     return new_img  
 
+def getPitch(frame):
+    lower_black = np.array([0,0,0])
+    upper_black = np.array([180,70,70])
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    mask_black = cv2.inRange(hsv, lower_black, upper_black)
+    mask_black = 255 - mask_black
+    frame = cv2.bitwise_and(frame,frame, mask= mask_black)
+    return frame
+
 def readFrame(c, xmin, xmax, ymin, ymax):
     ret,frame = c.read()
-    frame = brighten(frame[ymin:ymax,xmin:xmax], 2.0, 50.0)
+    frame = frame[ymin:ymax,xmin:xmax]
+    frame = getPitch(frame)
+    frame = brighten(frame, 2.0, 50.0)
     return frame
 
 def run():

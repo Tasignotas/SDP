@@ -34,6 +34,8 @@ while(1):
     upper_blue = np.array([36,255,255])
     lower_red = np.array([200,100,100])
     upper_red = np.array([250,255,255])
+    lower_black = np.array([0,0,0])
+    upper_black = np.array([180,75,75])
 
 # red = (255,0,0) - (100,20,20) RGB
 # yellow = (232,93,0) - (180,100,10) RGB
@@ -44,9 +46,12 @@ while(1):
     maskz3 = cv2.inRange(zone3_hsv, lower_blue, upper_blue)
     maskz4 = cv2.inRange(zone4_hsv, lower_blue, upper_blue)
     mask = cv2.inRange(hsv, lower_blue, upper_blue)
+    mask_black = 255 - cv2.inRange(hsv, lower_black, upper_black)
+    #print mask_black[0,0]
+    #mask_black = 255 - mask_black
 
     # Bitwise-AND mask and original image
-    res = cv2.bitwise_and(frame,frame, mask= mask)
+    res = cv2.bitwise_and(frame,frame, mask= mask_black)
 
     # get contours from thresholded masks
     contoursz1, h  = cv2.findContours(maskz1,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
@@ -76,6 +81,7 @@ while(1):
     #cv2.imshow("z4",zone4)
     #cv2.imshow("img",pitch)
     cv2.imshow("res",res)
+    cv2.imshow("mask",mask_black)
 
     k = cv2.waitKey(5) & 0xFF # press ESC to end
     if k == 27:
