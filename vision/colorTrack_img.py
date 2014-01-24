@@ -31,19 +31,30 @@ while(1):
     zone4_hsv = cv2.cvtColor(zone4, cv2.COLOR_BGR2HSV)
 
     # define range of blue color in HSV define thresholds - need to check these values
-    lower_blue = np.array([100,50,50])
-    upper_blue = np.array([150,255,255])
-    lower_red = np.array([200,100,100])
-    upper_red = np.array([250,255,255])
+    lower_blue = np.array([100,110,60])
+    upper_blue = np.array([110,150,100])
+    lower_red = np.array([0,240,175])
+    upper_red = np.array([10,250,195])
+    lower_yellow = np.array([10,235,190])
+    upper_yellow = np.array([30,255,230])
+
 
 # red = (255,0,0) - (100,20,20) RGB
 # yellow = (232,93,0) - (180,100,10) RGB
 
     # Threshold the HSV zones to get only blue colors
-    maskz1 = cv2.inRange(zone1_hsv, lower_blue, upper_blue)
-    maskz2 = cv2.inRange(zone2_hsv, lower_blue, upper_blue)
-    maskz3 = cv2.inRange(zone3_hsv, lower_blue, upper_blue)
-    maskz4 = cv2.inRange(zone4_hsv, lower_blue, upper_blue)
+    maskz1 = cv2.inRange(zone1_hsv, lower_yellow, upper_yellow)
+    maskz2 = cv2.inRange(zone2_hsv, lower_yellow, upper_yellow)
+    maskz3 = cv2.inRange(zone3_hsv, lower_yellow, upper_yellow)
+    maskz4 = cv2.inRange(zone4_hsv, lower_yellow, upper_yellow)
+    # maskz1 = cv2.inRange(zone1_hsv, lower_red, upper_red)
+    # maskz2 = cv2.inRange(zone2_hsv, lower_red, upper_red)
+    # maskz3 = cv2.inRange(zone3_hsv, lower_red, upper_red)
+    # maskz4 = cv2.inRange(zone4_hsv, lower_red, upper_red)
+    # maskz1 = cv2.inRange(zone1_hsv, lower_blue, upper_blue)
+    # maskz2 = cv2.inRange(zone2_hsv, lower_blue, upper_blue)
+    # maskz3 = cv2.inRange(zone3_hsv, lower_blue, upper_blue)
+    # maskz4 = cv2.inRange(zone4_hsv, lower_blue, upper_blue)
 
     # Bitwise-AND mask and original image
 #    res = cv2.bitwise_and(pitch,pitch, mask= mask)
