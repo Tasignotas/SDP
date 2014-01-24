@@ -30,7 +30,7 @@ def readFrame(c, xmin, xmax, ymin, ymax):
     frame = brighten(frame, 2.0, 50.0)
     return frame
 
-def run():
+def run(color):
     cap = cv2.VideoCapture(0)
     for i in range(10):
         ret,frame = cap.read()
@@ -43,7 +43,7 @@ def run():
     width = (xmax - xmin)#/4
     height = ymax - ymin
 
-    tracker = Tracker(frame, "blue", int(width * 3 / 4), 0, int(width * 4 / 4), int(height))
+    tracker = Tracker(frame, color, int(width * 3 / 4), 0, int(width * 4 / 4), int(height))
     tracker.update(frame)
     
     while(1):
@@ -63,7 +63,7 @@ def run():
         if k == 27:
             break
 
-    run()
+    #run()
 
     cv2.destroyAllWindows()
     cap.release()
