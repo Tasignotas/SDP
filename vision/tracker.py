@@ -48,7 +48,8 @@ class Tracker():
             self.pos = pos
             self.angle = angle
         except:
-            print "ERROR"
-            return None
+            print "ERROR - resetting window size"
+            self.window = self.initwindow
+            return self.update(frame)
 
         return ret
