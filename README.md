@@ -18,4 +18,7 @@ To install the python library, navigate to *nxt-python* inside the *lib* directo
 * A detailed tutorial with examples and use cases can be found [here](https://opencv-python-tutroals.readthedocs.org/en/latest/py_tutorials/py_tutorials.html) - going through it can be handy to understand the code
 * For OpenCV installation instructions please get in touch with others or have a look at the scripts in *vision/*
 
-
+### Installing OpenCV on OS X
+The problem with installing OpenCV on OS X is because the Python library was installed in the wrong directory. To fix this..:
+* Go to usr/local/share/bin
+* Copy the contents from python2.7/site-packages to /Library/Python/2.7/site-packages
