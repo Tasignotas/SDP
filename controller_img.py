@@ -24,7 +24,7 @@ def getPitch(frame):
     return frame
 
 def readFrame(c, xmin, xmax, ymin, ymax):
-    frame = cv2.imread("img/000000%02d.jpg" % c)
+    frame = cv2.imread("img/blue/000000%02d.jpg" % c)
     frame = frame[ymin:ymax,xmin:xmax]
     frame = getPitch(frame)
     frame = brighten(frame, 2.0, 50.0)
@@ -33,7 +33,7 @@ def readFrame(c, xmin, xmax, ymin, ymax):
 def run(color):
 
     # Take each frame
-    frame = cv2.imread("img/00000001.jpg")
+    frame = cv2.imread("img/blue/00000001.jpg")
 
     xmin,xmax,ymin,ymax = get_crop_coordinates(frame)
     print xmin,xmax,ymin,ymax
@@ -42,15 +42,17 @@ def run(color):
     width = (xmax - xmin)#/4
     height = ymax - ymin
 
-    tracker = Tracker(frame, color, int(width * 3 / 4), 0, int(width * 4 / 4), int(height))
+    tracker = Tracker(frame, color, 0, 0, int(width), int(height))
     tracker.update(frame)
-    
+    i = 0
+    j = 1
     while(1):
-
-        i = 1
-        i = i + 1
-        i = i % 60
-
+        if i == 58:
+            j = -1
+        if i == 1:
+            j = 1
+        i = (i % 59) + (j *1)
+        print i
         print "properties"
         print tracker.pos
         print tracker.angle
