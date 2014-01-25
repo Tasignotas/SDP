@@ -13,7 +13,7 @@ RED_LOWER = np.array([0, 240, 140])
 RED_HIGHER = np.array([9, 255, 255])
 
 YELLOW_LOWER = np.array([9, 50, 50])
-YELLOW_HIGHER = np.array([11, 255, 255]) 
+YELLOW_HIGHER = np.array([11, 255, 255])
 
 def find_crop_coordinates(frame, width=520, height=285):
     """
@@ -107,3 +107,18 @@ def mask(frame, lower, higher):
     """
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     return cv2.inRange(hsv, lower, higher)
+
+def slice(frame, pieces=4):
+    """
+    TODO
+
+    Given a frame, slice into n pieces given by the argument.
+    Either use fancy methods for precise slicing or just split into n equal for now.
+    To get size do frame.shape
+
+    Returns:
+        [4-tuple  of 2-tuples]  of slized frames, offset is the
+                                distance from the left side of the original frame
+    """
+    offset = 0
+    return ((frame, offset), (frame, offset), (frame, offset), (frame, offset))

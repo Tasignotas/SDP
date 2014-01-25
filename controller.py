@@ -1,7 +1,10 @@
 import cv2
+from vision.vision import Vision
+from planner.planner import Planner
 from vision.crop_field import *
 from vision.tracker import Tracker
 #from src.milestone1 import Robot
+
 
 def normalize(img):
     kernel = np.ones((5, 5), np.float32) / 25
@@ -11,7 +14,7 @@ def normalize(img):
 def brighten(img, alpha=1.0, beta=10.0):
     mul_img = cv2.multiply(img, np.array([alpha]))
     new_img = cv2.add(mul_img,np.array([beta]))
-    return new_img  
+    return new_img
 
 def getPitch(frame):
     lower_black = np.array([0,0,0])
@@ -45,7 +48,7 @@ def run(color):
 
     tracker = Tracker(frame, color, int(width * 3 / 4), 0, int(width * 4 / 4), int(height))
     tracker.update(frame)
-    
+
     while(1):
         print "properties"
         print tracker.pos
@@ -54,7 +57,7 @@ def run(color):
         ret = tracker.update(frame)
         if not ret:
             break
-        
+
 
         cv2.ellipse(frame, ret, (0, 0, 255), 2)
         cv2.imshow('img',frame)
@@ -67,4 +70,58 @@ def run(color):
 
     cv2.destroyAllWindows()
     cap.release()
-    
+
+
+class Controller:
+    """
+    Primary source of robot control. Ties vision and planning together.
+    """
+
+    def __init__(self):
+        self.vision = Vision()
+        self.planner = Planner()
+        self.attacker = Attacker()
+        self.defender = Defender()
+
+    def run(self):
+        """
+        Main flow of the program. Run the controller with vision and planning combined.
+        """
+        while True:
+            positions = self.vision.locate()
+            actions = self.planner.plan(*positions)
+
+            # Execute action
+            self.attacker.execute(actions[0])
+            self.defender.execute(actions[1])
+
+            # TODO: Display vision GUI/feed
+
+            print 'Executed'
+
+
+
+class Robot:
+    """
+    Robot superclass for control.
+    Should encapsulate robot communication as well.
+    """
+    def execute(self, action):
+        """
+        Execute robot action.
+        """
+        pass
+
+
+class Attacker(Robot):
+    """
+    Attacker implementation.
+    """
+    pass
+
+
+class Defender(Robot):
+    """
+    Defender implementation.
+    """
+    pass
