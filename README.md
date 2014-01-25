@@ -28,7 +28,7 @@ To install the python library, navigate to *nxt-python* inside the *lib* directo
 * Extract the contents
 * When on computers with with video feed, navigate to */disk/scratch/sdp/* and create a directory for OpenCV
 * Copy extracted contents over to this directory
-* Create directory build and navigate inside
+* Create directory `build` and navigate inside
 * Execute `cmake -D CMAKE_INSTALL_PREFIX=~/.local ..` or *cmake -D WITH_OPENCL=OFF -D WITH_CUDA=OFF -D BUILD_opencv_gpu=OFF -D BUILD_opencv_gpuarithm=OFF -D BUILD_opencv_gpubgsegm=OFF -D BUILD_opencv_gpucodec=OFF -D BUILD_opencv_gpufeatures2d=OFF -D BUILD_opencv_gpufilters=OFF -D BUILD_opencv_gpuimgproc=OFF -D BUILD_opencv_gpulegacy=OFF -D BUILD_opencv_gpuoptflow=OFF -D BUILD_opencv_gpustereo=OFF -D BUILD_opencv_gpuwarping=OFF -D CMAKE_INSTALL_PREFIX=~/.local ..* to install without GPU libraries
 * Execute `make` and wait (for quite some time)
 * Execute `make install`
