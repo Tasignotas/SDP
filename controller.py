@@ -95,6 +95,8 @@ class Controller:
             self.attacker.execute(actions[0])
             self.defender.execute(actions[1])
 
+            # TODO: Display vision GUI/feed
+
             print 'Executed'
 
 
