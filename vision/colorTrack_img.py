@@ -1,15 +1,15 @@
 import cv2
 import numpy as np
 
+i = 0
 while(1):
 
     # Looping
-    i = 0
-    i = i + 1
-    i = i % 60
+    i = (i % 59) + 1
 
+    print i
     # Take each frame
-    frame = cv2.imread("../img/000000%02d.jpg" % i)
+    frame = cv2.imread("../img/all/000000%02d.jpg" % i)
     frame = cv2.GaussianBlur(frame,(5,5),0)
     print frame.size
 
