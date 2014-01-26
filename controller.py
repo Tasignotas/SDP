@@ -112,10 +112,10 @@ class Robot:
         Connect to Brick and setup Motors/Sensors.
         """
         connection = src.common.Connection(name=connectionName)
-        self.Brick = connection.brick
-        self.MOTOR_L = Motor(self.Brick,leftMotorPort)
-        self.MOTOR_R = Motor(self.brick,rightMotorPort)
-        self.LIGHT_L = Light(self.Brick,sensorPort)
+        self.BRICK = connection.brick
+        self.MOTOR_L = Motor(self.BRICK,leftMotorPort)
+        self.MOTOR_R = Motor(self.BRICK,rightMotorPort)
+        self.LIGHT_L = Light(self.BRICK,sensorPort)
         self.LIGHT_L.set_illuminated(True)
 
     def execute(self, action):
