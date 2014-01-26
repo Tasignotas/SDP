@@ -8,6 +8,9 @@ FRAME_NAME = 'ConfigureWindow'
 
 WHITE = (255,255,255)
 BLACK = (0,0,0)
+BLUE = (255, 0, 0)
+GREEN = (0, 255, 0)
+RED = (0, 0, 255)
 
 
 class Configure:
@@ -20,102 +23,99 @@ class Configure:
 		self.polygon = self.polygons = []
 		self.points = []
 
-		self.data = {
-			'outline': []
-		}
+		keys = ['outline', 'left', 'left-middle', 'right-middle', 'right']
+		self.data = self.drawing = {}
 
-		self.drawing = {
-			'outline': [],
-			'left': [],
-			'left-middle': [],
-			'right-middle': [],
-			'right': []
-		}
+		# Create keys
+		for key in keys:
+			self.data[key] = []
+			self.drawing[key] = []
 
-		self.colors = {
-			'outline': BLACK
-		}
+		self.color = RED
 
 
-	def run(self):
+	def run(self, camera=False):
 		frame = cv2.namedWindow(FRAME_NAME)
 
 		# Set callback
 		cv2.setMouseCallback(FRAME_NAME, self.draw)
 
-		# for i in range(10):
-			# state, self.image = self.camera.read()
-		# if not image:
-		# 	self.stop()
-		self.image = cv2.imread('00000001.jpg')
-		self.running = True
+		if camera:
+			cap = cv2.VideoCapture(0)
+			for i in range(10):
+				status, self.image = cap.read()
+		else:
+			self.image = cv2.imread('00000001.jpg')
 
+		# Get various data about the image from the user
 		self.get_pitch_outline()
 
-		# while self.running:
-		# 	cv2.imshow(FRAME_NAME, self.image)
-		# 	k = cv2.waitKey(200) & 0xFF
-		# 	if k == ord('x'):
-		# 		self.stop()
-		# 	elif k == ord('q'):
-		# 		# Next polygon
-		# 		self.new_polygon = True
-		# 		self.polygons.append(self.polygon)
-		# 		self.polygon = []
-		# 		self.draw_polygon()
+		self.get_zone('left', 'draw LEFT Defender')
+		self.get_zone('left-middle', 'draw LEFT Attacker')
+		self.get_zone('right-middle', 'draw RIGHT Attacker')
+		self.get_zone('right', 'draw RIGHT Defender')
 
-		# 	elif k == ord('q'):
-		# 		self.next = True
-		#
+		print 'Press any key to finish.'
 		cv2.waitKey(0)
-		cv2.waitKey(0)
-
 		cv2.destroyAllWindows()
 
-	def get_pitch_outline(self):
-		print "DRAW OUTLINE and continue by pressin 'q'"
-		k = True
-		self.drawing = 'outline'
+		# Write out the data
+		self.dump('calibrate.json', self.data)
+
+	def reshape(self):
+		return np.array(self.data[self.drawing], np.int32).reshape((-1,1,2))
+
+	def draw_poly(self, points):
+		cv2.polylines(self.image, [points], True, self.color)
+		cv2.imshow(FRAME_NAME, self.image)
+
+	def get_zone(self, key, message):
+		print '%s. %s' % (message, "Continue by pressing q")
+		self.drawing, k = key, True
 
 		while k != ord('q'):
 			cv2.imshow(FRAME_NAME, self.image)
 			k = cv2.waitKey(100) & 0xFF
 
-		points = np.array(self.data[self.drawing], np.int32).reshape((-1,1,2))
-		cv2.polylines(self.image, [points], True, BLACK)
-		cv2.imshow(FRAME_NAME, self.image)
-		cv2.waitKey(0)
+		self.draw_poly(self.reshape())
 
+	def get_pitch_outline(self):
+		"""
+		Let user select points that corespond to the pitch outline.
+		End selection by pressing 'q'.
+		Result is masked and cropped.
+		"""
+		self.get_zone('outline', 'Draw the outline of the pitch. Contine by pressing \'q\'')
+
+		# Setup black mask to remove overflows
 		mask = self.image.copy()
-		size = tools.find_crop_coordinates(self.image, self.data[self.drawing])
-
 		points = np.array(self.data[self.drawing], np.int32)
-		mask = self.image.copy()
 		cv2.fillConvexPoly(mask, points, BLACK)
+		hsv_mask = cv2.cvtColor(mask, cv2.COLOR_BGR2HSV)
+		mask = cv2.inRange(hsv_mask, (0, 0, 0), (0, 0, 0))
 
-		hsv = cv2.cvtColor(mask, cv2.COLOR_BGR2HSV)
-		mask = cv2.inRange(hsv, (0, 0, 0), (0, 0, 0))
-
+		# Merge images, only the inside of the polygon selected remains
 		self.image = cv2.bitwise_and(self.image, self.image, mask= mask)
 
+		# Get crop size based on points
+		size = tools.find_crop_coordinates(self.image, self.data[self.drawing])
+		# Crop
 		self.image = self.image[size[2]:size[3], size[0]:size[1]]
 
 		cv2.imshow(FRAME_NAME, self.image)
 
-	def stop(self):
-			self.running = False
-			print 'Exiting..'
-
 	def draw(self, event, x, y, flags, param):
+		"""
+		Callback for events
+		"""
 		if event == cv2.EVENT_LBUTTONDOWN:
-			color = self.colors[self.drawing]
-			cv2.circle(self.image, (x, y), 2, color, -1)
+			color = self.color
+			cv2.circle(self.image, (x-1, y-1), 2, color, -1)
 			self.data[self.drawing].append((x,y))
+
+	def dump(self, filename='calibrate.json', data={}):
+		tools.write_json(filename, data)
 
 
 c = Configure()
-c.run()
-
-
-
-
+c.run(camera=True)

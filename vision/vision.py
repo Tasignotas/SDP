@@ -23,7 +23,8 @@ class Camera():
         """
         Read in a single frame as a thread
         """
-        return thread.start_new_thread(self._get_frame, ())
+        # return thread.start_new_thread(self._get_frame, ())
+        return self._get_frame()
 
 
 class Vision:

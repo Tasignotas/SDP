@@ -23,10 +23,14 @@ def get_calibration(filename='calibrate.json'):
     _file = open(filename, 'r')
     return get_json(filename)
 
-def get_json(filename='calibrate.json'):
-    _file = open(filename, 'r')
-    return json.loads(_file.read())
-    
+# def get_json(filename='calibrate.json'):
+#     _file = open(filename, 'r')
+#     return json.loads(_file.read())
+
+def write_json(filename='calibrate.json', data={}):
+    _file = open(filename, 'w')
+    _file.write(json.dumps(data))
+    _file.close()    
 
 def find_crop_coordinates(frame, keypoints=None, width=520, height=285):
     """
