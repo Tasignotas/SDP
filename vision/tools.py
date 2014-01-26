@@ -24,9 +24,9 @@ def get_calibration(filename='calibrate.json'):
     _file = open(filename, 'r')
     return get_json(filename)
 
-# def get_json(filename='calibrate.json'):
-#     _file = open(filename, 'r')
-#     return json.loads(_file.read())
+def get_json(filename='calibrate.json'):
+    _file = open(filename, 'r')
+    return json.loads(_file.read())
 
 def write_json(filename='calibrate.json', data={}):
     _file = open(filename, 'w')
@@ -115,9 +115,11 @@ def adjust_light(frame, brightness=2.0, contrast=50.0):
     Returns:
         updated frame
     """
-    brightness = max(3.0, float(brightness))
-    contrast = max(100.0, float(contrast))
-    return cv2.add(cv2.multiply(frame, np.array[brightness]), np.array([contrast]))
+    # brightness = max(3.0, float(brightness))
+    # contrast = max(100.0, float(contrast))
+    return cv2.add(
+        cv2.multiply(frame, np.array[brightness]), 
+        np.array([contrast]))
 
 def view(frame, label='Frame'):
     """

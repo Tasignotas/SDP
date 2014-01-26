@@ -1,6 +1,6 @@
 import cv2
 from vision.vision import Vision
-from planner.planner import Planner
+from planning.planner import Planner
 from vision.crop_field import *
 from vision.tracker import Tracker
 #from src.milestone1 import Robot
