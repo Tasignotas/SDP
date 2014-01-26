@@ -15,7 +15,7 @@ RED_HIGHER = np.array([9, 255, 255])
 YELLOW_LOWER = np.array([9, 50, 50])
 YELLOW_HIGHER = np.array([11, 255, 255])
 
-def find_crop_coordinates(frame, width=520, height=285):
+def find_crop_coordinates(frame, keypoints=None, width=520, height=285):
     """
     Get crop coordinated for the actual image based on masked version.
 
@@ -26,34 +26,41 @@ def find_crop_coordinates(frame, width=520, height=285):
     Returns:
         A 4-tuple with crop values
     """
-    frame_width, frame_height, channels = frame.shape
+    frame_height, frame_width, channels = frame.shape
     if frame_width < width or frame_height < height:
         print 'get_crop_coordinates:', 'Requested size of the frame is smaller than the original frame'
         return frame
 
-    # Smoothen and apply white mask
-    mask = mask_field(normalize(frame))
+    if not keypoints:
+        # Smoothen and apply white mask
+        mask = mask_field(normalize(frame))
 
-    # Get FAST detection of features
-    fast = cv2.FastFeatureDetector()
+        # Get FAST detection of features
+        fast = cv2.FastFeatureDetector()
 
-    # get keypoints - list of Keypoints with x/y coordinates
-    kp = fast.detect(mask, None)
+        # get keypoints - list of Keypoints with x/y coordinates
+        kp = fast.detect(mask, None)
 
-    x_min = min(kp, key=lambda x: x.pt[0]).pt[0]
-    y_min = min(kp, key=lambda x: x.pt[1]).pt[1]
-    x_max = max(kp, key=lambda x: x.pt[0]).pt[0]
-    y_max = max(kp, key=lambda x: x.pt[1]).pt[1]
+        x_min = min(kp, key=lambda x: x.pt[0]).pt[0]
+        y_min = min(kp, key=lambda x: x.pt[1]).pt[1]
+        x_max = max(kp, key=lambda x: x.pt[0]).pt[0]
+        y_max = max(kp, key=lambda x: x.pt[1]).pt[1]
+
+    else:
+        x_min = min(keypoints, key=lambda x: x[0])[0]
+        y_min = min(keypoints, key=lambda x: x[1])[1]
+        x_max = max(keypoints, key=lambda x: x[0])[0]
+        y_max = max(keypoints, key=lambda x: x[1])[1]
 
     x_delta = x_max - x_min
     y_delta = y_max - y_min
 
-    x_remaining = max(0, (width - x_delta) / 2)
-    y_remaining = max(0, (height - y_delta) / 2)
+    # x_remaining = max(0, (width - x_delta) / 2)
+    # y_remaining = max(0, (height - y_delta) / 2)
 
     return (
-        x_min + x_remaining, x_max + x_remaining,
-        y_min + y_remaining, y_max + y_remaining)
+        x_min, x_max,
+        y_min, y_max)
 
 def crop(frame, size=None):
     """
@@ -64,10 +71,11 @@ def crop(frame, size=None):
         [OpenCV Frame] frame    frame to crop
         [(x1,x2,y1,y2)] size
     """
-    if not size:
-        x_min, x_max, y_min, y_max = get_crop_coordinates(frame)
-    else:
-        x_min, x_max, y_min, y_max = size
+    # if not size or not len(size):
+    #     x_min, x_max, y_min, y_max = get_crop_coordinates(frame)
+    # else:
+    print 'SIZE:', size
+    x_min, x_max, y_min, y_max = size
     return frame[y_min:y_max, x_min:x_max]
 
 def adjust_light(frame, brightness=2.0, contrast=50.0):
