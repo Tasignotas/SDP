@@ -1,5 +1,8 @@
 import numpy as np
 import cv2
+import json
+import thread
+
 
 
 # HSV Colors
@@ -14,6 +17,16 @@ RED_HIGHER = np.array([9, 255, 255])
 
 YELLOW_LOWER = np.array([9, 50, 50])
 YELLOW_HIGHER = np.array([11, 255, 255])
+
+
+def get_calibration(filename='calibrate.json'):
+    _file = open(filename, 'r')
+    return get_json(filename)
+
+def get_json(filename='calibrate.json'):
+    _file = open(filename, 'r')
+    return json.loads(_file.read())
+    
 
 def find_crop_coordinates(frame, keypoints=None, width=520, height=285):
     """
