@@ -88,15 +88,8 @@ class Configure:
 		self.get_zone('outline', 'Draw the outline of the pitch. Contine by pressing \'q\'')
 
 		# Setup black mask to remove overflows
-		mask = self.image.copy()
-		points = np.array(self.data[self.drawing], np.int32)
-		cv2.fillConvexPoly(mask, points, BLACK)
-		hsv_mask = cv2.cvtColor(mask, cv2.COLOR_BGR2HSV)
-		mask = cv2.inRange(hsv_mask, (0, 0, 0), (0, 0, 0))
-
-		# Merge images, only the inside of the polygon selected remains
-		self.image = cv2.bitwise_and(self.image, self.image, mask= mask)
-
+		self.image = tools.mask_pitch(self.image, self.data[self.drawing])
+		
 		# Get crop size based on points
 		size = tools.find_crop_coordinates(self.image, self.data[self.drawing])
 		# Crop

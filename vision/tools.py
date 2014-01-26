@@ -3,7 +3,8 @@ import cv2
 import json
 import thread
 
-
+# BGR Colors
+BLACK = (0,0,0)
 
 # HSV Colors
 WHITE_LOWER = np.array([1,0,100])
@@ -31,6 +32,14 @@ def write_json(filename='calibrate.json', data={}):
     _file = open(filename, 'w')
     _file.write(json.dumps(data))
     _file.close()    
+
+def mask_pitch(frame, points):
+    mask = frame.copy()
+    points = np.array(points, np.int32)
+    cv2.fillConvexPoly(mask, points, BLACK)
+    hsv_mask = cv2.cvtColor(mask, cv2.COLOR_BGR2HSV)
+    mask = cv2.inRange(hsv_mask, (0,0,0), (0,0,0))
+    return cv2.bitwise_and(frame, frame, mask=mask)
 
 def find_crop_coordinates(frame, keypoints=None, width=520, height=285):
     """
