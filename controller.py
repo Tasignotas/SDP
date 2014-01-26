@@ -106,6 +106,18 @@ class Robot:
     Robot superclass for control.
     Should encapsulate robot communication as well.
     """
+
+    def __init__ (self, connectionName,leftMotorPort,rightMotorPort,sensorPort):
+        """
+        Connect to Brick and setup Motors/Sensors.
+        """
+        connection = src.common.Connection(name=connectionName)
+        self.BRICK = connection.brick
+        self.MOTOR_L = Motor(self.BRICK,leftMotorPort)
+        self.MOTOR_R = Motor(self.BRICK,rightMotorPort)
+        self.LIGHT_L = Light(self.BRICK,sensorPort)
+        self.LIGHT_L.set_illuminated(True)
+
     def execute(self, action):
         """
         Execute robot action.
