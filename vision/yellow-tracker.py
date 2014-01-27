@@ -79,7 +79,7 @@ class YellowTracker:
 
             # Apply simple kernel blur
             # Take a matrix given by second argument and calculate average of those pixels
-            # self.frame = cv2.blur(self.frame, (3, 3))
+            self.frame = cv2.blur(self.frame, (3, 3))
 
             # Set Contrast
             self.frame = cv2.add(self.frame, np.array([100.0]))
@@ -104,7 +104,7 @@ class YellowTracker:
             # Find contours, they describe the masked image - our T
             contours, hierarchy = cv2.findContours(
                 threshold,
-                cv2.RETR_LIST,
+                cv2.RETR_TREE,
                 cv2.CHAIN_APPROX_SIMPLE
             )
 
@@ -115,7 +115,8 @@ class YellowTracker:
                 cnt = contours[0]
 
                 # Draw bounding ellipse and get the ellipse angle
-                # angle = self.draw_ellipse(cnt)
+                angle = self.draw_ellipse(cnt)
+                print angle
 
                 # Draw a rotated bounding box around the T
                 # self.draw_bounding_box(cnt)
@@ -124,7 +125,7 @@ class YellowTracker:
                 # self.draw_fitted_line(frame_mask, cnt)
 
                 # Draw contours as filled object
-                self.draw_contours(cnt)
+                # self.draw_contours(cnt)
 
                 # Find extreme values - left most, topmost, rightmost and bottom most values of the T
                 # self.draw_extremes(cnt)
