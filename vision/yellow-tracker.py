@@ -22,6 +22,7 @@ class YellowTracker:
         # Get crop coordinates from calibrate.json
         pitch_outline = tools.get_calibration('calibrate.json')['outline']
         self.crop = tools.find_crop_coordinates(self.frame, pitch_outline)
+        return True
 
     def draw_ellipse(self, contours):
         ellipse = cv2.fitEllipse(contours)
@@ -30,14 +31,14 @@ class YellowTracker:
         return angle
 
     def draw_bounding_box(self, contours):
-        x, y, w, h = cv2.boundingRect(cnt)
-        rect = cv2.minAreaRect(cnt)
+        x, y, w, h = cv2.boundingRect(contours)
+        rect = cv2.minAreaRect(contours)
         box = np.int0(cv2.cv.BoxPoints(rect))
-        cv2.drawContours(self.frame, [box], 0, (0, 0, 255), 1)
+        cv2.drawContours(self.frame, [box], 0, (0, 0, 255), 2)
 
-    def draw_fitted_line(self, mask):
+    def draw_fitted_line(self, mask, cnt):
         rows, cols = mask.shape[:2]
-        [vx, vy, x, y] = cv2.fitLine(cnt, 1, 0, 0.01, 0.01)
+        [vx, vy, x, y] = cv2.fitLine(cnt, 1, 3, 0.01, 0, 0.01)
         lefty = int((-x * vy / vx) + y)
         righty = int(((cols - x) * vy / vx) + y)
         cv2.line(self.frame, (cols - 1, righty), (0, lefty), (0, 0, 255), 2)
@@ -53,7 +54,7 @@ class YellowTracker:
 
         return (leftmost, rightmost, topmost, bottommost)
 
-    def draw_extreme_points(self, contours):
+    def draw_extremes(self, contours):
         leftmost, rightmost, topmost, bottommost = self.get_extreme_points(contours)
         cv2.circle(self.frame, leftmost, 2, (0,0,255), -1)
         cv2.circle(self.frame, rightmost, 2, (0,255,0), -1)
@@ -78,7 +79,7 @@ class YellowTracker:
 
             # Apply simple kernel blur
             # Take a matrix given by second argument and calculate average of those pixels
-            self.frame = cv2.blur(self.frame, (5, 5))
+            # self.frame = cv2.blur(self.frame, (3, 3))
 
             # Set Contrast
             self.frame = cv2.add(self.frame, np.array([100.0]))
@@ -98,7 +99,7 @@ class YellowTracker:
                 cv2.imshow('Masked image', frame_mask)
 
             # Apply threshold to the masked image, no idea what the values mean
-            return_val, threshold = cv2.threshold(mask, 127, 255, 0)
+            return_val, threshold = cv2.threshold(frame_mask, 127, 255, 0)
 
             # Find contours, they describe the masked image - our T
             contours, hierarchy = cv2.findContours(
@@ -114,26 +115,26 @@ class YellowTracker:
                 cnt = contours[0]
 
                 # Draw bounding ellipse and get the ellipse angle
-                angle = self.draw_ellipse(cnt)
+                # angle = self.draw_ellipse(cnt)
 
                 # Draw a rotated bounding box around the T
-                self.draw_bounding_box(cnt)
+                # self.draw_bounding_box(cnt)
 
                 # Fit a line into the T
-                self.draw_fitted_line(frame_mask)
+                # self.draw_fitted_line(frame_mask, cnt)
 
                 # Draw contours as filled object
                 self.draw_contours(cnt)
 
                 # Find extreme values - left most, topmost, rightmost and bottom most values of the T
-                self.draw_extremes(cnt)
+                # self.draw_extremes(cnt)
 
             # Display feed
             if gui:
                 cv2.imshow('Yellow Tracker', self.frame)
 
             # Wait for 4ms before continuing, terminate by pressing 'q'
-            k = cv2.waitKey(4) & 0xFF
+            k = cv2.waitKey(2) & 0xFF
 
 
 
