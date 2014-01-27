@@ -36,6 +36,7 @@ crop = find_crop_coordinates(frame, coords['outline'])
 
 k = True
 multiplier = 1
+stack = []
 while k != ord('q'):
 
 	ret, frame = cap.read()
@@ -74,7 +75,7 @@ while k != ord('q'):
 		#cv2.ellipse(frame, ellipse,(0,0,255),3)
 		#if int(angle) ==0:
 		#	multiplier = multiplier*-1
-		print multiplier * angle
+		#print multiplier * angle
 
 		area = cv2.contourArea(cnt)
 		hull = cv2.convexHull(cnt)
@@ -105,7 +106,7 @@ while k != ord('q'):
 		[vx,vy,x,y] = cv2.fitLine(cnt, 1,0,0.01,0.01)
 		lefty = int((-x*vy/vx) + y)
 		righty = int(((cols-x)*vy/vx)+y)
-		#cv2.line(frame,(cols-1,righty),(0,lefty),(0,0,255),2)
+		cv2.line(frame,(cols-1,righty),(0,lefty),(0,0,255),2)
 
 		leftmost = tuple(cnt[cnt[:,:,0].argmin()][0])
 		rightmost = tuple(cnt[cnt[:,:,0].argmax()][0])
@@ -147,6 +148,20 @@ while k != ord('q'):
 		# cv2.circle(frame, rightmost, 2, (0,255,0), -1)
 		# cv2.circle(frame, topmost, 2, (255,0,0), -1)
 		# cv2.circle(frame, bottommost, 2, (0,0,0), -1)
+		
+		## removing outliars, so modifying the marker will not be necessary
+		if len(stack) > 5:
+			stack.pop(0)
+			stack.append(multiplier * angle)
+		else:
+			stack.append(multiplier * angle)
+
+		mean = sum(stack)/len(stack)
+		
+		if abs(mean - stack[-1]) > 50: # if latest value jumps by more than 50 degrees, simple outlier checking...
+			print "jump!!"
+			stack.pop() # discard that value
+		print sum(stack)/len(stack)
 
 	else:
 		print 'No vals'
