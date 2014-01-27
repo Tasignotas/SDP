@@ -9,7 +9,7 @@ class Connection:
         self.brick = nxt.locator.find_one_brick(
             name=name, method=nxt.locator.Method(usb=False))
         if self.brick:
-            print 'Connection succesfull.'
+            print 'Connection successful.'
 
     def close(self):
         """
