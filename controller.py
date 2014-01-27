@@ -107,7 +107,7 @@ class Robot:
     Should encapsulate robot communication as well.
     """
 
-    def __init__ (self, connectionName,leftMotorPort,rightMotorPort,sensorPort):
+    def __init__ (self, connectionName,leftMotorPort,rightMotorPort,kickerMotorPort,lightSensorPort):
         """
         Connect to Brick and setup Motors/Sensors.
         """
@@ -115,7 +115,8 @@ class Robot:
         self.BRICK = connection.brick
         self.MOTOR_L = Motor(self.BRICK,leftMotorPort)
         self.MOTOR_R = Motor(self.BRICK,rightMotorPort)
-        self.LIGHT_L = Light(self.BRICK,sensorPort)
+        self.MOTOR_K = Motor(self.BRICK,kickerMotorPort)
+        self.LIGHT_L = Light(self.BRICK,lightSensorPort)
         self.LIGHT_L.set_illuminated(True)
 
     def execute(self, action):
@@ -129,6 +130,15 @@ class Attacker(Robot):
     """
     Attacker implementation.
     """
+
+    def __init__ (self, connectionName,leftMotorPort,rightMotorPort,kickerMotorPort,lightSensorPort): 
+        """
+        Do the same setup as the Robot class, as well as anything specific to the Attacker.
+        """
+        Robot.__init__(self, connectionName,leftMotorPort,rightMotorPort,kickerMotorPort,lightSensorPort)
+       # No need for the parameters once the robots have been finalised.
+       #Robot.__init__(self, connectionName, PORT_B, PORT_C, PORT_A, PORT_2)
+
     pass
 
 
@@ -136,4 +146,13 @@ class Defender(Robot):
     """
     Defender implementation.
     """
+
+    def __init__ (self, connectionName,leftMotorPort,rightMotorPort,kickerMotorPort,lightSensorPort):
+        """
+        Do the same setup as the Robot class, as well as anything specific to the Defender.
+        """
+        Robot.__init__(self, connectionName,leftMotorPort,rightMotorPort,kickerMotorPort,lightSensorPort)
+       # No need for the parameters once the robots have been finalised.
+       #Robot.__init__(self, connectionName, PORT_B, PORT_C, PORT_A, PORT_2)
+
     pass
