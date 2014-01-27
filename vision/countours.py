@@ -35,6 +35,7 @@ coords = get_calibration()
 crop = find_crop_coordinates(frame, coords['outline'])
 
 k = True
+multiplier = 1
 while k != ord('q'):
 
 	ret, frame = cap.read()
@@ -62,15 +63,18 @@ while k != ord('q'):
 		cv2.RETR_LIST,
 		cv2.CHAIN_APPROX_SIMPLE
 	)
-
+	#print len(contours)
+	#print max([len(x) for x in contours])
 	if len(contours) > 0 and len(contours[0]) > 5:
 
 		cnt = contours[0]
 
 		(x,y),(MA,ma),angle = cv2.fitEllipse(cnt)
 		ellipse = ((x,y), (MA, ma), angle)
-		cv2.ellipse(frame, ellipse,(0,0,255),3)
-		print angle
+		#cv2.ellipse(frame, ellipse,(0,0,255),3)
+		#if int(angle) ==0:
+		#	multiplier = multiplier*-1
+		print multiplier * angle
 
 		area = cv2.contourArea(cnt)
 		hull = cv2.convexHull(cnt)
@@ -78,15 +82,15 @@ while k != ord('q'):
 		solidity = float(area)/hull_area
 
 		# print area, hull_area, solidity
-		# print cnt
+		#print cnt
 
 		x,y,w,h = cv2.boundingRect(cnt)
 		rect = cv2.minAreaRect(cnt)
 		box = cv2.cv.BoxPoints(rect)
 		box = np.int0(box)
-		# cv2.drawContours(frame,[box],0,(0,0,255),1)
+		#cv2.drawContours(frame,[box],0,(0,0,255),1)
 
-		# cv2.drawContours(frame, [cnt], -1, (0,255,0), -1)
+		#cv2.drawContours(frame, [cnt], -1, (0,255,0), -1)
 
 		# print cnt.shape
 
@@ -101,7 +105,7 @@ while k != ord('q'):
 		[vx,vy,x,y] = cv2.fitLine(cnt, 1,0,0.01,0.01)
 		lefty = int((-x*vy/vx) + y)
 		righty = int(((cols-x)*vy/vx)+y)
-		# cv2.line(frame,(cols-1,righty),(0,lefty),(0,0,255),2)
+		#cv2.line(frame,(cols-1,righty),(0,lefty),(0,0,255),2)
 
 		leftmost = tuple(cnt[cnt[:,:,0].argmin()][0])
 		rightmost = tuple(cnt[cnt[:,:,0].argmax()][0])
@@ -129,11 +133,11 @@ while k != ord('q'):
 		t_top = closest(points)
 		# print t_top
 
-		# cv2.line(frame, points[0], points[1], (255, 0, 0), 4)
+		#cv2.line(frame, points[0], points[1], (255, 0, 0), 4)
 		# print t_top	
 
-		# for point in points:
-		# 	cv2.circle(frame, point, 2, (0,0,255), -1)
+		for point in points:
+			cv2.circle(frame, point, 2, (0,0,255), -1)
 
 
 
