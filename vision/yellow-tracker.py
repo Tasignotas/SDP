@@ -3,6 +3,8 @@ import numpy as np
 import tools
 import math
 
+from shapes import *
+
 
 class YellowTracker:
 
@@ -61,12 +63,25 @@ class YellowTracker:
         cv2.circle(self.frame, topmost, 2, (255,0,0), -1)
         cv2.circle(self.frame, bottommost, 2, (0,0,0), -1)
 
+    def draw_polygon(self, polygons):
+        for p in polygons:
+            cv2.fillConvexPoly(self.frame, p, (0, 0, 255))
+            # print p.shape
+            # print p
+            cx, cy = centreOfMass(p)
+            cv2.circle(self.frame, (cx, cy), 1, (0,255,255), -1)
+
+            # Draw the lines connecting the centre of mass with the edges
+            # of the polygon
+            for point in p:
+                cv2.line(self.frame, (cx, cy), (point[0][0], point[0][1]), (255,0,0))
+
     def run(self, gui=True, port=0):
         status = self.setup_camera(port)
 
         if not status:
             print 'Camera not available'
-            return
+            returnq
 
         k = True
         # Terminate program by pressing q
@@ -108,6 +123,8 @@ class YellowTracker:
                 cv2.CHAIN_APPROX_SIMPLE
             )
 
+            polys = getShapes(contours)
+
             if len(contours) <= 0 or len(contours[0]) < 5:
                 print 'No contours found.'
             else:
@@ -115,8 +132,10 @@ class YellowTracker:
                 cnt = contours[0]
 
                 # Draw bounding ellipse and get the ellipse angle
-                angle = self.draw_ellipse(cnt)
-                print angle
+                # angle = self.draw_ellipse(cnt)
+                # print angle
+
+                self.draw_polygon(polys)
 
                 # Draw a rotated bounding box around the T
                 # self.draw_bounding_box(cnt)
