@@ -6,7 +6,6 @@ D_ZONE_A = (50, 100)
 
 W_BOUND = 15
 W_STRIP = 5
-W_GOAL = 60
 W_BLOCK = 10
 H_BLOCK = 20
 H_GOAL = 20
