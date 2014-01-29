@@ -45,6 +45,8 @@ def find_extremes(coords):
     left = min(coords, key=lambda x: x[0])[0]
     right = max(coords, key=lambda x:x[0])[0]
     top = min(coords, key=lambda x:x[1])[1]
+    bottom = max(coords, key=lambda x:x[1])[1]
+    return (left, right, top, bottom)
 
 def find_crop_coordinates(frame, keypoints=None, width=520, height=285):
     """
