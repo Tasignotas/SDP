@@ -4,8 +4,8 @@ import movement
 def track(tracker, target):
     pr = mrg(tracker, target)
     err = pcs(tracker, pr)
-    movement.forward(err[0])
-    movement.turn(err[1])
+    tracker.forward(err[0])
+    tracker.turn(err[1])
 
 def mrg(tracker, target):
     x = tracker.position[0]

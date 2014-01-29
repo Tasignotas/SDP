@@ -1,5 +1,7 @@
 # Robot Object
 
+import nxt
+
 ROBOT_LENGTH = 20
 ROBOT_WIDTH = 20
 ROBOT_HEIGHT = 10
