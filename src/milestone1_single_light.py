@@ -74,7 +74,7 @@ class Robot:
             intensity_left = self.LIGHT_L.get_sample()
             print 'LIGHT L:', intensity_left
             if intensity_left < THRESHOLD_WHITE:
-                self.run(SPEED, SPEED + 1)
+                self.run(SPEED, SPEED + 2)
             else:
                 self.turn(4, -4)
         self.stop()
