@@ -1,3 +1,5 @@
+# Goal Object
+
 GOAL_LENGTH = 60
 GOAL_WIDTH = 1
 GOAL_HEIGHT = 10

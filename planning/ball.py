@@ -1,3 +1,5 @@
+# Ball Object
+
 BALL_LENGTH = 5
 BALL_WIDTH = 5
 BALL_HEIGHT = 5
