@@ -1,9 +1,12 @@
 #By Ignotas
 
+import time
+
 from nxt.sensor import *
 from nxt.motor import *
-from common import Connection
-import time
+
+from planning.common import Connection
+
 
 
 # Connect to the brick

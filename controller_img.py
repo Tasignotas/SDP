@@ -1,7 +1,7 @@
 import cv2
 from vision.crop_field import *
 from vision.tracker import Tracker
-#from src.milestone1 import Robot
+#from milestone1.milestone1 import Robot
 
 def normalize(img):
     kernel = np.ones((5, 5), np.float32) / 25

@@ -3,7 +3,7 @@ from vision.vision import Vision
 from planning.planner import Planner
 from vision.crop_field import *
 from vision.tracker import Tracker
-#from src.milestone1 import Robot
+#from milestone1.milestone1 import Robot
 
 
 def normalize(img):
