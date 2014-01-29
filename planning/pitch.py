@@ -1,34 +1,74 @@
-import goal
+from json import load
 
-D_PITCH = (255, 110)
-D_ZONE_G = (50, 100)
-D_ZONE_A = (50, 100)
-
-W_BOUND = 15
-W_STRIP = 5
-W_GOAL = 60
-W_BLOCK = 10
-H_BLOCK = 20
-H_GOAL = 20
-
-S_PITCH = (0, 0)
-S_ZONE_A = (W_STRIP, W_STRIP)
-S_ZONE_B = (W_STRIP + D_ZONE_G[0] + W_BOUND, W_STRIP)
-S_ZONE_C = (S_ZONE_B[0] + D_ZONE_A[0] + W_BOUND, W_STRIP)
-S_ZONE_D = (S_ZONE_C[0] + D_ZONE_A[0] + W_BOUND, W_STRIP)
-
-LL_BLOCK = (0, 0, W_BLOCK, H_BLOCK)
-LR_BLOCK = (D_PITCH[0], 0, -W_BLOCK, H_BLOCK)
-UL_BLOCK = (0, D_PITCH[1], W_BLOCK, -H_BLOCK)
-UR_BLOCK = (D_PITCH[0], D_PITCH[1], -W_BLOCK, -H_BLOCK)
 
 class Pitch:
 
-    def __init__(self, robotA, robotB, robotC, robotD, ball):
-        self.ball = ball
-        self.goalA = goal.Goal(0, H_GOAL, 90, W_GOAL)
-        self.goalD = goal.Goal(D_PITCH[0], H_GOAL, -90, W_GOAL)
-        self.robotA = robotA
-        self.robotB = robotB
-        self.robotC = robotC
-        self.robotD = robotD
+
+    def __init__(self):
+        config_file = open('../vision/calibrate.json', 'r')
+        config_json = json.load(config_file)
+        config_file.close()
+        # Getting the coordinates of the bottom left corner:
+        min_x = min([point[0] for point in config_json['outline']])
+        min_y = min([point[1] for point in config_json['outline']]) 
+        # Getting the zones:       
+        self.zones = []
+        self.zones.append(Polygon(config_json['Zone_0']))
+        self.zones.append(Polygon(config_json['Zone_1']))
+        self.zones.append(Polygon(config_json['Zone_2']))
+        self.zones.append(Polygon(config_json['Zone_3']))        
+        # Making the point coordinates relative to the bottom leftmost point:
+        # TODO: figure out why some points become negative!!!
+        for zone in self.zones:
+            for point in zone.points:
+                point.x -= min_x
+                point.y -= min_y
+    
+
+    def is_within_bounds(self, robot, point):
+    # Checks whether the position/point planned for the robot is reachable:
+        zone = self.zones[robot.zone]
+        return zone.is_point_inside(point)        
+
+
+class Polygon:
+
+    
+    def __init__(self, coord_array):
+        self.points = []
+        for coords in coord_array:
+            self.points.append(Point(*coords))
+
+
+    def __repr__(self):
+        return ''.join([point.__repr__() for point in self.points])
+
+
+    def is_point_inside(self, point):
+        # Method that checks if the point is inside the polygon:    
+        n = len(self.points)
+        inside = False
+        p1x, p1y = self.points[0].x, self.points[0].x 
+        for i in range(n + 1):
+            p2x, p2y = self.points[i % n].x, self.points[i % n].y
+            if point.y > min(p1y, p2y):
+                if point.y <= max(p1y, p2y):
+                    if point.x <= max(p1x, p2x):
+                        if p1y != p2y:
+                            xinters = (point.y - p1y) * (p2x - p1x) / (p2y - p1y) + p1x
+                        if p1x == p2x or point.x <= xinters:
+                            inside = not inside
+            p1x,p1y = p2x,p2y
+        return inside
+        
+
+class Point:
+
+    
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+
+    def __repr__(self):
+        return 'x: %s, y: %s\n' % (self.x, self.y)
