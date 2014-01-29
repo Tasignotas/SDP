@@ -2,29 +2,8 @@ import cv2
 import time
 import thread
 import tools
-
-
-class Camera():
-
-    def __init__(self, port=0):
-        self.camera = cv2.VideoCapture(port)
-
-    def _get_frame(self, *args):
-        """
-        Read in and check a frame.
-        """
-        success, frame = self.camera.read()
-        if success:
-            return frame
-        print 'Could not retrieve frame'
-        return None
-
-    def get_frame(self):
-        """
-        Read in a single frame as a thread
-        """
-        # return thread.start_new_thread(self._get_frame, ())
-        return self._get_frame()
+from tracker import Tracker
+import math
 
 
 class Vision:
@@ -32,11 +11,36 @@ class Vision:
     Locate objects on the pitch.
     """
 
-    def __init__(self, port=0):
-        self.camera = Camera(port)
-        self.time = time.time()
-        self.frame_count = 0
-        self.active = True
+    def __init__(self, left='yellow', port=0):
+        self.capture = cv2.VideoCapture(port)
+        
+        for i in range(5):
+            status, frame = self.capture.read()
+
+        self.crop_values = tools.find_extremes(
+            tools.get_calibration('vision/calibrate.json')['outline'])
+
+        zone_size = int(math.floor(self.crop_values[1] / 4.0))
+
+        self.ball_tracker = Tracker(
+            'red', (0, self.crop_values[1], 0, self.crop_values[3]), 0, 100.0, 5)
+
+        zone1 = (0, zone_size)
+        zone2 = (zone_size, 2 * zone_size)
+        zone3 = (zone_size * 2, zone_size * 3)
+        zone4 = (zone_size * 3, zone_size * 4)
+
+        self. yellow_left = Tracker(
+            'yellow', (zone1[0], zone1[1], 0, self.crop_values[3]), 0)
+
+        self. yellow_middle = Tracker(
+            'yellow', (zone3[0], zone3[1], 0, self.crop_values[3]), zone_size * 2)
+
+        self.blue_middle = Tracker(
+            'blue', (zone2[0], zone2[1], 0, self.crop_values[3]), zone_size)
+
+        self.blue_right = Tracker(
+            'blue', (zone4[0], zone4[1], 0, self.crop_values[3]), zone_size * 3)
 
     def locate(self):
         """
@@ -45,69 +49,33 @@ class Vision:
         Returns:
             [5-tuple] Location of the robots and the ball
         """
-        frame = self.camera.get_frame()
-        if not frame:
+        status, frame = self.capture.read()
+        if not status:
+            print 'No Frame'
             return None
 
-        # TESTING ONLY, REMOVE WHEN METHODS BELOW IMPLEMENTED
-        crop_coords = 0, 640, 0, 480
-        # END OF TEST SECTION
-
-
         # Trim the image
-        # crop_coords = tools.find_crop_coordinates(frame)
-        # Slice image into 4 sections
-        frame_1, frame_2, frame_3, frame_4 = tools.slice(frame)
+        frame = frame[
+            self.crop_values[2]:self.crop_values[3],
+            self.crop_values[0]:self.crop_values[1]]
 
         # Find robots
-        robot_1 = thread.start_new_thread(self.find_robot, (frame_1[0], 't_yellow', frame_1[1]))
-        robot_2 = thread.start_new_thread(self.find_robot, (frame_2[0], 't_blue', frame_2[1]))
-        robot_3 = thread.start_new_thread(self.find_robot, (frame_3[0], 't_blue', frame_3[1]))
-        robot_4 = thread.start_new_thread(self.find_robot, (frame_4[0], 't_blue', frame_4[1]))
+        robot_1 = self.yellow_left.find(frame)
+        robot_2 = self.blue_middle.find(frame)
+        robot_3 = self.yellow_middle.find(frame)
+        robot_4 = self.blue_right.find(frame)
 
         # Find ball
-        ball = thread.start_new_thread(self.find_ball, (frame, ))
-        return (robot_1, robot_2, robot_3, robot_4, ball)
+        ball = self.ball_tracker.find(frame)
 
-    def find_robot(self, frame, color, left_offset):
-        """
-        Given the sliced frame, find the location of the robot.
 
-        Params:
-            [np Matrix] frame   Sliced up frame
-            [string] color      Color of the object to find.
-            [int] frame_offset  How many pixels to add to our x-values to get actual position on the field
+        result = (robot_1, robot_2, robot_3, robot_4, ball)
 
-        Returns:
-            [3-tuple (x, y, radius)]    Radius can be either the size of a square with x,y as mid point
-                                        Or simply the radius of a circle
-        """
-        if color == 't_yellow':
-            self.find_yellow_robot()
-        return (0, 0, 5)
+        for val in result:
+            if val is not None:
+                cv2.circle(frame, (val[0][0], val[0][1]), 10, (0, 255, 0), 1)
 
-    def find_yellow_robot(self, frame):
-        pass
+        cv2.imshow('Frame', frame)
+        cv2.waitKey(4)
 
-    def find_ball(self, frame):
-        """
-        Find a ball on the whole pitch. Couple of ideas could be used:
-
-        1. Split into 4/8 sections and search for ball in each
-        2. Use q = queue.Queue() and q.get() which is blocking untill an element is found.
-        3. Once q.get() returns an element return.
-
-        Params:
-            [np Matrix] frame
-
-        Returns:
-            [5-tuple (x, y, radius, direction, speed)]    Radius should be for the circular shape
-        """
-        return (0,0,5,0,0)
-
-    def stop(self):
-        self.active = False
-
-    def get_fps(self):
-        return None if self.time <= 0 else float(self.frame_count) / float(time.time() - self.time)
-
+        return result
