@@ -1,13 +1,13 @@
 import math
 import movement
 
-def Track(tracker, target):
-    pr = MRG(tracker, target)
-    err = PCS(tracker, pr)
-    movement.forward(err[0])
-    movement.turn(err[1])
+def track(tracker, target):
+    pr = mrg(tracker, target)
+    err = pcs(tracker, pr)
+    tracker.forward(err[0])
+    tracker.turn(err[1])
 
-def MRG(self, tracker, target):
+def mrg(tracker, target):
     x = tracker.position[0]
     y = tracker.position[1]
     r = tracker.position[2]
@@ -20,7 +20,7 @@ def MRG(self, tracker, target):
     yr = y + (dd * math.sin(b - g))
     return (xr, yr)
 
-def PCS(self, tracker, (xr, yr)):
+def pcs(tracker, (xr, yr)):
     x = tracker.position[0]
     y = tracker.position[1]
     r = tracker.position[2]

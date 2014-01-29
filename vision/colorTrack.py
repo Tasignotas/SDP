@@ -27,7 +27,7 @@ while(1):
     zone3_hsv = cv2.cvtColor(zone3, cv2.COLOR_BGR2HSV)
     zone4_hsv = cv2.cvtColor(zone4, cv2.COLOR_BGR2HSV)
 
-    # define range of blue color in HSV define thresholds - need to check these values
+    # define range of t_blue color in HSV define thresholds - need to check these values
     #lower_blue = np.array([100,50,50])
     #upper_blue = np.array([150,255,255])
     lower_blue = np.array([1,0,100])
@@ -38,9 +38,9 @@ while(1):
     upper_black = np.array([180,75,75])
 
 # red = (255,0,0) - (100,20,20) RGB
-# yellow = (232,93,0) - (180,100,10) RGB
+# t_yellow = (232,93,0) - (180,100,10) RGB
 
-    # Threshold the HSV zones to get only blue colors
+    # Threshold the HSV zones to get only t_blue colors
     maskz1 = cv2.inRange(zone1_hsv, lower_blue, upper_blue)
     maskz2 = cv2.inRange(zone2_hsv, lower_blue, upper_blue)
     maskz3 = cv2.inRange(zone3_hsv, lower_blue, upper_blue)

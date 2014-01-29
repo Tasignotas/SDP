@@ -46,8 +46,8 @@ roi = frame[r:r+h, c:c+w]
 hsv_roi =  cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
 #mask = cv2.inRange(hsv_roi, np.array((11., 238.,140.)), np.array((19.,255.,255.))) # Yellow objects
 #mask = cv2.inRange(hsv_roi, np.array((0., 240.,140.)), np.array((9.,255.,255.))) # Red objects 
-#mask = cv2.inRange(hsv_roi, np.array((100., 50.,50.)), np.array((150.,255.,255.))) # blue objects
-mask = cv2.inRange(hsv_roi, np.array((88., 50.,50.)), np.array((110.,255.,255.))) # blue objects
+#mask = cv2.inRange(hsv_roi, np.array((100., 50.,50.)), np.array((150.,255.,255.))) # t_blue objects
+mask = cv2.inRange(hsv_roi, np.array((88., 50.,50.)), np.array((110.,255.,255.))) # t_blue objects
 roi_hist = cv2.calcHist([hsv_roi],[0],mask,[180],[0,180])
 cv2.normalize(roi_hist,roi_hist,0,255,cv2.NORM_MINMAX)
 
