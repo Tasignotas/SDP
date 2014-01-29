@@ -35,3 +35,9 @@ class Robot:
 
     def set_possession(self, possession):
         self.possession = possession
+
+    def turn(r):
+        pass
+
+    def move(self, s):
+        pass
