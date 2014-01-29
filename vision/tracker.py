@@ -9,9 +9,9 @@ BLUE_HIGHER = np.array((129, 132,  91))
 
 class Tracker():
     def __init__(self,frame,color,col,row,width,height):
-        self.colors = {"blue":(np.array((95., 50.,50.)), np.array((110.,255.,255.))),
+        self.colors = {"t_blue":(np.array((95., 50.,50.)), np.array((110.,255.,255.))),
                        "red":(np.array((0., 240.,140.)), np.array((9.,255.,255.))),
-                       "yellow":(np.array((9., 50.,  50.)), np.array((11., 255., 255.))),
+                       "t_yellow":(np.array((9., 50.,  50.)), np.array((11., 255., 255.))),
                        "white":(BLUE_LOWER, BLUE_HIGHER)}
         self.lower,self.upper = self.colors[color]
         print self.upper

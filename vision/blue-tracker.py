@@ -125,7 +125,7 @@ class BlueTracker:
             # Convert frame to HSV
             frame_hsv = cv2.cvtColor(self.frame, cv2.COLOR_BGR2XYZ)
 
-            # Create a mask for the yellow T
+            # Create a mask for the t_yellow T
             frame_mask = cv2.inRange(
                 frame_hsv,
                 np.array((1.0, 75.0, 145.0)),

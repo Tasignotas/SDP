@@ -125,7 +125,7 @@ class YellowTracker:
             # Convert frame to HSV
             frame_hsv = cv2.cvtColor(self.frame, cv2.COLOR_BGR2HSV)
 
-            # Create a mask for the yellow T
+            # Create a mask for the t_yellow T
             frame_mask = cv2.inRange(
                 frame_hsv,
                 np.array((0.0, 115.0, 255.0)),

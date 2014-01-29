@@ -60,10 +60,10 @@ class Vision:
         frame_1, frame_2, frame_3, frame_4 = tools.slice(frame)
 
         # Find robots
-        robot_1 = thread.start_new_thread(self.find_robot, (frame_1[0], 'yellow', frame_1[1]))
-        robot_2 = thread.start_new_thread(self.find_robot, (frame_2[0], 'blue', frame_2[1]))
-        robot_3 = thread.start_new_thread(self.find_robot, (frame_3[0], 'blue', frame_3[1]))
-        robot_4 = thread.start_new_thread(self.find_robot, (frame_4[0], 'blue', frame_4[1]))
+        robot_1 = thread.start_new_thread(self.find_robot, (frame_1[0], 't_yellow', frame_1[1]))
+        robot_2 = thread.start_new_thread(self.find_robot, (frame_2[0], 't_blue', frame_2[1]))
+        robot_3 = thread.start_new_thread(self.find_robot, (frame_3[0], 't_blue', frame_3[1]))
+        robot_4 = thread.start_new_thread(self.find_robot, (frame_4[0], 't_blue', frame_4[1]))
 
         # Find ball
         ball = thread.start_new_thread(self.find_ball, (frame, ))
@@ -82,7 +82,7 @@ class Vision:
             [3-tuple (x, y, radius)]    Radius can be either the size of a square with x,y as mid point
                                         Or simply the radius of a circle
         """
-        if color == 'yellow':
+        if color == 't_yellow':
             self.find_yellow_robot()
         return (0, 0, 5)
 

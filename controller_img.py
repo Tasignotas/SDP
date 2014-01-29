@@ -24,7 +24,7 @@ def getPitch(frame):
     return frame
 
 def readFrame(c, xmin, xmax, ymin, ymax):
-    frame = cv2.imread("img/blue/000000%02d.jpg" % c)
+    frame = cv2.imread("img/t_blue/000000%02d.jpg" % c)
     frame = frame[ymin:ymax,xmin:xmax]
     frame = getPitch(frame)
     frame = brighten(frame, 2.0, 50.0)
@@ -33,7 +33,7 @@ def readFrame(c, xmin, xmax, ymin, ymax):
 def run(color):
 
     # Take each frame
-    frame = cv2.imread("img/blue/00000001.jpg")
+    frame = cv2.imread("img/t_blue/00000001.jpg")
 
     xmin,xmax,ymin,ymax = get_crop_coordinates(frame)
     print xmin,xmax,ymin,ymax
@@ -73,4 +73,4 @@ def run(color):
 
     cv2.destroyAllWindows()
     
-run("blue")
+run("t_blue")
