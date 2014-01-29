@@ -6,9 +6,13 @@ BALL_HEIGHT = 5
 
 class Ball:
 
-    def __init__(self):
+    def __init__(self, bid):
+        self.id = bid
         self.dimension = (BALL_LENGTH, BALL_WIDTH, BALL_HEIGHT)
         self.position = (0, 0, 0, 0)
+
+    def get_id(self):
+        return self.id
 
     def set_position(self, x, y, r, v):
         self.position = (x, y, r, v)
