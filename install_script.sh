@@ -35,7 +35,7 @@ python setup.py install --user
 
 echo "Installing nxt-python"
 cd ../nxt-python-2.2.2
-python setup install --user
+python setup.py install --user
 
 cd ~/.local
 
