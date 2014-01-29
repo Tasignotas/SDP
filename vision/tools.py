@@ -41,6 +41,13 @@ def mask_pitch(frame, points):
     mask = cv2.inRange(hsv_mask, (0,0,0), (0,0,0))
     return cv2.bitwise_and(frame, frame, mask=mask)
 
+def find_extremes(coords):
+    left = min(coords, key=lambda x: x[0])[0]
+    right = max(coords, key=lambda x:x[0])[0]
+    top = min(coords, key=lambda x:x[1])[1]
+    bottom = max(coords, key=lambda x:x[1])[1]
+    return (left, right, top, bottom)
+
 def find_crop_coordinates(frame, keypoints=None, width=520, height=285):
     """
     Get crop coordinated for the actual image based on masked version.
