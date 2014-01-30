@@ -91,4 +91,4 @@ class Defender(Robot):
 
 
 if __name__ == '__main__':
-    c = Controller().wow()
+    c = Controller().wow()  # Such controller
