@@ -22,7 +22,7 @@ class Configure:
 		self.polygon = self.polygons = []
 		self.points = []
 
-		keys = ['outline', 'left', 'left-middle', 'right-middle', 'right']
+		keys = ['outline', 'Zone_0', 'Zone_1', 'Zone_2', 'Zone_3']
 		self.data = self.drawing = {}
 
 		# Create keys
@@ -49,10 +49,10 @@ class Configure:
 		# Get various data about the image from the user
 		self.get_pitch_outline()
 
-		self.get_zone('left', 'draw LEFT Defender')
-		self.get_zone('left-middle', 'draw LEFT Attacker')
-		self.get_zone('right-middle', 'draw RIGHT Attacker')
-		self.get_zone('right', 'draw RIGHT Defender')
+		self.get_zone('Zone_0', 'draw LEFT Defender')
+		self.get_zone('Zone_1', 'draw LEFT Attacker')
+		self.get_zone('Zone_2', 'draw RIGHT Attacker')
+		self.get_zone('Zone_3', 'draw RIGHT Defender')
 
 		print 'Press any key to finish.'
 		cv2.waitKey(0)
