@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-from vision import Camera
 import tools
 
 
