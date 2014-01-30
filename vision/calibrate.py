@@ -89,7 +89,7 @@ class Configure:
 
 		# Setup black mask to remove overflows
 		self.image = tools.mask_pitch(self.image, self.data[self.drawing])
-		
+
 		# Get crop size based on points
 		size = tools.find_crop_coordinates(self.image, self.data[self.drawing])
 		# Crop
