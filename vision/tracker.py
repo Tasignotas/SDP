@@ -23,7 +23,11 @@ class Tracker:
     def get_min_enclousing_circle(self, contours):
         return cv2.minEnclosingCircle(contours)
 
-    def find(self, frame):
+    def find(self, frame, queue):
+        """
+        Find object definied in init.
+        Put result into the queue to retrieve by main process.
+        """
         # Crop frame
         frame = frame[self.crop[2]:self.crop[3], self.crop[0]:self.crop[1]]
 
@@ -55,6 +59,7 @@ class Tracker:
 
         if len(contours) <= 0 or len(contours[0]) < 5:
             print 'No contours found.'
+            queue.put(None)
         else:
             # Trim contours matrix
             cnt = contours[0]
@@ -65,4 +70,4 @@ class Tracker:
             x = int(x)
             y = int(y)
 
-            return ( (x + self.offset, y), 0, 0)
+            queue.put(((x + self.offset, y), 0, 0))
