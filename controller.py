@@ -16,9 +16,6 @@ class Controller:
         # self.attacker = Attacker()
         # self.defender = Defender()
 
-
-        
-
     def wow(self):
         """
         Main flow of the program. Run the controller with vision and planning combined.
@@ -32,10 +29,6 @@ class Controller:
             # Execute action
             # self.attacker.execute(actions[0])
             # self.defender.execute(actions[1])
-
-            # TODO: Display vision GUI/feed
-
-
 
 
 class Robot:
@@ -68,7 +61,7 @@ class Attacker(Robot):
     Attacker implementation.
     """
 
-    def __init__ (self, connectionName,leftMotorPort,rightMotorPort,kickerMotorPort,lightSensorPort): 
+    def __init__ (self, connectionName,leftMotorPort,rightMotorPort,kickerMotorPort,lightSensorPort):
         """
         Do the same setup as the Robot class, as well as anything specific to the Attacker.
         """
@@ -95,4 +88,5 @@ class Defender(Robot):
     pass
 
 
-c = Controller().wow()
+if __name__ == '__main__':
+    c = Controller().wow()
