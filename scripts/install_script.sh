@@ -40,6 +40,6 @@ python setup.py install --user
 cd ~/.local
 
 echo "Removing temp directory"
-#rm -rf tmp/
+rm -rf tmp/
 
 echo "Done"
