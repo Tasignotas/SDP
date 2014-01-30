@@ -1,4 +1,3 @@
-import cv2
 from vision.vision import Vision
 from planning.planner import Planner
 from vision.tracker import Tracker
