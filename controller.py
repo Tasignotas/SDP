@@ -11,7 +11,7 @@ class Controller:
 
     def __init__(self, port=0):
         self.vision = Vision()
-        # self.planner = Planner()
+        self.planner = Planner()
         # self.attacker = Attacker()
         # self.defender = Defender()
 
@@ -20,10 +20,13 @@ class Controller:
         Main flow of the program. Run the controller with vision and planning combined.
         """
         while True:
-            # Get frame
+            # Find object positions
             positions = self.vision.locate()
-            print positions
-            # actions = self.planner.plan(*positions)
+            print 'Positions:', positions
+
+            # Find appropriate action
+            actions = self.planner.plan(*positions)
+            print 'Actions:', actions
 
             # Execute action
             # self.attacker.execute(actions[0])
