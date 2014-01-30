@@ -1,6 +1,4 @@
 import cv2
-import time
-import thread
 import tools
 from tracker import Tracker
 import math
@@ -12,14 +10,18 @@ class Vision:
     """
 
     def __init__(self, left='yellow', port=0):
+        # Capture video port
         self.capture = cv2.VideoCapture(port)
-        
+
+        # Read in couple of frames to clear corrupted frames
         for i in range(5):
             status, frame = self.capture.read()
 
+        # Retrieve crop values from calibration
         self.crop_values = tools.find_extremes(
             tools.get_calibration('vision/calibrate.json')['outline'])
 
+        # Temporary: divide zones into section
         zone_size = int(math.floor(self.crop_values[1] / 4.0))
 
         self.ball_tracker = Tracker(
@@ -30,6 +32,7 @@ class Vision:
         zone3 = (zone_size * 2, zone_size * 3)
         zone4 = (zone_size * 3, zone_size * 4)
 
+        # Assign trackers
         self. yellow_left = Tracker(
             'yellow', (zone1[0], zone1[1], 0, self.crop_values[3]), 0)
 
