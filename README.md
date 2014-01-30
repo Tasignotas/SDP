@@ -1,5 +1,7 @@
 ##Systems Design Project - Group 7##
 
+![alt text](http://i2.kym-cdn.com/photos/images/original/000/581/723/a8b.jpg "Such Team")
+
 ------
 ###Installation
 
