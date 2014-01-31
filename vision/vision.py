@@ -3,6 +3,7 @@ import tools
 from tracker import BallTracker,RobotTracker
 import math
 from multiprocessing import Process, Queue
+import os
 
 
 class Vision:
@@ -72,11 +73,11 @@ class Vision:
 
         # Define processes
         processes = [
-            Process(target=self.yellow_left.find, args=((frame, robot_1_queue))),
-            Process(target=self.blue_middle.find, args=((frame, robot_2_queue))),
-            Process(target=self.yellow_middle.find, args=((frame, robot_3_queue))),
-            Process(target=self.blue_right.find, args=((frame, robot_4_queue))),
-            Process(target=self.ball_tracker.find, args=((frame, ball_queue)))
+            Process(target=self.yellow_left.find, args=((frame, robot_1_queue, 1))),
+            Process(target=self.blue_middle.find, args=((frame, robot_2_queue, 2))),
+            Process(target=self.yellow_middle.find, args=((frame, robot_3_queue, 3))),
+            Process(target=self.blue_right.find, args=((frame, robot_4_queue, 4))),
+            Process(target=self.ball_tracker.find, args=((frame, ball_queue, 5)))
         ]
 
         # Start processes
@@ -106,5 +107,11 @@ class Vision:
 
         cv2.imshow('Frame', frame)
         cv2.waitKey(4)
+
+        # MULTIPROCESSING DEBUG
+
+        # if hasattr(os, 'getppid'):  # only available on Unix
+        #     print 'parent process:', os.getppid()
+        # print 'process id:', os.getpid()
 
         return result
