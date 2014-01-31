@@ -47,7 +47,7 @@ class Vision:
         self.blue_right = RobotTracker(
             'blue', (zone4[0], zone4[1], 0, self.crop_values[3]), zone_size * 3)
 
-    def locate(self):
+    def locate(self,prevPos):
         """
         Find objects on the pitch using multiprocessing.
 

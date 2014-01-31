@@ -19,7 +19,7 @@ class Tracker:
         self.blur = blur
         self.color = COLORS[color]
         self.offset = offset
-        self.oldPos = None
+        #self.oldPos = (50,50)
 
     def get_min_enclousing_circle(self, contours):
         return cv2.minEnclosingCircle(contours)
@@ -57,9 +57,6 @@ class Tracker:
             cv2.CHAIN_APPROX_SIMPLE
         )
 
-        cv2.imshow('mask' + str(i), frame_mask)
-        cv2.waitKey(4)
-
 
         if len(contours) <= 0 or len(contours[0]) < 5:
             print 'No contours found.'
@@ -76,15 +73,18 @@ class Tracker:
  
             newX,newY = (x + self.offset, y)
            
-            if self.oldPos:
-                angle,changeX,changeY = self.getOrientation((newX,newY))
-                speed = np.sqrt(changeX**2 + changeY**2) # in pixels per frame
-                
+            if self.oldPos:#==(-1,-1):
+                self.oldPos = (newX,newY)
+#            angle,changeX,changeY = self.getOrientation((newX,newY))
+            vector = self.getOrientation((newX,newY))#,prevPos)
+            angle = vector[0]
+            changeX= vector[1]
+            changeY = vector[2]
+            speed = np.sqrt(changeX**2 + changeY**2) # in pixels per frame                
             #((x,y),orientation,speed)
-                queue.put(((x + self.offset, y), angle, speed))
-            else:
-                queue.put(((x+self.offset,y),0,0))
             self.oldPos = (newX,newY)
+            queue.put(((x + self.offset, y), angle, speed))
+
 
     def getOrientation(self):
         pass
@@ -92,13 +92,13 @@ class Tracker:
 class RobotTracker(Tracker):
     def __init__(self, color, crop, offset, contrast=1.0, blur=1):
         Tracker.__init__(self, color, crop, offset, contrast=1.0, blur=1)
-        self.oldPos = True
+        #self.oldPos = True
 
     def getOrientation(self,newPos):
-        return (0,0,0)
+        return (10,0,0)
         
 class BallTracker(Tracker):
-    def getOrientation(self,newPos):
+    def getOrientation(self,(newX,newY)):#,oldPos):
         oldX,oldY = self.oldPos
         changeX = newX-oldX
         changeY = newY-oldY 

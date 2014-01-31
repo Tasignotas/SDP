@@ -19,14 +19,15 @@ class Controller:
         """
         Main flow of the program. Run the controller with vision and planning combined.
         """
+        positions = (None,None,None,None,((0,0),0,0))
         while True:
             # Find object positions
-            positions = self.vision.locate()
-            print 'Positions:', positions
+            positions = self.vision.locate(positions[4][1])
+            print 'Positions:', positions[4]
 
             # Find appropriate action
             actions = self.planner.plan(*positions)
-            print 'Actions:', actions
+            #print 'Actions:', actions
 
             # Execute action
             # self.attacker.execute(actions[0])
