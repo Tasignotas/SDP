@@ -36,6 +36,9 @@ class Tracker:
         #self.oldPos = (50,50)
 
     def get_min_enclousing_circle(self, contours):
+        """
+        Find the smallest enclousing circle for an object given contours
+        """
         return cv2.minEnclosingCircle(contours)
 
     def find(self, frame, queue, i=0):
