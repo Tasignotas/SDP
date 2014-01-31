@@ -4,19 +4,33 @@ import math
 import tools
 
 
-COLORS = {
-    'red': (np.array((0.0, 114.0, 250.0)), np.array((5.0, 255.0, 255.0))),
-    'yellow': (np.array((0.0, 193.0, 137.0)), np.array((50.0, 255.0, 255.0))),
-    'blue': (np.array((87.0, 147.0, 82.0)), np.array((104.0, 255.0, 255.0)))
+CCOLORS = {
+    'red': [
+        (np.array((0.0, 114.0, 250.0)), np.array((5.0, 255.0, 255.0)), 1.0, 1)
+    ],
+    'yellow': [
+        (np.array((0.0, 193.0, 137.0)), np.array((50.0, 255.0, 255.0)), 1.0, 1)
+    ],
+    'blue': [
+        (np.array((87.0, 147.0, 82.0)), np.array((104.0, 255.0, 255.0)), 1.0, 1),
+        (np.array((91.0, 118.0, 90.0)), np.array((169.0, 255.0, 255.0)), 1.0, 1)
+    ]
 }
 
 
 class Tracker:
 
-    def __init__(self, color, crop, offset, contrast=1.0, blur=1):
+    def __init__(self, color, crop, offset):
+        """
+        Initialize tracker.
+
+        Params:
+            [string] color      the name of the color to pass in
+            [(left-min, right-max, top-min, bot-max)] 
+                                crop  crop coordinates
+            [int] offset        how much to offset the coordinates
+        """
         self.crop = crop
-        self.contrast = contrast
-        self.blur = blur
         self.color = COLORS[color]
         self.offset = offset
         #self.oldPos = (50,50)
