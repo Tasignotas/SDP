@@ -1,6 +1,6 @@
 import cv2
 import tools
-from tracker import BallTracker,RobotTracker
+from tracker import BallTracker, RobotTracker, Tracker
 import math
 from multiprocessing import Process, Queue
 import os
@@ -26,8 +26,10 @@ class Vision:
         # Temporary: divide zones into section
         zone_size = int(math.floor(self.crop_values[1] / 4.0))
 
-        self.ball_tracker = BallTracker(
-            'red', (0, self.crop_values[1], 0, self.crop_values[3]), 0, 100.0, 5)
+
+
+        # self.ball_tracker = Tracker(
+            # 'red', (0, self.crop_values[1], 0, self.crop_values[3]), 0)
 
         zone1 = (0, zone_size)
         zone2 = (zone_size, 2 * zone_size)
@@ -47,7 +49,7 @@ class Vision:
         self.blue_right = RobotTracker(
             'blue', (zone4[0], zone4[1], 0, self.crop_values[3]), zone_size * 3)
 
-    def locate(self,prevPos):
+    def locate(self):
         """
         Find objects on the pitch using multiprocessing.
 
@@ -69,15 +71,15 @@ class Vision:
         robot_3_queue = Queue()
         robot_4_queue = Queue()
 
-        ball_queue = Queue()
+        # ball_queue = Queue()
 
         # Define processes
         processes = [
-            Process(target=self.yellow_left.find, args=((frame, robot_1_queue, 1))),
-            Process(target=self.blue_middle.find, args=((frame, robot_2_queue, 2))),
-            Process(target=self.yellow_middle.find, args=((frame, robot_3_queue, 3))),
-            Process(target=self.blue_right.find, args=((frame, robot_4_queue, 4))),
-            Process(target=self.ball_tracker.find, args=((frame, ball_queue, 5)))
+            Process(target=self.yellow_left.find, args=((frame, robot_1_queue))),
+            Process(target=self.blue_middle.find, args=((frame, robot_2_queue))),
+            Process(target=self.yellow_middle.find, args=((frame, robot_3_queue))),
+            Process(target=self.blue_right.find, args=((frame, robot_4_queue))),
+            # Process(target=self.ball_tracker.find, args=((frame, ball_queue, 5)))
         ]
 
         # Start processes
@@ -91,13 +93,13 @@ class Vision:
         robot_4 = robot_4_queue.get()
 
         # Find ball
-        ball = ball_queue.get()
+        # ball = ball_queue.get()
 
         # terminate processes
         for process in processes:
             process.join()
 
-        result = (robot_1, robot_2, robot_3, robot_4, ball)
+        result = (robot_1, robot_2, robot_3, robot_4, None)
 
         # Draw results
         # TODO: Convert to a process!
