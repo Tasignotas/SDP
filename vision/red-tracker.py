@@ -80,6 +80,7 @@ class RedTracker:
         cv2.circle(self.frame, bottommost, 2, (0,0,0), -1)
 
     def run(self, gui=True, port=0):
+	predictionpoints = []
         status = self.setup_camera(port)
 
         if not status:
@@ -154,9 +155,51 @@ class RedTracker:
                 # Find extreme values - left most, topmost, rightmost and bottom most values of the T
                 # self.draw_extremes(cnt)
 
+		point,radius = self.get_min_enclousing_circle(cnt)
+                alpha = 50
+                newX,newY = point
+#                if oldPos:
+
+            
+		if len(predictionpoints) > 1:
+			predictionpoints.pop(0)
+			predictionpoints.append(point)
+			x1, y1 = predictionpoints[0][0], predictionpoints[0][1]
+			x2, y2 = predictionpoints[1][0], predictionpoints[1][1]
+###############
+                        oldX,oldY = x1,y1
+                        changeX = newX-oldX
+                        changeY = newY-oldY
+                        cv2.line(self.frame,(int(newX),int(newY)),(int(newX+alpha*changeX),int(newY+alpha*changeY)),(0,255,0),1)
+###############
+
+#			try:
+#				gradient = (y2-y1)/(x2-x1)
+#			except ZeroDivisionError:
+#				gradient = 0
+#			constant = y2-gradient*x2
+#
+#			if abs(x2-x1) >0.25 and abs(y2-y1)>0.25: #only draw line if it moves fast enough.
+#				if gradient <0:	#negative gradient
+#					if x2 > x1:
+#						cv2.line(self.frame, predictionpoints[0], (-constant/gradient,0), (0, 255, 0), 2)
+#					else:
+#						cv2.line(self.frame, predictionpoints[0], (0,constant), (0, 255, 0), 2)
+#				else: #positive gradient
+#					if x2 > x1:
+#						cv2.line(self.frame, predictionpoints[0], ((285-constant)/gradient,285), (0, 255, 0), 2) #hardcoded the so called edge, value 285 needs to be readjusted
+#					else:
+#						cv2.line(self.frame, predictionpoints[0], (0,constant), (0, 255, 0), 2)
+#			#calculating velocity, sampling over two frames. Origin is at top left corner of video feed.
+#			velocity = [(y2-y1)*1000/25,(x2-x1)*1000/25] #units are pixels per millisecond
+#			#print "Velocity =", velocity[1],"i +", velocity[0],"j"
+#
+		else:
+			predictionpoints.append(point)
+
             # Display feed
             if gui:
-                cv2.imshow('Yellow Tracker', self.frame)
+                cv2.imshow('Red Ball Tracker', self.frame)
 
             # Wait for 4ms before continuing, terminate by pressing 'q'
             k = cv2.waitKey(2) & 0xFF

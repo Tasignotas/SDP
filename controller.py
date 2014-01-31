@@ -1,4 +1,3 @@
-import cv2
 from vision.vision import Vision
 from planning.planner import Planner
 from vision.tracker import Tracker
@@ -12,30 +11,27 @@ class Controller:
 
     def __init__(self, port=0):
         self.vision = Vision()
-        # self.planner = Planner()
+        self.planner = Planner()
         # self.attacker = Attacker()
         # self.defender = Defender()
-
-
-        
 
     def wow(self):
         """
         Main flow of the program. Run the controller with vision and planning combined.
         """
+        positions = (None,None,None,None,((0,0),0,0))
         while True:
-            # Get frame
-            positions = self.vision.locate()
-            print positions
-            # actions = self.planner.plan(*positions)
+            # Find object positions
+            positions = self.vision.locate(positions[4][1])
+            print 'Positions:', positions[4]
+
+            # Find appropriate action
+            actions = self.planner.plan(*positions)
+            #print 'Actions:', actions
 
             # Execute action
             # self.attacker.execute(actions[0])
             # self.defender.execute(actions[1])
-
-            # TODO: Display vision GUI/feed
-
-
 
 
 class Robot:
@@ -68,7 +64,7 @@ class Attacker(Robot):
     Attacker implementation.
     """
 
-    def __init__ (self, connectionName,leftMotorPort,rightMotorPort,kickerMotorPort,lightSensorPort): 
+    def __init__ (self, connectionName,leftMotorPort,rightMotorPort,kickerMotorPort,lightSensorPort):
         """
         Do the same setup as the Robot class, as well as anything specific to the Attacker.
         """
@@ -95,4 +91,5 @@ class Defender(Robot):
     pass
 
 
-c = Controller().wow()
+if __name__ == '__main__':
+    c = Controller().wow()  # Such controller

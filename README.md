@@ -1,8 +1,16 @@
 ##Systems Design Project - Group 7##
 
+![alt text](http://i2.kym-cdn.com/photos/images/original/000/581/723/a8b.jpg "Such Team")
+
 ------
 ###Installation
 
+#### Linux/DICE
+Python-nxt is installed globally on DICE on level 3 of AT.
+
+To install [bluez](http://www.bluez.org/) please execute `sh scripts/install-bluez.sh`
+
+#### Debian with root access
 [Python-nxt](https://code.google.com/p/nxt-python/) requires [bluez](http://www.bluez.org/) to be installed in order to communicate with the NXT over BlueTooth correctly. Assuming you are on a debian based Linux system, execute the following:
 
 *sudo apt-get install bluez*.
