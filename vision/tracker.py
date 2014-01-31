@@ -23,7 +23,7 @@ class Tracker:
     def get_min_enclousing_circle(self, contours):
         return cv2.minEnclosingCircle(contours)
 
-    def find(self, frame, queue):
+    def find(self, frame, queue, i=0):
         """
         Find object definied in init.
         Put result into the queue to retrieve by main process.
@@ -55,6 +55,9 @@ class Tracker:
             cv2.RETR_TREE,
             cv2.CHAIN_APPROX_SIMPLE
         )
+
+        cv2.imshow('mask' + str(i), frame_mask)
+        cv2.waitKey(4)
 
 
         if len(contours) <= 0 or len(contours[0]) < 5:
