@@ -1,6 +1,6 @@
 import cv2
 import tools
-from tracker import Tracker
+from tracker import BallTracker,RobotTracker
 import math
 from multiprocessing import Process, Queue
 
@@ -25,7 +25,7 @@ class Vision:
         # Temporary: divide zones into section
         zone_size = int(math.floor(self.crop_values[1] / 4.0))
 
-        self.ball_tracker = Tracker(
+        self.ball_tracker = BallTracker(
             'red', (0, self.crop_values[1], 0, self.crop_values[3]), 0, 100.0, 5)
 
         zone1 = (0, zone_size)
@@ -34,16 +34,16 @@ class Vision:
         zone4 = (zone_size * 3, zone_size * 4)
 
         # Assign trackers
-        self. yellow_left = Tracker(
+        self. yellow_left = RobotTracker(
             'yellow', (zone1[0], zone1[1], 0, self.crop_values[3]), 0)
 
-        self. yellow_middle = Tracker(
+        self. yellow_middle = RobotTracker(
             'yellow', (zone3[0], zone3[1], 0, self.crop_values[3]), zone_size * 2)
 
-        self.blue_middle = Tracker(
+        self.blue_middle = RobotTracker(
             'blue', (zone2[0], zone2[1], 0, self.crop_values[3]), zone_size)
 
-        self.blue_right = Tracker(
+        self.blue_right = RobotTracker(
             'blue', (zone4[0], zone4[1], 0, self.crop_values[3]), zone_size * 3)
 
     def locate(self):
