@@ -87,7 +87,6 @@ class RobotTracker(Tracker):
         """
         self.crop = crop
         self.color = COLORS[color][0]
-        print self.color
         self.offset = offset
 
     def find(self, frame, queue):
@@ -130,17 +129,55 @@ class RobotTracker(Tracker):
 
         
 class BallTracker(Tracker):
-    pass
+    
+    def __init__(self, crop, offset):
+        """
+        Initialize tracker.
 
-    # def getOrientation(self,(newX,newY)):#,oldPos):
-    #     oldX,oldY = self.oldPos
-    #     changeX = newX-oldX
-    #     changeY = newY-oldY 
-    #             #alpha = 100
-    #             #cv2.line(frame,(newX,newY),(newX+alpha*changeX,newY+alpha*changeY),(0,255,0),3)
-    #     k = np.arctan2(changeX,changeY)
-    #     if k<0:
-    #         k = np.abs(k) + np.pi
-    #     angle = k * 180/np.pi
+        Params:
+            [string] color      the name of the color to pass in
+            [(left-min, right-max, top-min, bot-max)] 
+                                crop  crop coordinates
+            [int] offset        how much to offset the coordinates
+        """
+        self.crop = crop
+        self.color = COLORS['red'][0]
+        self.offset = offset
 
-    #     return (angle,changeX,changeY)
+    def find(self, frame, queue):
+        contours, hierarchy = self.preprocess(
+            frame,
+            self.crop,
+            self.color['min'], 
+            self.color['max'], 
+            self.color['contrast'], 
+            self.color['blur']
+        )
+
+        if len(contours) <= 0 or len(contours[0]) < 5:
+            print 'No contours found.'
+            queue.put(None)
+        else:
+            # Trim contours matrix
+            cnt = contours[0]
+
+            # Get center
+            (x, y), radius = self.get_min_enclousing_circle(cnt)
+
+            x = int(x)
+            y = int(y)
+ 
+#             newX,newY = (x + self.offset, y)
+           
+#             if self.oldPos:#==(-1,-1):
+#                 self.oldPos = (newX,newY)
+# #            angle,changeX,changeY = self.getOrientation((newX,newY))
+#             vector = self.getOrientation((newX,newY))#,prevPos)
+#             angle = vector[0]
+#             changeX= vector[1]
+#             changeY = vector[2]
+#             speed = np.sqrt(changeX**2 + changeY**2) # in pixels per frame                
+#             #((x,y),orientation,speed)
+#             self.oldPos = (newX,newY)
+            angle, speed = None, None
+            queue.put(((x + self.offset, y), angle, speed))
