@@ -3,6 +3,7 @@ import tools
 from tracker import Tracker
 import math
 from multiprocessing import Process, Queue
+import os
 
 
 class Vision:
@@ -106,5 +107,11 @@ class Vision:
 
         cv2.imshow('Frame', frame)
         cv2.waitKey(4)
+
+        # MULTIPROCESSING DEBUG
+
+        # if hasattr(os, 'getppid'):  # only available on Unix
+        #     print 'parent process:', os.getppid()
+        # print 'process id:', os.getpid()
 
         return result
