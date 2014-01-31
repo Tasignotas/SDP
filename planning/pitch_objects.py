@@ -26,6 +26,15 @@ class Coordinate(object):
         self.y = y
 
 
+    def get_position(self):
+        return self.x, self.y
+
+
+    def set_position(self, x, y):
+        self.x = x
+        self.y = y
+
+
     def __repr__(self):
         return 'x: %s, y: %s\n' % (self.x, self.y)
 
@@ -53,21 +62,12 @@ class Vector(Coordinate):
         self.velocity = velocity
 
 
-    def get_position(self):
-        return self.x, self.y
-
-
     def get_orientation(self):
         return self.orientation
 
 
     def get_velocity(self):
         return self.velocity
-
-
-    def set_position(self, x, y):
-        self.x = x
-        self.y = y
 
 
     def set_orientation(self, orientation):
