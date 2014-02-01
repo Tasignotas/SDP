@@ -6,12 +6,15 @@ from multiprocessing import Process, Queue
 import os
 
 
+TEAM_COLORS = set(['yellow', 'blue'])
+
+
 class Vision:
     """
     Locate objects on the pitch.
     """
 
-    def __init__(self, left='yellow', port=0):
+    def __init__(self, side='left', color='yellow', port=0):
         # Capture video port
         self.capture = cv2.VideoCapture(port)
 
@@ -26,6 +29,7 @@ class Vision:
         # Temporary: divide zones into section
         zone_size = int(math.floor(self.crop_values[1] / 4.0))
 
+
         self.ball_tracker = BallTracker(
             (0, self.crop_values[1], 0, self.crop_values[3]), 0)
 
@@ -34,18 +38,29 @@ class Vision:
         zone3 = (zone_size * 2, zone_size * 3)
         zone4 = (zone_size * 3, zone_size * 4)
 
-        # Assign trackers
-        self. yellow_left = RobotTracker(
-            'yellow', (zone1[0], zone1[1], 0, self.crop_values[3]), 0)
+        # Do set difference to find the other color - if is too long :)
+        opponent_color = (TEAM_COLORS - set([color])).pop()
 
-        self. yellow_middle = RobotTracker(
-            'yellow', (zone3[0], zone3[1], 0, self.crop_values[3]), zone_size * 2)
+        if side == 'left':
+            self.us = [
+                RobotTracker(color, (zone1[0], zone1[1], 0, self.crop_values[3]), 0),   # defender
+                RobotTracker(color, (zone3[0], zone3[1], 0, self.crop_values[3]), zone_size * 2) # attacker
+            ]
 
-        self.blue_middle = RobotTracker(
-            'blue', (zone2[0], zone2[1], 0, self.crop_values[3]), zone_size)
+            self.opponents = [
+                RobotTracker(opponent_color, (zone2[0], zone2[1], 0, self.crop_values[3]), zone_size),
+                RobotTracker(opponent_color, (zone4[0], zone4[1], 0, self.crop_values[3]), zone_size * 3)
+            ]
+        else:
+            self.us = [
+                RobotTracker(color, (zone2[0], zone2[1], 0, self.crop_values[3]), zone_size),
+                RobotTracker(color, (zone4[0], zone4[1], 0, self.crop_values[3]), zone_size * 3)
+            ]
 
-        self.blue_right = RobotTracker(
-            'blue', (zone4[0], zone4[1], 0, self.crop_values[3]), zone_size * 3)
+            self.opponents = [
+                RobotTracker(opponent_color, (zone1[0], zone1[1], 0, self.crop_values[3]), 0),   # defender
+                RobotTracker(opponent_color, (zone3[0], zone3[1], 0, self.crop_values[3]), zone_size * 2)
+            ]
 
     def locate(self):
         """
@@ -73,10 +88,10 @@ class Vision:
 
         # Define processes
         processes = [
-            Process(target=self.yellow_left.find, args=((frame, robot_1_queue))),
-            Process(target=self.blue_middle.find, args=((frame, robot_2_queue))),
-            Process(target=self.yellow_middle.find, args=((frame, robot_3_queue))),
-            Process(target=self.blue_right.find, args=((frame, robot_4_queue))),
+            Process(target=self.us[0].find, args=((frame, robot_1_queue))),
+            Process(target=self.us[1].find, args=((frame, robot_2_queue))),
+            Process(target=self.opponents[0].find, args=((frame, robot_3_queue))),
+            Process(target=self.opponents[1].find, args=((frame, robot_4_queue))),
             Process(target=self.ball_tracker.find, args=((frame, ball_queue)))
         ]
 
