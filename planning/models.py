@@ -198,6 +198,8 @@ class World:
 
 
     def __init__(self, our_color, our_side):
+        assert our_side in ['left', 'right']
+        assert our_color in ['yellow', 'blue']
         self.pitch = Pitch()
         self.our_color = our_color
         self.our_side = our_side
