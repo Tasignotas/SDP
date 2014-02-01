@@ -1,11 +1,16 @@
+from models import *
 
 
 class Planner:
 
-    def __init__(self):
-        pass
+    def __init__(self, our_color, our_side):
+        self.world = World(our_color, our_side)
 
-    def plan(self, robot_1, robot_2, robot_3, robot_4, ball):
+    def update_and_plan(self, position_dict):
+        self.world.update_positions(position_dict)
+        return self.plan()
+
+    def plan(self):
         """
         Given the robots and the ball, find the most appropriate action.
 
