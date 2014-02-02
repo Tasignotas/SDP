@@ -7,6 +7,7 @@ import os
 
 
 TEAM_COLORS = set(['yellow', 'blue'])
+SIDES = ['left', 'right']
 
 
 class Vision:
@@ -15,6 +16,13 @@ class Vision:
     """
 
     def __init__(self, side='left', color='yellow', port=0):
+
+        if color not in TEAM_COLORS:
+            print 'Incorrect color assignment.', 'Valid colors are:', TEAM_COLORS
+            return
+        if side not in SIDES:
+            print 'Incorrect side assignment.', 'Valid sides are:', SIDES
+
         # Capture video port
         self.capture = cv2.VideoCapture(port)
 
