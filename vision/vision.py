@@ -100,6 +100,14 @@ class Vision:
 
         # Find robots and ball, use queue to avoid deadlock and share resources
         positions = [q.get() for q in queues]
+        
+        if positions[4]:
+            objects[4].oldPos.append(positions[4][0])
+        if len(objects[4].oldPos) > 5:
+            objects[4].oldPos.pop(0)
+        #for i in objects:
+        print objects[4].oldPos
+            
 
         # terminate processes
         for process in processes:

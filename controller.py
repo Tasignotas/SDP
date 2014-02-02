@@ -23,7 +23,7 @@ class Controller:
         while True:
             # Find object positions
             positions = self.vision.locate()
-            # print 'Positions:', positions[4]
+            print 'Positions:', positions[4]
 
             # Find appropriate action
             actions = self.planner.plan(*positions)

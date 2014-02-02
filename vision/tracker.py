@@ -100,7 +100,7 @@ class RobotTracker(Tracker):
         )
 
         if len(contours) <= 0 or len(contours[0]) < 5:
-            print 'No contours found.'
+           # print 'No contours found.'
             queue.put(None)
         else:
             # Trim contours matrix
@@ -129,7 +129,7 @@ class RobotTracker(Tracker):
 
         
 class BallTracker(Tracker):
-    
+        
     def __init__(self, crop, offset):
         """
         Initialize tracker.
@@ -143,7 +143,8 @@ class BallTracker(Tracker):
         self.crop = crop
         self.color = COLORS['red'][0]
         self.offset = offset
-        self.oldPos = None
+        #self.oldPos = (0,0)#None
+        self.oldPos = [(0,0)]
 
     def find(self, frame, queue):
         contours, hierarchy = self.preprocess(
@@ -170,8 +171,8 @@ class BallTracker(Tracker):
  
             newX,newY = (x + self.offset, y)
            
-            if not self.oldPos:#==(-1,-1):
-                self.oldPos = (newX,newY)
+            #if not self.oldPos:#==(-1,-1):
+                #self.oldPos = (0,0)
  #            angle,changeX,changeY = self.getOrientation((newX,newY))
             vector = self.getOrientation((newX,newY))#,prevPos)
             angle = vector[0]
@@ -179,20 +180,25 @@ class BallTracker(Tracker):
             changeY = vector[2]
             speed = np.sqrt(changeX**2 + changeY**2) # in pixels per frame                
              #((x,y),orientation,speed)
-            self.oldPos = (newX,newY)
+            #self.oldPos = (0,0)
             #return ((x + self.offset, y), angle, speed)
             #angle, speed = None, None
             queue.put(((x + self.offset, y), angle, speed))
 
     def getOrientation(self,newPos):
-        oldX,oldY = self.oldPos
+#        if self.
+        oldX,oldY = self.oldPos[-1]
         changeX = newPos[0]-oldX
-        changeY = newPos[1]-oldY 
+        changeY = newPos[1]-oldY
+        if np.abs(changeX) <2 or np.abs(changeY) <2:
+            changeX = newPos[0] - self.oldPos[0][0]
+            changeY = newPos[1] - self.oldPos[0][1]
                  #alpha = 100
                  #cv2.line(frame,(newX,newY),(newX+alpha*changeX,newY+alpha*changeY),(0,255,0),3)
-        k = np.arctan2(changeX,changeY)
-        if k<0:
-            k = np.abs(k) + np.pi
-        angle = k * 180/np.pi
-        
+        k = np.arctan2(changeY,changeX)
+        #if k<0:
+        #k = np.abs(k) + np.pi
+        #angle = k * 180/np.pi
+        angle = np.degrees(k)
+        print (changeX,changeY) 
         return (angle,changeX,changeY)
