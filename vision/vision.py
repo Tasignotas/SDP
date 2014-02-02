@@ -67,6 +67,7 @@ class Vision:
         Find objects on the pitch using multiprocessing.
 
         Returns:
+            [5-tuple] Location of the robots and the ball
         """
         status, frame = self.capture.read()
         if not status:
