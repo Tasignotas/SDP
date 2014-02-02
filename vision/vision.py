@@ -117,4 +117,4 @@ class Vision:
         #     print 'parent process:', os.getppid()
         # print 'process id:', os.getpid()
 
-        return tuple(postions)
+        return tuple(positions)
