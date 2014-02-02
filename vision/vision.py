@@ -24,7 +24,7 @@ class Vision:
 
         # Retrieve crop values from calibration
         self.crop_values = tools.find_extremes(
-            tools.get_calibration('calibrate.json')['outline'])
+            tools.get_calibration('vision/calibrate.json')['outline'])
 
         # Temporary: divide zones into section
         zone_size = int(math.floor(self.crop_values[1] / 4.0))
@@ -117,4 +117,4 @@ class Vision:
         #     print 'parent process:', os.getppid()
         # print 'process id:', os.getpid()
 
-        return tuple(postions)
+        return tuple(positions)

@@ -143,6 +143,7 @@ class BallTracker(Tracker):
         self.crop = crop
         self.color = COLORS['red'][0]
         self.offset = offset
+        self.oldPos = None
 
     def find(self, frame, queue):
         contours, hierarchy = self.preprocess(
@@ -167,17 +168,31 @@ class BallTracker(Tracker):
             x = int(x)
             y = int(y)
  
-#             newX,newY = (x + self.offset, y)
+            newX,newY = (x + self.offset, y)
            
-#             if self.oldPos:#==(-1,-1):
-#                 self.oldPos = (newX,newY)
-# #            angle,changeX,changeY = self.getOrientation((newX,newY))
-#             vector = self.getOrientation((newX,newY))#,prevPos)
-#             angle = vector[0]
-#             changeX= vector[1]
-#             changeY = vector[2]
-#             speed = np.sqrt(changeX**2 + changeY**2) # in pixels per frame                
-#             #((x,y),orientation,speed)
-#             self.oldPos = (newX,newY)
-            angle, speed = None, None
+            if not self.oldPos:#==(-1,-1):
+                self.oldPos = (newX,newY)
+ #            angle,changeX,changeY = self.getOrientation((newX,newY))
+            vector = self.getOrientation((newX,newY))#,prevPos)
+            angle = vector[0]
+            changeX = vector[1]
+            changeY = vector[2]
+            speed = np.sqrt(changeX**2 + changeY**2) # in pixels per frame                
+             #((x,y),orientation,speed)
+            self.oldPos = (newX,newY)
+            #return ((x + self.offset, y), angle, speed)
+            #angle, speed = None, None
             queue.put(((x + self.offset, y), angle, speed))
+
+    def getOrientation(self,newPos):
+        oldX,oldY = self.oldPos
+        changeX = newPos[0]-oldX
+        changeY = newPos[1]-oldY 
+                 #alpha = 100
+                 #cv2.line(frame,(newX,newY),(newX+alpha*changeX,newY+alpha*changeY),(0,255,0),3)
+        k = np.arctan2(changeX,changeY)
+        if k<0:
+            k = np.abs(k) + np.pi
+        angle = k * 180/np.pi
+        
+        return (angle,changeX,changeY)
