@@ -39,4 +39,4 @@ nosetests.xml
 *.mp4
 
 # Gedit files
-*.py~
+*.*~
