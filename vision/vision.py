@@ -77,46 +77,34 @@ class Vision:
         # Trim the image
         frame = frame[
             self.crop_values[2]:self.crop_values[3],
-            self.crop_values[0]:self.crop_values[1]]
+            self.crop_values[0]:self.crop_values[1]
+        ]
 
-        robot_1_queue = Queue()
-        robot_2_queue = Queue()
-        robot_3_queue = Queue()
-        robot_4_queue = Queue()
-
-        ball_queue = Queue()
+        queues = [Queue() for i in range(5)]
 
         # Define processes
         processes = [
-            Process(target=self.us[0].find, args=((frame, robot_1_queue))),
-            Process(target=self.us[1].find, args=((frame, robot_2_queue))),
-            Process(target=self.opponents[0].find, args=((frame, robot_3_queue))),
-            Process(target=self.opponents[1].find, args=((frame, robot_4_queue))),
-            Process(target=self.ball_tracker.find, args=((frame, ball_queue)))
+            Process(target=self.us[0].find, args=((frame, queues[0]))),
+            Process(target=self.us[1].find, args=((frame, queues[1]))),
+            Process(target=self.opponents[0].find, args=((frame, queues[2]))),
+            Process(target=self.opponents[1].find, args=((frame, queues[3]))),
+            Process(target=self.ball_tracker.find, args=((frame, queues[4])))
         ]
 
         # Start processes
         for process in processes:
             process.start()
 
-        # Find robots, use queue to avoid deadlock and share resources
-        robot_1 = robot_1_queue.get()
-        robot_2 = robot_2_queue.get()
-        robot_3 = robot_3_queue.get()
-        robot_4 = robot_4_queue.get()
-
-        # Find ball
-        ball = ball_queue.get()
+        # Find robots and ball, use queue to avoid deadlock and share resources
+        positions = [q.get() for q in queues]
 
         # terminate processes
         for process in processes:
             process.join()
 
-        result = (robot_1, robot_2, robot_3, robot_4, ball)
-
         # Draw results
         # TODO: Convert to a process!
-        for val in result:
+        for val in positions:
             if val is not None:
                 cv2.circle(frame, (val[0][0], val[0][1]), 10, (0, 255, 0), 1)
 
@@ -129,4 +117,4 @@ class Vision:
         #     print 'parent process:', os.getppid()
         # print 'process id:', os.getpid()
 
-        return result
+        return tuple(postions)
