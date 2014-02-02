@@ -37,3 +37,6 @@ nosetests.xml
 # video files
 *.avi
 *.mp4
+
+# Gedit files
+*.py~
