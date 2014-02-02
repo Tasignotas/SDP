@@ -27,6 +27,18 @@ COLORS = {
             'max': np.array((104.0, 255.0, 255.0)),
             'contrast': 1.0,
             'blur': 1
+        },
+        {
+            'min': np.array((87.0, 105.0, 82.0)),
+            'max': np.array((104.0, 255.0, 255.0)),
+            'contrast': 1.0,
+            'blur': 1
+        },
+        {
+            'min': np.array((87.0, 100.0, 90.0)),
+            'max': np.array((104.0, 255.0, 255.0)),
+            'contrast': 1.0,
+            'blur': 1
         }
            
     ]
