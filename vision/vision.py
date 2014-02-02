@@ -7,6 +7,7 @@ import os
 
 
 TEAM_COLORS = set(['yellow', 'blue'])
+SIDES = ['left', 'right']
 
 
 class Vision:
@@ -15,6 +16,13 @@ class Vision:
     """
 
     def __init__(self, side='left', color='yellow', port=0):
+
+        if color not in TEAM_COLORS:
+            print 'Incorrect color assignment.', 'Valid colors are:', TEAM_COLORS
+            return
+        if side not in SIDES:
+            print 'Incorrect side assignment.', 'Valid sides are:', SIDES
+
         # Capture video port
         self.capture = cv2.VideoCapture(port)
 
@@ -81,15 +89,10 @@ class Vision:
         ]
 
         queues = [Queue() for i in range(5)]
+        objects = [self.us[0], self.us[1], self.opponents[0], self.opponents[1], self.ball_tracker]
 
         # Define processes
-        processes = [
-            Process(target=self.us[0].find, args=((frame, queues[0]))),
-            Process(target=self.us[1].find, args=((frame, queues[1]))),
-            Process(target=self.opponents[0].find, args=((frame, queues[2]))),
-            Process(target=self.opponents[1].find, args=((frame, queues[3]))),
-            Process(target=self.ball_tracker.find, args=((frame, queues[4])))
-        ]
+        processes = [Process(target=obj.find, args=((frame, queues[i]))) for (i, obj) in enumerate(objects)]
 
         # Start processes
         for process in processes:
