@@ -67,7 +67,6 @@ class Vision:
         Find objects on the pitch using multiprocessing.
 
         Returns:
-            [5-tuple] Location of the robots and the ball
         """
         status, frame = self.capture.read()
         if not status:
@@ -83,16 +82,8 @@ class Vision:
         queues = [Queue() for i in range(5)]
         objects = [self.us[0], self.us[1], self.opponents[0], self.opponents[1], self.ball_tracker]
 
-        processes = [Process(target=obj.find)]
-
         # Define processes
-        processes = [
-            Process(target=self.us[0].find, args=((frame, queues[0]))),
-            Process(target=self.us[1].find, args=((frame, queues[1]))),
-            Process(target=self.opponents[0].find, args=((frame, queues[2]))),
-            Process(target=self.opponents[1].find, args=((frame, queues[3]))),
-            Process(target=self.ball_tracker.find, args=((frame, queues[4])))
-        ]
+        processes = [Process(target=obj.find, args=((frame, queues[i]))) for (i, obj) in enumerate(objects)]
 
         # Start processes
         for process in processes:
