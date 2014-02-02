@@ -89,7 +89,7 @@ def main():
     parser.add_option("-c", "--color", dest="color",
                       help="all / yellow / red / blue")
     (opts, args) = parser.parse_args()
-    if opts == 'None'
+    if opts == 'None':
         opts = 'all'
     selectColor = {}
     if (color in ['all', 'yellow']):
