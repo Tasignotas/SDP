@@ -111,7 +111,7 @@ class Vision:
             if val is not None:
                 cv2.circle(frame, (val[0][0], val[0][1]), 10, (0, 255, 0), 1)
 
-        cv2.imshow('Frame', frame)
+        cv2.imshow('SUCH VISION', frame)
         cv2.waitKey(4)
 
         # MULTIPROCESSING DEBUG
