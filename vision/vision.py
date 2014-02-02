@@ -81,6 +81,9 @@ class Vision:
         ]
 
         queues = [Queue() for i in range(5)]
+        objects = [self.us[0], self.us[1], self.opponents[0], self.opponents[1], self.ball_tracker]
+
+        processes = [Process(target=obj.find)]
 
         # Define processes
         processes = [
