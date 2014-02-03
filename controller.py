@@ -33,7 +33,7 @@ class Controller:
             #    print 'Positions:', positions[0][1]
 
             # Find appropriate action
-            actions = self.planner.plan({})
+            actions = self.planner.plan(positions)
             #print 'Actions:', actions
 
             # Execute action

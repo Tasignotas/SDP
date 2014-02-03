@@ -101,11 +101,9 @@ class RobotTracker(Tracker):
         self.color = COLORS[color]
         self.offset = offset
 
-    def _find_circle(self, frame, contours, offset, search_size=18):
-        (x, y), radius = self.get_min_enclousing_circle(contours)
+    def _find_circle(self, frame, location, offset, search_size=18):
+        (x, y) = location
 
-        # Cast to integers
-        x, y = int(x), int(y)
 
         # Define bounding box for search
         xmin, xmax = x + offset - search_size / 2, x + offset + search_size / 2
@@ -129,7 +127,7 @@ class RobotTracker(Tracker):
             diff_y = center[1] - y
 
             # DEBUG
-            print (diff_x, diff_y)
+            # print (diff_x, diff_y)
 
             angle = np.arctan((np.abs(diff_y) * 1.0 / np.abs(diff_x)))
             angle = np.degrees(angle)
@@ -166,8 +164,13 @@ class RobotTracker(Tracker):
                 # Trim contours matrix
                 cnt = contours[0]
 
+                (x, y), radius = self.get_min_enclousing_circle(cnt)
+
+                # Cast to integers
+                x, y = int(x), int(y)
+
                 # Find angle and speed
-                angle, speed = self._find_circle(frame, cnt, self.offset)
+                angle, speed = self._find_circle(frame, (x, y), self.offset)
 
                 # Attach to queue for multiprocessing
                 queue.put(((x + self.offset, y), angle, speed))
@@ -256,10 +259,19 @@ class BallTracker(Tracker):
 
         originVector = np.array([0,1])
         changeVector = np.array([changeX,changeY])
-        angle = np.arccos(np.dot(originVector,changeVector)/(np.sqrt(np.dot(changeVector,changeVector))))
+
+        denominator = np.sqrt(np.dot(changeVector,changeVector))
+
+        if denominator == 0:
+            angle = None
+        else:
+            angle = np.arccos(
+                np.dot(originVector,changeVector) / (np.sqrt(np.dot(changeVector,changeVector)))
+            )
+            angle = np.degrees(angle)
+            if changeX <0:
+                angle = 360 - angle
         #print(np.sqrt(np.dot(changeVector,changeVector)))
-        angle = np.degrees(angle)
-        if changeX <0:
-            angle = 360 - angle
+        
         #print ((changeX,changeY),angle) 
         return (angle,changeX,changeY)
