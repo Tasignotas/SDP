@@ -3,6 +3,7 @@ from json import load
 from numpy import array
 from Polygon.cPolygon import Polygon
 from Polygon.Utils import pointList
+from math import atan, cos, hypot
 
 
 ROBOT_LENGTH = 20
@@ -113,6 +114,20 @@ class Pitch_Object(object):
         self._vector = vector
 
 
+    def get_polygon(self):
+        x, y = self.get_x(), self.get_y()
+        angle = self.get_angle()
+        (width, length, height) = self.get_dimensions()
+        diagonal = hypot(width / 2, length / 2)
+        arc = atan((width * 0.5)/(height * 0.5))
+        front_left_corner = (x + (diagonal * cos(angle - arc)))
+        front_right_corner = (x + (diagonal * cos(angle + arc)))
+        back_left_corner = (x + (diagonal * cos(((angle + 180) % 360) + arc)))
+        back_right_corner = (x + (diagonal * cos(((angle + 180) % 360) - arc)))
+        return Polygon((front_left_corner, front_right_corner, back_left_corner, back_right_corner))
+
+
+
     def __repr__(self):
         return ('x: %s\ny: %s\nangle: %s\nvelocity: %s\ndimensions: %s\n' %
                 (self.get_x(), self.get_y(),
@@ -216,13 +231,10 @@ class World:
     '''
 
 
-    def __init__(self, our_color, our_side):
+    def __init__(self, our_side):
         assert our_side in ['left', 'right']
-        assert our_color in ['yellow', 'blue']
         self._pitch = Pitch()
-        self.our_color = our_color
         self.our_side = our_side
-        self.their_color = 'yellow' if our_color == 'blue' else 'blue'
         self.their_side = 'left' if our_side == 'right' else 'right'
         self._ball = Ball(0, 0, 0, 0)
         self._robots = []
