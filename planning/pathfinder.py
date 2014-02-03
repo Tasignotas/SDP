@@ -5,6 +5,11 @@ from math import sqrt, pow, cos, sin, atan
 
 
 def find_path(tracker, target):
+    at_x = tracker.get_x() == target.get_x()
+    at_y = tracker.get_y() == target.get_y()
+    at_angle = tracker.get_angle() == target.get_angle()
+    if at_x & at_y & at_angle:
+        return (0, 0, 0)
     reference_position = moving_reference_generator(tracker, target)
     path = position_control_system(tracker, reference_position)
     return path
