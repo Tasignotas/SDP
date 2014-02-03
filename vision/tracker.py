@@ -27,6 +27,18 @@ COLORS = {
             'max': np.array((104.0, 255.0, 255.0)),
             'contrast': 1.0,
             'blur': 1
+        },
+        {
+            'min': np.array((87.0, 105.0, 82.0)),
+            'max': np.array((104.0, 255.0, 255.0)),
+            'contrast': 1.0,
+            'blur': 1
+        },
+        {
+            'min': np.array((87.0, 100.0, 90.0)),
+            'max': np.array((104.0, 255.0, 255.0)),
+            'contrast': 1.0,
+            'blur': 1
         }
            
     ]
@@ -86,59 +98,54 @@ class RobotTracker(Tracker):
             [int] offset        how much to offset the coordinates
         """
         self.crop = crop
-        self.color = COLORS[color][0]
+        self.color = COLORS[color]
         self.offset = offset
 
-    def find(self, frame):#, queue):
-        contours, hierarchy = self.preprocess(
-            frame,
-            self.crop,
-            self.color['min'], 
-            self.color['max'], 
-            self.color['contrast'], 
-            self.color['blur']
-        )
 
-        if len(contours) <= 0 or len(contours[0]) < 5:
-            print 'No contours found.'
-            #queue.put(None)
-        else:
-            # Trim contours matrix
-            cnt = contours[0]
+    def find(self, frame, queue):
+        for color in self.color:
+            contours, hierarchy = self.preprocess(
+                frame,
+                self.crop,
+                color['min'], 
+                color['max'], 
+                color['contrast'], 
+                color['blur']
+            )
 
-            # Get center
-            (x, y), radius = self.get_min_enclousing_circle(cnt)
+            if len(contours) <= 0 or len(contours[0]) < 5:
+                print 'No contours found.'
+                # queue.put(None)
+            else:
+                # Trim contours matrix
+                cnt = contours[0]
 
-            x = int(x)
-            y = int(y)
-            
-            xmin = np.minimum(x+3*radius,x-3*radius)
-            xmax = np.maximum(x+3*radius,x-3*radius)            
+                # Get center
+                (x, y), radius = self.get_min_enclousing_circle(cnt)
 
-            ymin = np.minimum(y+3*radius,y-3*radius)
-            ymax = np.maximum(y+3*radius,y-3*radius)            
+                x = int(x)
+                y = int(y)
 
-            roi = frame[ymin:ymax,xmin:xmax]
+  #          xmin = np.minimum(x+3*radius,x-3*radius)
+ #           xmax = np.maximum(x+3*radius,x-3*radius)            
+
+#            ymin = np.minimum(y+3*radius,y-3*radius)
+#            ymax = np.maximum(y+3*radius,y-3*radius)            
+
+#            roi = frame[ymin:ymax,xmin:xmax]
 # https://opencv-python-tutroals.readthedocs.org/en/latest/py_tutorials/py_imgproc/py_houghcircles/py_houghcircles.html
 
-            roi = cv2.medianBlur(roi,5)
-            roi = cv2.cvtColor(roi,cv2.COLOR_BGR2GRAY)
-            circles = cv2.HoughCircles(roi,cv2.cv.CV_HOUGH_GRADIENT,1,20,param1=50,param2=10,minRadius=3,maxRadius=7)
-            return  circles,roi
-#             newX,newY = (x + self.offset, y)
-           
-#             if self.oldPos:#==(-1,-1):
-#                 self.oldPos = (newX,newY)
-# #            angle,changeX,changeY = self.getOrientation((newX,newY))
-#             vector = self.getOrientation((newX,newY))#,prevPos)
-#             angle = vector[0]
-#             changeX= vector[1]
-#             changeY = vector[2]
-#             speed = np.sqrt(changeX**2 + changeY**2) # in pixels per frame                
-#             #((x,y),orientation,speed)
-#             self.oldPos = (newX,newY)
-            #angle, speed = None, None
-            #queue.put(((x + self.offset, y), angle, speed))
+#            roi = cv2.medianBlur(roi,5)
+#            roi = cv2.cvtColor(roi,cv2.COLOR_BGR2GRAY)
+#            circles = cv2.HoughCircles(roi,cv2.cv.CV_HOUGH_GRADIENT,1,20,param1=50,param2=10,minRadius=3,maxRadius=7)
+#            return  circles,roi
+     
+
+                angle, speed = None, None
+                queue.put(((x + self.offset, y), angle, speed))
+                return
+        queue.put(None)
+        return
 
         
 class BallTracker(Tracker):
@@ -154,49 +161,54 @@ class BallTracker(Tracker):
             [int] offset        how much to offset the coordinates
         """
         self.crop = crop
-        self.color = COLORS['red'][0]
+        self.color = COLORS['red']
         self.offset = offset
         #self.oldPos = (0,0)#None
         self.oldPos = [(0,0)]
 
     def find(self, frame, queue):
-        contours, hierarchy = self.preprocess(
-            frame,
-            self.crop,
-            self.color['min'], 
-            self.color['max'], 
-            self.color['contrast'], 
-            self.color['blur']
-        )
+        for color in self.color:
+            contours, hierarchy = self.preprocess(
+                frame,
+                self.crop,
+                color['min'], 
+                color['max'], 
+                color['contrast'], 
+                color['blur']
+            )
 
-        if len(contours) <= 0 or len(contours[0]) < 5:
-            print 'No contours found.'
-            queue.put(None)
-        else:
-            # Trim contours matrix
-            cnt = contours[0]
+            if len(contours) <= 0 or len(contours[0]) < 5:
+                print 'No contours found.'
+                # queue.put(None)
+            else:
+                # Trim contours matrix
+                cnt = contours[0]
 
-            # Get center
-            (x, y), radius = self.get_min_enclousing_circle(cnt)
+                # Get center
+                (x, y), radius = self.get_min_enclousing_circle(cnt)
 
-            x = int(x)
-            y = int(y)
- 
-            newX,newY = (x + self.offset, y)
-           
-            #if not self.oldPos:#==(-1,-1):
+                x = int(x)
+                y = int(y)
+     
+                newX,newY = (x + self.offset, y)
+               
+                #if not self.oldPos:#==(-1,-1):
+                    #self.oldPos = (0,0)
+     #            angle,changeX,changeY = self.getOrientation((newX,newY))
+                vector = self.getOrientation((newX,newY))#,prevPos)
+                angle = vector[0]
+                changeX = vector[1]
+                changeY = vector[2]
+                speed = np.sqrt(changeX**2 + changeY**2) # in pixels per frame                
+                 #((x,y),orientation,speed)
                 #self.oldPos = (0,0)
- #            angle,changeX,changeY = self.getOrientation((newX,newY))
-            vector = self.getOrientation((newX,newY))#,prevPos)
-            angle = vector[0]
-            changeX = vector[1]
-            changeY = vector[2]
-            speed = np.sqrt(changeX**2 + changeY**2) # in pixels per frame                
-             #((x,y),orientation,speed)
-            #self.oldPos = (0,0)
-            #return ((x + self.offset, y), angle, speed)
-            #angle, speed = None, None
-            queue.put(((x + self.offset, y), angle, speed))
+                #return ((x + self.offset, y), angle, speed)
+                #angle, speed = None, None
+                queue.put(((x + self.offset, y), angle, speed))
+                return
+
+        queue.put(None)
+        return
 
     def getOrientation(self,newPos):
 #        if self.
