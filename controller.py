@@ -2,7 +2,7 @@ from vision.vision import Vision
 from planning.planner import Planner
 from vision.tracker import Tracker
 import vision.tools as tools
-import nxt
+from nxt import *
 
 
 class Controller:
@@ -13,7 +13,7 @@ class Controller:
     def __init__(self, port=0, connect=False):
         self.vision = Vision()
         self.planner = Planner(our_side='left')
-        self.attacker = Attacker_Controller(connectionName='GRP7A', leftMotorPort='PORT_A', rightMotorPort='PORT_C', kickerMotorPort='PORT_B')
+        self.attacker = Attacker_Controller(connectionName='GRP7A', leftMotorPort=PORT_A, rightMotorPort=PORT_C, kickerMotorPort=PORT_B)
         #self.defender = Defender_Controller('GRP7A', 'PORT_X', 'PORT_X', 'PORT_X')
 
 
@@ -42,8 +42,8 @@ class Connection:
 
     def __init__(self, name='NXT'):
         print 'Connecting to NXT Brick with name %s' % name
-        self.brick = nxt.locator.find_one_brick(
-            name=name, method=nxt.locator.Method(usb=False))
+        self.brick = locator.find_one_brick(
+            name=name, method=locator.Method(usb=False))
         if self.brick:
             print 'Connection successful.'
 
