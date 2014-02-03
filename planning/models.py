@@ -111,7 +111,8 @@ class Pitch_Object(object):
 
 
     def set_vector(self, vector):
-        self._vector = vector
+        if vector:
+            self._vector = vector
 
 
     def get_polygon(self):
@@ -194,7 +195,7 @@ class Pitch:
 
 
     def __init__(self):
-        config_file = open('../vision/calibrate.json', 'r')
+        config_file = open('vision/calibrate.json', 'r')
         config_json = load(config_file)
         config_file.close()
         # Getting the zones:

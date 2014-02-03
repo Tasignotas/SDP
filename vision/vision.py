@@ -4,6 +4,7 @@ from tracker import BallTracker, RobotTracker
 import math
 from multiprocessing import Process, Queue
 import os
+from planning.models import Vector
 
 
 TEAM_COLORS = set(['yellow', 'blue'])
@@ -41,33 +42,30 @@ class Vision:
         self.ball_tracker = BallTracker(
             (0, self.crop_values[1], 0, self.crop_values[3]), 0)
 
-        zone1 = (0, zone_size)
-        zone2 = (zone_size, 2 * zone_size)
-        zone3 = (zone_size * 2, zone_size * 3)
-        zone4 = (zone_size * 3, zone_size * 4)
+        zones = [(zone_size * i, zone_size * (i + 1), 0, self.crop_values[3]) for i in range(4)]
 
         # Do set difference to find the other color - if is too long :)
         opponent_color = (TEAM_COLORS - set([color])).pop()
 
         if side == 'left':
             self.us = [
-                RobotTracker(color, (zone1[0], zone1[1], 0, self.crop_values[3]), 0),   # defender
-                RobotTracker(color, (zone3[0], zone3[1], 0, self.crop_values[3]), zone_size * 2) # attacker
+                RobotTracker(color, zones[0], 0),   # defender
+                RobotTracker(color, zones[2], zone_size * 2) # attacker
             ]
 
             self.opponents = [
-                RobotTracker(opponent_color, (zone2[0], zone2[1], 0, self.crop_values[3]), zone_size),
-                RobotTracker(opponent_color, (zone4[0], zone4[1], 0, self.crop_values[3]), zone_size * 3)
+                RobotTracker(opponent_color, zones[1], zone_size),
+                RobotTracker(opponent_color, zones[3], zone_size * 3)
             ]
         else:
             self.us = [
-                RobotTracker(color, (zone2[0], zone2[1], 0, self.crop_values[3]), zone_size),
-                RobotTracker(color, (zone4[0], zone4[1], 0, self.crop_values[3]), zone_size * 3)
+                RobotTracker(color, zones[1], zone_size),
+                RobotTracker(color, zones[3], zone_size * 3)
             ]
 
             self.opponents = [
-                RobotTracker(opponent_color, (zone1[0], zone1[1], 0, self.crop_values[3]), 0),   # defender
-                RobotTracker(opponent_color, (zone3[0], zone3[1], 0, self.crop_values[3]), zone_size * 2)
+                RobotTracker(opponent_color, zones[0], 0),   # defender
+                RobotTracker(opponent_color, zones[2], zone_size * 2)
             ]
 
     def locate(self):
@@ -106,7 +104,7 @@ class Vision:
         if len(objects[4].oldPos) > 5:
             objects[4].oldPos.pop(0)
         #for i in objects:
-        print objects[4].oldPos
+        # print objects[4].oldPos
             
 
         # terminate processes
@@ -132,4 +130,19 @@ class Vision:
         #     print 'parent process:', os.getppid()
         # print 'process id:', os.getpid()
 
-        return tuple(positions)
+        result = {
+            'our_attacker': self.to_vector(positions[1]),
+            'their_attacker': self.to_vector(positions[3]),
+            'our_defender': self.to_vector(positions[0]),
+            'their_defender': self.to_vector(positions[2]),
+            'ball': self.to_vector(positions[4])
+        }
+
+        return result
+
+
+    def to_vector(self, args):
+        if args is not None:
+            x, y = args[0] if args[0] is not None else (None, None)
+            return Vector(x, y, args[1], args[2])
+
