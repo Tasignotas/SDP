@@ -111,7 +111,8 @@ class Pitch_Object(object):
 
 
     def set_vector(self, vector):
-        self._vector = vector
+        if vector:
+            self._vector = vector
 
 
     def get_polygon(self):
@@ -284,11 +285,16 @@ class World:
             that it gets passed by the vision system '''
         if 'our_attacker' in position_dict:
             self.get_our_attacker().set_vector(position_dict['our_attacker'])
+            print self.get_our_attacker()
         if 'their_attacker' in position_dict:
             self.get_their_attacker().set_vector(position_dict['their_attacker'])
+            print self.get_their_attacker()
         if 'our_defender' in position_dict:
             self.get_our_defender().set_vector(position_dict['our_defender'])
+            print self.get_our_defender()
         if 'their_defender' in position_dict:
             self.get_their_defender().set_vector(position_dict['their_defender'])
+            print self.get_their_defender()
         if 'ball' in position_dict:
             self.get_ball().set_vector(position_dict['ball'])
+            print self.get_ball()

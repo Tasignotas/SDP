@@ -168,9 +168,12 @@ class RobotTracker(Tracker):
 
                 # Cast to integers
                 x, y = int(x), int(y)
+                try:
+                    # Find angle and speed
+                    angle, speed = self._find_circle(frame, (x, y), self.offset)
 
-                # Find angle and speed
-                angle, speed = self._find_circle(frame, (x, y), self.offset)
+                except Exception:
+                    angle, speed = None, None
 
                 # Attach to queue for multiprocessing
                 queue.put(((x + self.offset, y), angle, speed))

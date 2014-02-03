@@ -134,7 +134,8 @@ class Vision:
             'our_attacker': self.to_vector(positions[1]),
             'their_attacker': self.to_vector(positions[3]),
             'our_defender': self.to_vector(positions[0]),
-            'their_defender': self.to_vector(positions[2])
+            'their_defender': self.to_vector(positions[2]),
+            'ball': self.to_vector(positions[4])
         }
 
         return result
