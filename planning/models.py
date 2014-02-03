@@ -1,7 +1,8 @@
 
 from json import load
 from numpy import array
-from cv2 import pointPolygonTest
+from Polygon.cPolygon import Polygon
+from Polygon.Utils import pointList
 
 
 ROBOT_LENGTH = 20
@@ -22,39 +23,25 @@ class Coordinate(object):
 
 
     def __init__(self, x, y):
-        self.x = x
-        self.y = y
+        self._x = x
+        self._y = y
 
 
-    def get_position(self):
-        return self.x, self.y
+    def get_x(self):
+        return self._x
+
+
+    def get_y(self):
+        return self._y
 
 
     def set_position(self, x, y):
-        self.x = x
-        self.y = y
+        self._x = x
+        self._y = y
 
 
     def __repr__(self):
-        return 'x: %s, y: %s\n' % (self.x, self.y)
-
-
-class Polygon:
-
-
-    def __init__(self, coord_array):
-        self.points = []
-        for coords in coord_array:
-            self.points.append(Coordinate(*coords))
-
-
-    def get_coordinates(self):
-        return self.points
-
-
-    def __repr__(self):
-        return ''.join([point.__repr__() for point in self.points])
-
+        return 'x: %s, y: %s\n' % (self._x, self._y)
 
 
 class Vector(Coordinate):
@@ -62,43 +49,74 @@ class Vector(Coordinate):
 
     def __init__(self, x, y, angle, velocity):
         super(Vector, self).__init__(x, y)
-        self.angle = angle
-        self.velocity = velocity
+        self._angle = angle
+        self._velocity = velocity
 
 
     def get_angle(self):
-        return self.angle
+        return self._angle
 
 
     def get_velocity(self):
-        return self.velocity
+        return self._velocity
 
 
     def set_angle(self, angle):
-        self.angle = angle
+        self._angle = angle
 
 
     def set_velocity(self, velocity):
-        self.velocity = velocity
+        self._velocity = velocity
 
 
     def __repr__(self):
-        return 'x: %s, y: %s, angle: %s, velocity: %s\n' % (self.x, self.y, self.angle, self.velocity)
+        return ('x: %s, y: %s, angle: %s, velocity: %s\n' %
+                (self.get_x(), self.get_y(),
+                 self._angle, self._velocity))
 
 
-class Pitch_Object(Vector):
+class Pitch_Object(object):
     '''
     A class that describes an abstract pitch object
     '''
 
     def __init__(self, x, y, angle, velocity, width, length, height):
-        super(Pitch_Object, self).__init__(x, y, angle, velocity)
-        self.dimensions = (width, length, height)
+        self._vector = Vector(x, y, angle, velocity)
+        self._dimensions = (width, length, height)
+
+
+    def get_dimensions(self):
+        return self._dimensions
+
+
+    def get_angle(self):
+        return self._vector.get_angle()
+
+
+    def get_velocity(self):
+        return self._vector.get_velocity()
+
+
+    def get_x(self):
+        return self._vector.get_x()
+
+
+    def get_y(self):
+        return self._vector.get_y()
+
+
+    def get_vector(self):
+        return self._vector.get_position()
+
+
+    def set_vector(self, vector):
+        self._vector = vector
 
 
     def __repr__(self):
         return ('x: %s\ny: %s\nangle: %s\nvelocity: %s\ndimensions: %s\n' %
-                (self.x, self.y, self.angle, self.velocity, self.dimensions))
+                (self.get_x(), self.get_y(),
+                 self.get_angle(), self.get_velocity(), self.get_dimensions()))
 
 
 
@@ -108,25 +126,26 @@ class Robot(Pitch_Object):
 
     def __init__(self, zone, x, y, angle, velocity, width=ROBOT_WIDTH, length=ROBOT_LENGTH, height=ROBOT_HEIGHT):
         super(Robot, self).__init__(x, y, angle, velocity, width, length, height)
-        self.zone = zone
-        self.possession = False
+        self._zone = zone
+        self._possession = False
 
 
     def get_zone(self):
-        return self.zone
+        return self._zone
 
 
     def get_possession(self):
-        return self.possession
+        return self._possession
 
 
     def set_possession(self, possession):
-        self.possession = possession
+        self._possession = possession
 
 
     def __repr__(self):
         return ('zone: %s\nx: %s\ny: %s\nangle: %s\nvelocity: %s\ndimensions: %s\n' %
-                (self.zone, self.x, self.y, self.angle, self.velocity, self.dimensions))
+                (self._zone, self.get_x(), self.get_y(),
+                 self.get_angle(), self.get_velocity(), self.get_dimensions()))
 
 
 class Ball(Pitch_Object):
@@ -141,16 +160,17 @@ class Goal(Pitch_Object):
 
     def __init__(self, zone, x, y, angle, velocity, width=GOAL_WIDTH, length=GOAL_LENGTH, height=GOAL_HEIGHT):
         super(Goal, self).__init__(x, y, angle, 0, width, length, height)
-        self.zone = zone
+        self._zone = zone
 
 
     def get_zone(self):
-        return self.zone
+        return self._zone
 
 
     def __repr__(self):
         return ('zone: %s\nx: %s\ny: %s\nangle: %s\nvelocity: %s\ndimensions: %s\n' %
-                (self.zone, self.x, self.y, self.angle, self.velocity, self.dimensions))
+                (self._zone, self.get_dimensions()[0], self.get_dimensions()[1],
+                 self.get_angle(), self.get_velocity(), self.get_dimensions()))
 
 class Pitch:
     '''
@@ -163,32 +183,31 @@ class Pitch:
         config_json = load(config_file)
         config_file.close()
         # Getting the zones:
-        self.zones = []
-        self.zones.append(Polygon(config_json['Zone_0']))
-        self.zones.append(Polygon(config_json['Zone_1']))
-        self.zones.append(Polygon(config_json['Zone_2']))
-        self.zones.append(Polygon(config_json['Zone_3']))
-        self.width = max([max([point.get_position()[0] for point in zone.get_coordinates()]) for zone in self.zones])
-        self.height = max([max([point.get_position()[1] for point in zone.get_coordinates()]) for zone in self.zones])
+        self._zones = []
+        self._zones.append(Polygon(config_json['Zone_0']))
+        self._zones.append(Polygon(config_json['Zone_1']))
+        self._zones.append(Polygon(config_json['Zone_2']))
+        self._zones.append(Polygon(config_json['Zone_3']))
+        self._width = max([max([point[0] for point in pointList(zone)]) for zone in self._zones])
+        self._height = max([max([point[1] for point in pointList(zone)]) for zone in self._zones])
 
 
     def is_within_bounds(self, robot, point):
     # Checks whether the position/point planned for the robot is reachable:
-        zone = self.zones[robot.zone]
-        zone_coords = array([[point.x, point.y] for point in zone.points])
-        return pointPolygonTest(zone_coords, (point.x, point.y), False)
+        zone = self._zones[robot.get_zone()]
+        return zone.isInside(point.get_x(), point.get_y())
 
 
     def get_width(self):
-        return self.width
+        return self._width
 
 
     def get_height(self):
-        return self.height
+        return self._height
 
 
     def __repr__(self):
-        return str(self.zones)
+        return str(self._zones)
 
 
 class World:
@@ -200,51 +219,64 @@ class World:
     def __init__(self, our_color, our_side):
         assert our_side in ['left', 'right']
         assert our_color in ['yellow', 'blue']
-        self.pitch = Pitch()
+        self._pitch = Pitch()
         self.our_color = our_color
         self.our_side = our_side
         self.their_color = 'yellow' if our_color == 'blue' else 'blue'
         self.their_side = 'left' if our_side == 'right' else 'right'
-        self.ball = Ball(0, 0, 0, 0)
-        self.robots = []
-        self.robots.append(Robot(0, 0, 0, 0, 0))
-        self.robots.append(Robot(1, 0, 0, 0, 0))
-        self.robots.append(Robot(2, 0, 0, 0, 0))
-        self.robots.append(Robot(3, 0, 0, 0, 0))
-        self.goals = []
-        self.goals.append(Goal(0, 0, self.pitch.get_height()/2.0, 0, 0))
-        self.goals.append(Goal(3, self.pitch.get_width(), self.pitch.get_height()/2.0, 0, 0))
+        self._ball = Ball(0, 0, 0, 0)
+        self._robots = []
+        self._robots.append(Robot(0, 0, 0, 0, 0))
+        self._robots.append(Robot(1, 0, 0, 0, 0))
+        self._robots.append(Robot(2, 0, 0, 0, 0))
+        self._robots.append(Robot(3, 0, 0, 0, 0))
+        self._goals = []
+        self._goals.append(Goal(0, 0, self._pitch.get_height() / 2.0, 0, 0))
+        self._goals.append(Goal(3, self._pitch.get_width(), self._pitch.get_height() / 2.0, 0, 0))
 
 
     def get_our_attacker(self):
-        return self.robots[2] if self.our_side == 'left' else self.robots[1]
+        return self._robots[2] if self.our_side == 'left' else self._robots[1]
 
 
     def get_their_attacker(self):
-        return self.robots[1] if self.our_side == 'left' else self.robots[2]
+        return self._robots[1] if self.our_side == 'left' else self._robots[2]
 
 
-    def get_our_goalkeeper(self):
-        return self.robots[0] if self.our_side == 'left' else self.robots[3]
+    def get_our_defender(self):
+        return self._robots[0] if self.our_side == 'left' else self._robots[3]
 
 
-    def get_their_goalkeeper(self):
-        return self.robots[3] if self.our_side == 'left' else self.robots[0]
+    def get_their_defender(self):
+        return self._robots[3] if self.our_side == 'left' else self._robots[0]
 
 
     def get_ball(self):
-        return self.ball
+        return self._ball
 
 
     def get_our_goal(self):
-        return self.goals[0] if self.our_side == 'left' else self.goals[1]
+        return self._goals[0] if self.our_side == 'left' else self._goals[1]
 
 
     def get_their_goal(self):
-        return self.goals[1] if self.our_side == 'left' else self.goals[2]
+        return self._goals[1] if self.our_side == 'left' else self._goals[2]
 
 
-    def update_positions(position_dict):
+    def get_pitch(self):
+        return self._pitch
+
+
+    def update_positions(self, position_dict):
         ''' This method will update the positions of the pitch objects
             that it gets passed by the vision system '''
-        pass
+        if 'our_attacker' in position_dict:
+            self.get_our_attacker().set_vector(position_dict['our_attacker'])
+        if 'their_attacker' in position_dict:
+            self.get_their_attacker().set_vector(position_dict['their_attacker'])
+        if 'our_defender' in position_dict:
+            self.get_our_defender().set_vector(position_dict['our_defender'])
+        if 'their_defender' in position_dict:
+            self.get_their_defender().set_vector(position_dict['their_defender'])
+        if 'ball' in position_dict:
+            self.get_ball().set_vector(position_dict['ball'])
