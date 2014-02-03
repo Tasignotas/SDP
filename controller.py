@@ -10,12 +10,13 @@ class Controller:
     Primary source of robot control. Ties vision and planning together.
     """
 
-    def __init__(self, port=0):
+    def __init__(self, port=0, connect=False):
         self.vision = Vision()
         self.planner = Planner(our_side='left')
-        self.defender = Defender_Controller(
-            connectionName='GRP7D', leftMotorPort='PORT_A', 
-            rightMotorPort='PORT_C', kickerMotorPort='PORT_B')
+        if connect:
+            self.defender = Defender_Controller(
+                connectionName='GRP7D', leftMotorPort='PORT_A', 
+                rightMotorPort='PORT_C', kickerMotorPort='PORT_B')
         #self.attacker_controller = Attacker_Controller('GRP7A', 'PORT_X', 'PORT_X', 'PORT_X')
 
 
@@ -32,7 +33,7 @@ class Controller:
             #    print 'Positions:', positions[0][1]
 
             # Find appropriate action
-            actions = self.planner.plan(*positions)
+            actions = self.planner.plan({})
             #print 'Actions:', actions
 
             # Execute action
