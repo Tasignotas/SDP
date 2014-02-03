@@ -225,5 +225,13 @@ class BallTracker(Tracker):
         #k = np.abs(k) + np.pi
         #angle = k * 180/np.pi
         angle = np.degrees(k)
-        print (changeX,changeY) 
+
+# Work out angle between y axis and change vector
+# seems to work a little better, but is always between
+# 0 and 180 degrees.
+        originVector = np.array([0,1])
+        changeVector = np.array([changeX,changeY])
+        angle = np.arccos(np.dot(originVector,changeVector)/np.sqrt(np.dot(changeVector,changeVector)))
+        angle = np.degrees(angle)
+        print ((changeX,changeY),angle) 
         return (angle,changeX,changeY)
