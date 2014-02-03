@@ -13,7 +13,9 @@ class Controller:
     def __init__(self, port=0):
         self.vision = Vision()
         self.planner = Planner(our_side='left')
-        self.defender = Defender_Controller(connectionName='GRP7D', leftMotorPort='PORT_A', rightMotorPort='PORT_C', kickerMotorPort='PORT_B')
+        self.defender = Defender_Controller(
+            connectionName='GRP7D', leftMotorPort='PORT_A', 
+            rightMotorPort='PORT_C', kickerMotorPort='PORT_B')
         #self.attacker_controller = Attacker_Controller('GRP7A', 'PORT_X', 'PORT_X', 'PORT_X')
 
 
