@@ -1,6 +1,5 @@
-
-
-import math
+from math import cos, atan, hypot
+from Polygon import cPolygon
 from json import load
 from numpy import array
 from cv2 import pointPolygonTest
@@ -24,8 +23,8 @@ BALL_HEIGHT = 5
 BALL_POSSESSION_THRESHOLD = 12.5
 
 
-GOAL_LENGTH = 60
-GOAL_WIDTH = 1
+GOAL_LENGTH = 1
+GOAL_WIDTH = 60
 GOAL_HEIGHT = 10
 
 
@@ -48,20 +47,6 @@ class Coordinate(object):
 
     def __repr__(self):
         return 'x: %s, y: %s\n' % (self.x, self.y)
-
-
-class Polygon:
-
-
-    def __init__(self, coord_array):
-        self.points = []
-        for coordinates in coord_array:
-            self.points.append(Coordinate(*coordinates))
-
-
-    def __repr__(self):
-        return ''.join([point.__repr__() for point in self.points])
-
 
 
 class Vector(Coordinate):
@@ -116,12 +101,12 @@ class Pitch_Object(Vector):
         x, y = self.get_position()
         angle = self.get_orientation()
         (width, length, height) = self.get_dimensions()
-        diagonal = math.hypot(width / 2, length / 2)
-        arc = math.atan((width * 0.5)/(height * 0.5))
-        front_left_corner = (x + (diagonal * math.cos(angle - arc)))
-        front_right_corner = (x + (diagonal * math.cos(angle + arc)))
-        back_left_corner = (x + (diagonal * math.cos(((angle + 180) % 360) + arc)))
-        back_right_corner = (x + (diagonal * math.cos(((angle + 180) % 360) - arc)))
+        diagonal = hypot(length / 2, width / 2)
+        arc = atan(length / width)
+        front_left_corner = (x + (diagonal * cos(angle - arc)))
+        front_right_corner = (x + (diagonal * cos(angle + arc)))
+        back_left_corner = (x + (diagonal * cos(((angle + 180) % 360) + arc)))
+        back_right_corner = (x + (diagonal * cos(((angle + 180) % 360) - arc)))
         return (front_left_corner, front_right_corner, back_left_corner, back_right_corner)
 
 
@@ -136,23 +121,23 @@ class Pitch:
     '''
 
 
-    def __init__(self):
-        config_file = open('../vision/calibrate.json', 'r')
+    def __init__(self, config):
+        config_file = open(config, 'r')
         config_json = load(config_file)
         config_file.close()
         # Getting the zones:
         self.zones = []
-        self.zones.append(Polygon(config_json['Zone_0']))
-        self.zones.append(Polygon(config_json['Zone_1']))
-        self.zones.append(Polygon(config_json['Zone_2']))
-        self.zones.append(Polygon(config_json['Zone_3']))
+        self.zones.append(cPolygon.Polygon(config_json['Zone_0'],))
+        self.zones.append(cPolygon.Polygon(config_json['Zone_1']))
+        self.zones.append(cPolygon.Polygon(config_json['Zone_2']))
+        self.zones.append(cPolygon.Polygon(config_json['Zone_3']))
 
 
     def is_within_bounds(self, robot, point):
     # Checks whether the position/point planned for the robot is reachable:
         zone = self.zones[robot.zone]
         zone_coordinates = array([[point.x, point.y] for point in zone.points])
-        return pointPolygonTest(zone_coordinates, (point.x, point.y), False)
+        return
 
 
     def __repr__(self):
@@ -174,7 +159,7 @@ class Robot(Pitch_Object):
     def get_possession(self, ball):
         delta_x = self.get_position()[0] - ball.get_position()[0]
         delta_y = self.get_position()[1] - ball.get_position()[1]
-        delta_h = math.hypot(delta_x, delta_y)
+        delta_h = hypot(delta_x, delta_y)
         delta_angle = abs(self.get_orientation() - ball.get_orientation())
         return (delta_h < BALL_POSSESSION_THRESHOLD) & (delta_angle == 180)
 
@@ -189,15 +174,15 @@ class Robot(Pitch_Object):
 class AwayRobot(Robot):
 
 
-    def __init__(self, robot_id, zone, x, y, angle, velocity, width=ROBOT_WIDTH, length=ROBOT_LENGTH, height=ROBOT_HEIGHT):
-        super(AwayRobot, self).__init__(robot_id, zone, x, y, angle, velocity, width, length, height)
+    def __init__(self, robot_id, zone, width=ROBOT_WIDTH, length=ROBOT_LENGTH, height=ROBOT_HEIGHT):
+        super(AwayRobot, self).__init__(robot_id, zone, 0, 0, 0, 0, width, length, height)
 
 
 class HomeRobot(Robot):
 
 
-    def __init__(self, robot_id, zone, x, y, angle, velocity, width=ROBOT_WIDTH, length=ROBOT_LENGTH, height=ROBOT_HEIGHT):
-        super(HomeRobot, self).__init__(robot_id, zone, x, y, angle, velocity, width, length, height)
+    def __init__(self, robot_id, zone, width=ROBOT_WIDTH, length=ROBOT_LENGTH, height=ROBOT_HEIGHT):
+        super(HomeRobot, self).__init__(robot_id, zone, 0, 0, 0, 0, width, length, height)
         self.connection = Connection(robot_id)
         self.brick = self.connection.brick
         self.motor_l = Motor(self.brick, ROBOT_MOTOR_L)
@@ -223,8 +208,8 @@ class HomeRobot(Robot):
 class Ball(Pitch_Object):
 
 
-    def __init__(self, ball_id, x, y, angle, velocity, width=BALL_WIDTH, length=BALL_LENGTH, height=BALL_HEIGHT):
-        super(Ball, self).__init__(ball_id, x, y, angle, velocity, width, length, height)
+    def __init__(self, ball_id, width=BALL_WIDTH, length=BALL_LENGTH, height=BALL_HEIGHT):
+        super(Ball, self).__init__(ball_id, 0, 0, 0, 0, width, length, height)
 
 
 class Goal(Pitch_Object):
