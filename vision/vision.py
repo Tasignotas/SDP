@@ -118,6 +118,10 @@ class Vision:
         for val in positions:
             if val is not None:
                 cv2.circle(frame, (val[0][0], val[0][1]), 10, (0, 255, 0), 1)
+        for i in range(4):
+            if positions[i] is not None and positions[i][2] is not None:
+                cv2.circle(frame,(positions[i][2][0],positions[i][2][1]),5,(255,0,0),1)
+                cv2.line(frame,(positions[i][0][0],positions[i][0][1]),(positions[i][2][0],positions[i][2][1]),(0,0,255),3)
 
         cv2.imshow('SUCH VISION', frame)
         cv2.waitKey(4)

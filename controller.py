@@ -23,7 +23,9 @@ class Controller:
         while True:
             # Find object positions
             positions = self.vision.locate()
-            print 'Positions:', positions[4]
+            print positions
+            #if positions[0] is not None:
+            #    print 'Positions:', positions[0][1]
 
             # Find appropriate action
             actions = self.planner.plan(*positions)

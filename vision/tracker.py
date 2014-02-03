@@ -114,8 +114,8 @@ class RobotTracker(Tracker):
             )
 
             if len(contours) <= 0 or len(contours[0]) < 5:
-                print 'No contours found.'
-                # queue.put(None)
+                #print 'No contours found.'
+                queue.put(None)
             else:
                 # Trim contours matrix
                 cnt = contours[0]
@@ -125,27 +125,57 @@ class RobotTracker(Tracker):
 
                 x = int(x)
                 y = int(y)
-
+                radius = 6
+                xmin = x+self.offset-3*radius
+                xmax = x+self.offset+3*radius
+                ymin = y-3*radius
+                ymax = y+3*radius
   #          xmin = np.minimum(x+3*radius,x-3*radius)
  #           xmax = np.maximum(x+3*radius,x-3*radius)            
 
 #            ymin = np.minimum(y+3*radius,y-3*radius)
 #            ymax = np.maximum(y+3*radius,y-3*radius)            
 
-#            roi = frame[ymin:ymax,xmin:xmax]
+                
+                roi = frame[ymin:ymax,xmin:xmax]
 # https://opencv-python-tutroals.readthedocs.org/en/latest/py_tutorials/py_imgproc/py_houghcircles/py_houghcircles.html
 
 #            roi = cv2.medianBlur(roi,5)
-#            roi = cv2.cvtColor(roi,cv2.COLOR_BGR2GRAY)
-#            circles = cv2.HoughCircles(roi,cv2.cv.CV_HOUGH_GRADIENT,1,20,param1=50,param2=10,minRadius=3,maxRadius=7)
-#            return  circles,roi
+                roi = cv2.cvtColor(roi,cv2.COLOR_BGR2GRAY)
+                circles = cv2.HoughCircles(roi,cv2.cv.CV_HOUGH_GRADIENT,1,20,param1=50,param2=10,minRadius=3,maxRadius=7)
+                if circles is not None:
+                    circleCenter = (circles[0][0][0]+xmin,circles[0][0][1]+ymin)
+                    diffX = circleCenter[0] - x +self.offset
+                    diffY = circleCenter[1] - y              
+                    print(diffX,diffY)
+                    #diffVector = np.array([diffX,diffY])
+                    #originVector = np.array([0,1])
+                    #angle = np.arccos(np.dot(originVector,diffVector)/np.sqrt(np.dot(diffVector,diffVector)))
+                    angle = np.arctan((np.abs(diffY)*1.0/np.abs(diffX)))
+                    angle = np.degrees(angle)
+                    if diffX>0 and diffY<0:
+                        angle = 90- angle
+                    if diffX>0 and diffY>0:
+                        angle = 180-angle
+                    if diffX<0 and diffY>0:
+                        angle = 180+angle
+                    if diffX<0 and diffY<0:
+                        angle = 360 - angle
+                    #if diffX <0:
+                    #    angle = 360-angle
+
+                    speed = (circleCenter[0],circleCenter[1])
+                else:
+                    angle = None
+                #print (circles,roi)
+                #return  (circles,roi)
      
 
-                angle, speed = None, None
+                    speed = None#, None
                 queue.put(((x + self.offset, y), angle, speed))
                 return
         queue.put(None)
-        return
+        return (None,None)
 
         
 class BallTracker(Tracker):
@@ -226,14 +256,12 @@ class BallTracker(Tracker):
         #angle = k * 180/np.pi
         angle = np.degrees(k)
 
-# Work out angle between y axis and change vector
-# seems to work a little better, but is always between
-# 0 and 180 degrees.
         originVector = np.array([0,1])
         changeVector = np.array([changeX,changeY])
-        angle = np.arccos(np.dot(originVector,changeVector)/np.sqrt(np.dot(changeVector,changeVector)))
+        angle = np.arccos(np.dot(originVector,changeVector)/(np.sqrt(np.dot(changeVector,changeVector))))
+        #print(np.sqrt(np.dot(changeVector,changeVector)))
         angle = np.degrees(angle)
-        if changeY <0:
-            angle = 180 + (180- (angle * -1))
-        print ((changeX,changeY),angle) 
+        if changeX <0:
+            angle = 360 - angle
+        #print ((changeX,changeY),angle) 
         return (angle,changeX,changeY)
