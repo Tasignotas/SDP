@@ -1,15 +1,22 @@
+from models import World
 
 
 class Planner:
 
-    def __init__(self):
-        pass
+    def __init__(self, our_side):
+        self.world = World(our_side)
 
-    def plan(self, robot_1, robot_2, robot_3, robot_4, ball):
-        """
-        Given the robots and the ball, find the most appropriate action.
+    def update_and_plan(self, position_dict):
+        self.world.update_positions(position_dict)
+        return self.plan()
 
-        Returns:
-            [2-tuple of 3-tuples] defense robot action, attack robot action consisting of values to execute on robot motors
-        """
+    def plan(self):
+        '''
+        This method comes up with a plan - a list of actions that need
+        to be performed. The plan is then carried out by the controller
+        '''
+
+
+
+
         return ((0,0,0), (0,0,0))
