@@ -13,8 +13,8 @@ class Controller:
     def __init__(self, port=0):
         self.vision = Vision()
         self.planner = Planner(our_side='left')
-        self.defender = Defender_Controller(connectionName='GRP7D', leftMotorPort='PORT_A', rightMotorPort='PORT_C', kickerMotorPort='PORT_B')
-        #self.attacker_controller = Attacker_Controller('GRP7A', 'PORT_X', 'PORT_X', 'PORT_X')
+        self.attacker = Attacker_Controller(connectionName='GRP7A', leftMotorPort='PORT_A', rightMotorPort='PORT_C', kickerMotorPort='PORT_B')
+        #self.defender = Defender_Controller('GRP7A', 'PORT_X', 'PORT_X', 'PORT_X')
 
 
     def wow(self):
@@ -25,17 +25,16 @@ class Controller:
         while True:
             # Find object positions
             positions = self.vision.locate()
-            print positions
             #if positions[0] is not None:
             #    print 'Positions:', positions[0][1]
 
             # Find appropriate action
-            actions = self.planner.plan(*positions)
+            actions = self.planner.plan(positions)
             #print 'Actions:', actions
 
             # Execute action
-            # self.attacker.execute(actions[0])
-            # self.defender.execute(actions[1])
+            self.attacker.execute(actions[0])
+            # self.defender.execute(actions[0])
 
 
 class Connection:
@@ -77,7 +76,8 @@ class Robot_Controller(object):
         """
         Execute robot action.
         """
-        pass
+        self.MOTOR_L.run(action[0])
+        self.MOTOR_R.run(action[1])
 
 
 class Attacker_Controller(Robot_Controller):
