@@ -259,10 +259,19 @@ class BallTracker(Tracker):
 
         originVector = np.array([0,1])
         changeVector = np.array([changeX,changeY])
-        angle = np.arccos(np.dot(originVector,changeVector)/(np.sqrt(np.dot(changeVector,changeVector))))
+
+        denominator = np.sqrt(np.dot(changeVector,changeVector))
+
+        if denominator == 0:
+            angle = None
+        else:
+            angle = np.arccos(
+                np.dot(originVector,changeVector) / (np.sqrt(np.dot(changeVector,changeVector)))
+            )
+            angle = np.degrees(angle)
+            if changeX <0:
+                angle = 360 - angle
         #print(np.sqrt(np.dot(changeVector,changeVector)))
-        angle = np.degrees(angle)
-        if changeX <0:
-            angle = 360 - angle
+        
         #print ((changeX,changeY),angle) 
         return (angle,changeX,changeY)

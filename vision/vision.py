@@ -137,7 +137,7 @@ class Vision:
             'their_defender': self.to_vector(positions[2])
         }
 
-        return tuple(positions)
+        return result
 
 
     def to_vector(self, args):
