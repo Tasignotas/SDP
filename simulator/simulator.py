@@ -17,10 +17,10 @@ class Simulator(object):
         self.blue = cv2.imread('blue.jpg', -1)
 
         # Positions of the robots
-        self.robots = {'y1': (100, 200, 0),
-                       'y2': (200, 200, 20),
-                       'b1': (300, 200, 180),
-                       'b2': (400, 200, 90)}
+        self.robots = {'y1': [100, 200, 0],
+                       'y2': [200, 200, 20],
+                       'b1': [300, 200, 180],
+                       'b2': [400, 200, 90]}
         cv2.namedWindow('Simulator')
 
     def overlayImage(self, x_offset, y_offset, s_img):
@@ -83,5 +83,5 @@ class Simulator(object):
         pass
 
 
-sim = Simulator()
-sim.run()
+# sim = Simulator()
+# sim.run()
