@@ -41,33 +41,30 @@ class Vision:
         self.ball_tracker = BallTracker(
             (0, self.crop_values[1], 0, self.crop_values[3]), 0)
 
-        zone1 = (0, zone_size)
-        zone2 = (zone_size, 2 * zone_size)
-        zone3 = (zone_size * 2, zone_size * 3)
-        zone4 = (zone_size * 3, zone_size * 4)
+        zones = [(zone_size * i, zone_size * (i + 1), 0, self.crop_values[3]) for i in range(4)]
 
         # Do set difference to find the other color - if is too long :)
         opponent_color = (TEAM_COLORS - set([color])).pop()
 
         if side == 'left':
             self.us = [
-                RobotTracker(color, (zone1[0], zone1[1], 0, self.crop_values[3]), 0),   # defender
-                RobotTracker(color, (zone3[0], zone3[1], 0, self.crop_values[3]), zone_size * 2) # attacker
+                RobotTracker(color, zones[0], 0),   # defender
+                RobotTracker(color, zones[2], zone_size * 2) # attacker
             ]
 
             self.opponents = [
-                RobotTracker(opponent_color, (zone2[0], zone2[1], 0, self.crop_values[3]), zone_size),
-                RobotTracker(opponent_color, (zone4[0], zone4[1], 0, self.crop_values[3]), zone_size * 3)
+                RobotTracker(opponent_color, zones[1], zone_size),
+                RobotTracker(opponent_color, zones[3], zone_size * 3)
             ]
         else:
             self.us = [
-                RobotTracker(color, (zone2[0], zone2[1], 0, self.crop_values[3]), zone_size),
-                RobotTracker(color, (zone4[0], zone4[1], 0, self.crop_values[3]), zone_size * 3)
+                RobotTracker(color, zones[1], zone_size),
+                RobotTracker(color, zones[3], zone_size * 3)
             ]
 
             self.opponents = [
-                RobotTracker(opponent_color, (zone1[0], zone1[1], 0, self.crop_values[3]), 0),   # defender
-                RobotTracker(opponent_color, (zone3[0], zone3[1], 0, self.crop_values[3]), zone_size * 2)
+                RobotTracker(opponent_color, zones[0], 0),   # defender
+                RobotTracker(opponent_color, zones[2], zone_size * 2)
             ]
 
     def locate(self):
