@@ -2,6 +2,7 @@ from vision.vision import Vision
 from planning.planner import Planner
 from vision.tracker import Tracker
 import vision.tools as tools
+import nxt
 
 
 class Controller:
@@ -9,11 +10,15 @@ class Controller:
     Primary source of robot control. Ties vision and planning together.
     """
 
-    def __init__(self, port=0):
+    def __init__(self, port=0, connect=False):
         self.vision = Vision()
-        self.planner = Planner()
-        # self.attacker = Attacker()
-        # self.defender = Defender()
+        self.planner = Planner(our_side='left')
+        if connect:
+            self.defender = Defender_Controller(
+                connectionName='GRP7D', leftMotorPort='PORT_A', 
+                rightMotorPort='PORT_C', kickerMotorPort='PORT_B')
+        #self.attacker_controller = Attacker_Controller('GRP7A', 'PORT_X', 'PORT_X', 'PORT_X')
+
 
     def wow(self):
         """
@@ -28,7 +33,7 @@ class Controller:
             #    print 'Positions:', positions[0][1]
 
             # Find appropriate action
-            actions = self.planner.plan(*positions)
+            actions = self.planner.plan({})
             #print 'Actions:', actions
 
             # Execute action
@@ -36,23 +41,40 @@ class Controller:
             # self.defender.execute(actions[1])
 
 
-class Robot:
+class Connection:
+
+
+    def __init__(self, name='NXT'):
+        print 'Connecting to NXT Brick with name %s' % name
+        self.brick = nxt.locator.find_one_brick(
+            name=name, method=nxt.locator.Method(usb=False))
+        if self.brick:
+            print 'Connection successful.'
+
+
+    def close(self):
+        """
+        TODO
+        Close connection to the brick, return success or failure.
+        """
+        pass
+
+
+class Robot_Controller(object):
     """
-    Robot superclass for control.
-    Should encapsulate robot communication as well.
+    Robot_Controller superclass for robot control.
     """
 
-    def __init__ (self, connectionName,leftMotorPort,rightMotorPort,kickerMotorPort,lightSensorPort):
+    def __init__(self, connectionName, leftMotorPort, rightMotorPort, kickerMotorPort):
         """
         Connect to Brick and setup Motors/Sensors.
         """
-        connection = src.common.Connection(name=connectionName)
+        connection = Connection(name=connectionName)
         self.BRICK = connection.brick
         self.MOTOR_L = Motor(self.BRICK,leftMotorPort)
         self.MOTOR_R = Motor(self.BRICK,rightMotorPort)
         self.MOTOR_K = Motor(self.BRICK,kickerMotorPort)
-        self.LIGHT_L = Light(self.BRICK,lightSensorPort)
-        self.LIGHT_L.set_illuminated(True)
+
 
     def execute(self, action):
         """
@@ -61,36 +83,28 @@ class Robot:
         pass
 
 
-class Attacker(Robot):
+class Attacker_Controller(Robot_Controller):
     """
     Attacker implementation.
     """
 
-    def __init__ (self, connectionName,leftMotorPort,rightMotorPort,kickerMotorPort,lightSensorPort):
+    def __init__ (self, connectionName, leftMotorPort, rightMotorPort, kickerMotorPort):
         """
         Do the same setup as the Robot class, as well as anything specific to the Attacker.
         """
-        Robot.__init__(self, connectionName,leftMotorPort,rightMotorPort,kickerMotorPort,lightSensorPort)
-       # No need for the parameters once the robots have been finalised.
-       #Robot.__init__(self, connectionName, PORT_B, PORT_C, PORT_A, PORT_2)
-
-    pass
+        super(Attacker_Controller, self).__init__(connectionName, leftMotorPort, rightMotorPort, kickerMotorPort)
 
 
-class Defender(Robot):
+class Defender_Controller(Robot_Controller):
     """
     Defender implementation.
     """
 
-    def __init__ (self, connectionName,leftMotorPort,rightMotorPort,kickerMotorPort,lightSensorPort):
+    def __init__ (self, connectionName, leftMotorPort, rightMotorPort, kickerMotorPort):
         """
         Do the same setup as the Robot class, as well as anything specific to the Defender.
         """
-        Robot.__init__(self, connectionName,leftMotorPort,rightMotorPort,kickerMotorPort,lightSensorPort)
-       # No need for the parameters once the robots have been finalised.
-       #Robot.__init__(self, connectionName, PORT_B, PORT_C, PORT_A, PORT_2)
-
-    pass
+        super(Defender_Controller, self).__init__(connectionName, leftMotorPort, rightMotorPort, kickerMotorPort)
 
 
 if __name__ == '__main__':
