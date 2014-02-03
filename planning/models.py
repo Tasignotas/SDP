@@ -1,9 +1,10 @@
 
+
 from json import load
 from numpy import array
 from Polygon.cPolygon import Polygon
 from Polygon.Utils import pointList
-from math import atan, cos, hypot
+from math import atan, cos, sin, hypot, pi
 
 
 ROBOT_LENGTH = 20
@@ -14,6 +15,7 @@ ROBOT_HEIGHT = 10
 BALL_LENGTH = 5
 BALL_WIDTH = 5
 BALL_HEIGHT = 5
+BALL_POSSESSION_THRESHOLD = 12.5
 
 GOAL_LENGTH = 60
 GOAL_WIDTH = 1
@@ -102,8 +104,18 @@ class Pitch_Object(object):
         return self._vector.get_x()
 
 
+    def get_x_shift(self, d, theta):
+        angle = self._vector.get_angle()
+        return self._vector.get_x() + (d * cos(theta + angle))
+
+
     def get_y(self):
         return self._vector.get_y()
+
+
+    def get_y_shift(self, d, theta):
+        angle = self._vector.get_angle()
+        return self._vector.get_x() + (d * sin(theta + angle))
 
 
     def get_vector(self):
@@ -116,25 +128,20 @@ class Pitch_Object(object):
 
 
     def get_polygon(self):
-        x, y = self.get_x(), self.get_y()
-        angle = self.get_angle()
         (width, length, height) = self.get_dimensions()
-        diagonal = hypot(width / 2, length / 2)
-        arc = atan((width * 0.5)/(height * 0.5))
-        front_left_corner = (x + (diagonal * cos(angle - arc)))
-        front_right_corner = (x + (diagonal * cos(angle + arc)))
-        back_left_corner = (x + (diagonal * cos(((angle + 180) % 360) + arc)))
-        back_right_corner = (x + (diagonal * cos(((angle + 180) % 360) - arc)))
-        return Polygon((front_left_corner, front_right_corner, back_left_corner, back_right_corner))
-
+        d = hypot(width / 2, length / 2)
+        theta = atan((width * 0.5)/(height * 0.5))
+        back_right = (self.get_x_shift(d, theta-(pi/2)), self.get_y_shift(d, theta-(pi/2)))
+        back_left = (self.get_x_shift(d, -theta-(pi/2)), self.get_y_shift(d, -theta-(pi/2)))
+        front_right = (self.get_x_shift(d, -theta+(pi/2)), self.get_y_shift(d, -theta+(pi/2)))
+        front_left = (self.get_x_shift(d, theta+(pi/2)), self.get_y_shift(d, theta+(pi/2)))
+        return Polygon((front_left, front_right, back_left, back_right))
 
 
     def __repr__(self):
         return ('x: %s\ny: %s\nangle: %s\nvelocity: %s\ndimensions: %s\n' %
                 (self.get_x(), self.get_y(),
                  self.get_angle(), self.get_velocity(), self.get_dimensions()))
-
-
 
 
 class Robot(Pitch_Object):
@@ -150,12 +157,17 @@ class Robot(Pitch_Object):
         return self._zone
 
 
-    def get_possession(self):
-        return self._possession
+    def get_possession(self, ball):
+        check_angle = abs(self.get_angle() - ball.get_angle()) <= pi / 4
+        displacement = hypot(self.get_x() - ball.get_x(), self.get_x() - ball.get_x())
+        check_displacement = displacement <= BALL_POSSESSION_THRESHOLD
+        return check_angle & check_displacement
 
 
-    def set_possession(self, possession):
-        self._possession = possession
+    def get_kick_path(self, target):
+        robot_poly = self.get_polygon()
+        target_poly = self.get_polygon()
+        return Polygon(robot_poly[0], robot_poly[1], target_poly[0], target_poly[1])
 
 
     def __repr__(self):
