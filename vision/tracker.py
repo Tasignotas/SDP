@@ -89,7 +89,7 @@ class RobotTracker(Tracker):
         self.color = COLORS[color][0]
         self.offset = offset
 
-    def find(self, frame, queue):
+    def find(self, frame):#, queue):
         contours, hierarchy = self.preprocess(
             frame,
             self.crop,
@@ -100,8 +100,8 @@ class RobotTracker(Tracker):
         )
 
         if len(contours) <= 0 or len(contours[0]) < 5:
-           # print 'No contours found.'
-            queue.put(None)
+            print 'No contours found.'
+            #queue.put(None)
         else:
             # Trim contours matrix
             cnt = contours[0]
@@ -111,7 +111,20 @@ class RobotTracker(Tracker):
 
             x = int(x)
             y = int(y)
- 
+            
+            xmin = np.minimum(x+3*radius,x-3*radius)
+            xmax = np.maximum(x+3*radius,x-3*radius)            
+
+            ymin = np.minimum(y+3*radius,y-3*radius)
+            ymax = np.maximum(y+3*radius,y-3*radius)            
+
+            roi = frame[ymin:ymax,xmin:xmax]
+# https://opencv-python-tutroals.readthedocs.org/en/latest/py_tutorials/py_imgproc/py_houghcircles/py_houghcircles.html
+
+            roi = cv2.medianBlur(roi,5)
+            roi = cv2.cvtColor(roi,cv2.COLOR_BGR2GRAY)
+            circles = cv2.HoughCircles(roi,cv2.cv.CV_HOUGH_GRADIENT,1,20,param1=50,param2=10,minRadius=3,maxRadius=7)
+            return  circles,roi
 #             newX,newY = (x + self.offset, y)
            
 #             if self.oldPos:#==(-1,-1):
@@ -124,8 +137,8 @@ class RobotTracker(Tracker):
 #             speed = np.sqrt(changeX**2 + changeY**2) # in pixels per frame                
 #             #((x,y),orientation,speed)
 #             self.oldPos = (newX,newY)
-            angle, speed = None, None
-            queue.put(((x + self.offset, y), angle, speed))
+            #angle, speed = None, None
+            #queue.put(((x + self.offset, y), angle, speed))
 
         
 class BallTracker(Tracker):
