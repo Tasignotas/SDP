@@ -4,18 +4,40 @@ import cv2
 class Simulator(object):
     
     def __init__(self):
-        self.clean = cv2.imread('bg.jpg')
+        
+        # Images for display
+        self.background = cv2.imread('bg.jpg')
+        self.yellow = cv2.imread('yellow.jpg')
+        self.blue = cv2.imread('blue.jpg')
+
+        # Positions of the robots
+        self.robots = {'y1': (100, 100, 0),
+                       'y2': (200, 100, 0),
+                       'b1': (300, 100, 0),
+                       'b2': (400, 100, 0)}
         cv2.namedWindow('Simulator')
 
+    def getFrame(self):
+
+        for robot in ['y1', 'y2']:
+            x_offset = self.robots[robot][0]
+            y_offset = self.robots[robot][1]
+            self.background[y_offset:y_offset+self.yellow.shape[0], x_offset:x_offset+self.yellow.shape[1]] = self.yellow
+
+        for robot in ['b1', 'b2']:
+            x_offset = self.robots[robot][0]
+            y_offset = self.robots[robot][1]
+            self.background[y_offset:y_offset+self.blue.shape[0], x_offset:x_offset+self.blue.shape[1]] = self.blue
 
 
     def run(self):
         """
         Run the simulation.
         """
-        # self._initialize()
+
         while(1):
-            cv2.imshow('Simulator', self.clean)
+            self.getFrame()
+            cv2.imshow('Simulator', self.background)
             k = cv2.waitKey(5) & 0xFF
 
             if k == 27:
