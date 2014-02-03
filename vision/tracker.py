@@ -101,6 +101,52 @@ class RobotTracker(Tracker):
         self.color = COLORS[color]
         self.offset = offset
 
+    def _find_circle(self, frame, contours, offset, search_size=18):
+        (x, y), radius = self.get_min_enclousing_circle(contours)
+
+        # Cast to integers
+        x, y = int(x), int(y)
+
+        # Define bounding box for search
+        xmin, xmax = x + offset - search_size / 2, x + offset + search_size / 2
+        ymin, ymax = y - search_size / 2, y + search_size / 2
+
+        # Trim and convert to grayscale
+        box = cv2.cvtColor(frame[ymin:ymax, xmin:xmax], cv2.COLOR_BGR2GRAY)
+
+        # Find circles in the box using Hough Contours
+        circles = cv2.HoughCircles(
+            box,
+            cv2.cv.CV_HOUGH_GRADIENT,
+            1, 20, param1=50, param2=10,
+            minRadius=3, maxRadius=7
+        )
+
+        # calculate angle if circles available
+        if circles is not None:
+            center = (circles[0][0][0] + xmin, circles[0][0][1] + ymin)
+            diff_x = center[0] - x + offset
+            diff_y = center[1] - y
+
+            # DEBUG
+            print (diff_x, diff_y)
+
+            angle = np.arctan((np.abs(diff_y) * 1.0 / np.abs(diff_x)))
+            angle = np.degrees(angle)
+            if diff_x > 0 and diff_y < 0:
+                angle = 90 - angle
+            if diff_x > 0 and diff_y > 0:
+                angle = 180 - angle
+            if diff_x < 0 and diff_y > 0:
+                angle = 180+angle
+            if diff_x < 0 and diff_y < 0:
+                angle = 360 - angle
+
+            # What do we need this for???
+            speed = (center[0], center[1])
+            return (angle, speed)
+        else:
+            return (None, None)
 
     def find(self, frame, queue):
         for color in self.color:
@@ -120,58 +166,10 @@ class RobotTracker(Tracker):
                 # Trim contours matrix
                 cnt = contours[0]
 
-                # Get center
-                (x, y), radius = self.get_min_enclousing_circle(cnt)
+                # Find angle and speed
+                angle, speed = self._find_circle(frame, cnt, self.offset)
 
-                x = int(x)
-                y = int(y)
-                radius = 6
-                xmin = x+self.offset-3*radius
-                xmax = x+self.offset+3*radius
-                ymin = y-3*radius
-                ymax = y+3*radius
-  #          xmin = np.minimum(x+3*radius,x-3*radius)
- #           xmax = np.maximum(x+3*radius,x-3*radius)            
-
-#            ymin = np.minimum(y+3*radius,y-3*radius)
-#            ymax = np.maximum(y+3*radius,y-3*radius)            
-
-                
-                roi = frame[ymin:ymax,xmin:xmax]
-# https://opencv-python-tutroals.readthedocs.org/en/latest/py_tutorials/py_imgproc/py_houghcircles/py_houghcircles.html
-
-#            roi = cv2.medianBlur(roi,5)
-                roi = cv2.cvtColor(roi,cv2.COLOR_BGR2GRAY)
-                circles = cv2.HoughCircles(roi,cv2.cv.CV_HOUGH_GRADIENT,1,20,param1=50,param2=10,minRadius=3,maxRadius=7)
-                if circles is not None:
-                    circleCenter = (circles[0][0][0]+xmin,circles[0][0][1]+ymin)
-                    diffX = circleCenter[0] - x +self.offset
-                    diffY = circleCenter[1] - y              
-                    print(diffX,diffY)
-                    #diffVector = np.array([diffX,diffY])
-                    #originVector = np.array([0,1])
-                    #angle = np.arccos(np.dot(originVector,diffVector)/np.sqrt(np.dot(diffVector,diffVector)))
-                    angle = np.arctan((np.abs(diffY)*1.0/np.abs(diffX)))
-                    angle = np.degrees(angle)
-                    if diffX>0 and diffY<0:
-                        angle = 90- angle
-                    if diffX>0 and diffY>0:
-                        angle = 180-angle
-                    if diffX<0 and diffY>0:
-                        angle = 180+angle
-                    if diffX<0 and diffY<0:
-                        angle = 360 - angle
-                    #if diffX <0:
-                    #    angle = 360-angle
-
-                    speed = (circleCenter[0],circleCenter[1])
-                else:
-                    angle = None
-                #print (circles,roi)
-                #return  (circles,roi)
-     
-
-                    speed = None#, None
+                # Attach to queue for multiprocessing
                 queue.put(((x + self.offset, y), angle, speed))
                 return
         queue.put(None)
