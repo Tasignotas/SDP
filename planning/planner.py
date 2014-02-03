@@ -1,4 +1,9 @@
 from models import World
+from pathfinder import find_path
+
+
+ANGLE_THRESHOLD = 20
+DISTANCE_THRESHOLD = 10
 
 
 class Planner:
@@ -14,7 +19,7 @@ class Planner:
         our_defender = self._world.get_our_defender()
         their_attacker = self._world.get_their_attacker()
         their_defender = self._world.get_their_defender()
-        ball = self._world.get_ball() 
+        ball = self._world.get_ball()
         if our_defender.get_possession():
             # Match orientation with h_attack
             # Check for clear kick path
@@ -40,6 +45,14 @@ class Planner:
             # Follow path to MTV point
             pass
         else:
-            # Try to follow path to ball
-            pass
-        return ((0,0,0), (0,0,0))
+            # For now, we just ask the defender to fetch the ball:
+            path = find_path(our_defender, ball)
+            # If we're at (more or less) correct angle and we still need to go straight:
+            if  ((-ANGLE_THRESHOLD) < path[1] < ANGLE_THRESHOLD) and (DISTANCE_THRESHOLD < path[0]):
+                return ((50, 50, 10), (0, 0, 0))
+            # If we need to turn right:
+            elif (-ANGLE_THRESHOLD) < path[1]:
+                return ((50, -50, 0), (0, 0, 0))
+            elif ANGLE_THRESHOLD < path[1]:
+                return ((-50, 50, 0), (0, 0, 0))
+        return ((0, 0, 0), (0, 0, 0))

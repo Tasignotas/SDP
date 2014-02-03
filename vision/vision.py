@@ -4,6 +4,7 @@ from tracker import BallTracker, RobotTracker
 import math
 from multiprocessing import Process, Queue
 import os
+from planning.models import Vector
 
 
 TEAM_COLORS = set(['yellow', 'blue'])
@@ -103,7 +104,7 @@ class Vision:
         if len(objects[4].oldPos) > 5:
             objects[4].oldPos.pop(0)
         #for i in objects:
-        print objects[4].oldPos
+        # print objects[4].oldPos
             
 
         # terminate processes
@@ -129,4 +130,19 @@ class Vision:
         #     print 'parent process:', os.getppid()
         # print 'process id:', os.getpid()
 
-        return tuple(positions)
+        result = {
+            'our_attacker': self.to_vector(positions[1]),
+            'their_attacker': self.to_vector(positions[3]),
+            'our_defender': self.to_vector(positions[0]),
+            'their_defender': self.to_vector(positions[2]),
+            'ball': self.to_vector(positions[4])
+        }
+
+        return result
+
+
+    def to_vector(self, args):
+        if args is not None:
+            x, y = args[0] if args[0] is not None else (None, None)
+            return Vector(x, y, args[1], args[2])
+
