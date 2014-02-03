@@ -282,13 +282,13 @@ class World:
     def update_positions(self, position_dict):
         ''' This method will update the positions of the pitch objects
             that it gets passed by the vision system '''
-        if 'our_attacker' in position_dict:
+        if position_dict['our_attacker']:
             self.get_our_attacker().set_vector(position_dict['our_attacker'])
-        if 'their_attacker' in position_dict:
+        if position_dict['their_attacker']:
             self.get_their_attacker().set_vector(position_dict['their_attacker'])
-        if 'our_defender' in position_dict:
+        if position_dict['our_defender']:
             self.get_our_defender().set_vector(position_dict['our_defender'])
-        if 'their_defender' in position_dict:
+        if position_dict['their_defender']:
             self.get_their_defender().set_vector(position_dict['their_defender'])
-        if 'ball' in position_dict:
+        if position_dict['ball']:
             self.get_ball().set_vector(position_dict['ball'])
