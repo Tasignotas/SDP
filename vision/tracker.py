@@ -11,6 +11,12 @@ COLORS = {
             'max': np.array((5.0, 255.0, 255.0)),
             'contrast': 100.0,
             'blur': 5
+        },
+        {
+            'min': np.array((0.0, 181.0, 130.0)),
+            'max': np.array((10.0, 255.0, 255.0)),
+            'contrast': 100.0,
+            'blur': 5
         }
     ],
     'yellow': [

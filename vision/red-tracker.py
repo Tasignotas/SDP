@@ -98,10 +98,10 @@ class RedTracker:
 
             # Apply simple kernel blur
             # Take a matrix given by second argument and calculate average of those pixels
-            self.frame = cv2.blur(self.frame, (5, 5))
+            # self.frame = cv2.blur(self.frame, (5, 5))
 
             # Set Contrast
-            self.frame = cv2.add(self.frame, np.array([100.0]))
+            # self.frame = cv2.add(self.frame, np.array([100.0]))
 
             # Convert frame to HSV
             frame_hsv = cv2.cvtColor(self.frame, cv2.COLOR_BGR2HSV)
@@ -109,8 +109,8 @@ class RedTracker:
             # Create a mask for the t_yellow T
             frame_mask = cv2.inRange(
                 frame_hsv,
-                np.array((0.0, 114.0, 250.0)),
-                np.array((5.0, 255.0, 255.0))
+                np.array((0.0, 181.0, 130.0)),
+                np.array((10.0, 255.0, 255.0))
             )
 
             # Display the masked image
