@@ -21,8 +21,14 @@ COLORS = {
     ],
     'yellow': [
         {
-            'min': np.array((0.0, 193.0, 137.0)),
-            'max': np.array((50.0, 255.0, 255.0)),
+            'min': np.array((0.0, 193.0, 137.0)), #LH,LS,LV
+            'max': np.array((50.0, 255.0, 255.0)), #UH,US,UV
+            'contrast': 1.0,
+            'blur': 1
+        },
+        {
+            'min': np.array((6.0, 154.0, 229.0)), #LH,LS,LV
+            'max': np.array((130.0, 255.0, 255.0)), #UH,US,UV
             'contrast': 1.0,
             'blur': 1
         }
