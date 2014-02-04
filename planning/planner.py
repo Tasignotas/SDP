@@ -49,7 +49,7 @@ class Planner:
             path = find_path(our_defender, ball)
             # If we're at (more or less) correct angle and we still need to go straight:
             if  ((-ANGLE_THRESHOLD) < path[1] < ANGLE_THRESHOLD) and (DISTANCE_THRESHOLD < path[0]):
-                return ((50, 50, 10), (0, 0, 0))
+                return ((50, 50, 0), (0, 0, 0))
             # If we need to turn right:
             elif (-ANGLE_THRESHOLD) < path[1]:
                 return ((50, -50, 0), (0, 0, 0))
