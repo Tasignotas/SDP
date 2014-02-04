@@ -8,10 +8,7 @@ def check_values(tracker, target):
     at_x = tracker.get_x() == target.get_x()
     at_y = tracker.get_y() == target.get_y()
     at_angle = tracker.get_angle() == target.get_angle()
-    x_none = (tracker.get_x() | target.get_x()) == None
-    y_none = (tracker.get_y() | target.get_y()) == None
-    angle_none = (tracker.get_angle() | target.get_angle()) == None
-    return not (at_x | at_y | at_angle | x_none | y_none | angle_none)
+    return not (at_x or at_y or at_angle)
 
 
 def find_path(tracker, target):
