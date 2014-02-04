@@ -37,9 +37,12 @@ class Coordinate(object):
         return self._y
 
 
-    def set_position(self, x, y):
-        self._x = x
-        self._y = y
+    def set_x(self, x):
+        self._x = x if x else self._x
+
+
+    def set_y(self, y):
+        self._y = y if y else self._y
 
 
     def __repr__(self):
@@ -64,11 +67,11 @@ class Vector(Coordinate):
 
 
     def set_angle(self, angle):
-        self._angle = angle
+        self._angle = angle if angle else self._angle
 
 
     def set_velocity(self, velocity):
-        self._velocity = velocity
+        self._velocity = velocity if velocity else self._velocity
 
 
     def __repr__(self):
@@ -115,15 +118,18 @@ class Pitch_Object(object):
 
 
     def get_vector(self):
-        return self._vector.get_position()
+        return self._vector
 
 
     def set_vector(self, vector):
-        if vector:
-            self._vector = vector
+        self._vector.set_angle(vector.get_angle())
+        self._vector.set_velocity(vector.get_velocity())
+        self._vector.set_x(vector.get_x())
+        self._vector.set_y(vector.get_y())
 
 
     def get_polygon(self):
+        # This returns the Polygon (boundary box) around the object:
         (width, length, height) = self.get_dimensions()
         d = hypot(width / 2, length / 2)
         theta = atan((width * 0.5)/(height * 0.5))
@@ -154,10 +160,11 @@ class Robot(Pitch_Object):
 
 
     def get_possession(self, ball):
+        # Checks if the robot has possession:
         check_angle = abs(self.get_angle() - ball.get_angle()) <= pi / 4
         displacement = hypot(self.get_x() - ball.get_x(), self.get_x() - ball.get_x())
         check_displacement = displacement <= BALL_POSSESSION_THRESHOLD
-        return check_angle & check_displacement
+        return (check_angle and check_displacement)
 
 
     def get_pass_path(self, robot):
@@ -222,7 +229,7 @@ class Pitch:
 
 
     def __init__(self):
-        config_file = open('vision/calibrate.json', 'r')
+        config_file = open('../vision/calibrate.json', 'r')
         config_json = load(config_file)
         config_file.close()
         # Getting the zones:
