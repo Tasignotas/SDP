@@ -51,6 +51,12 @@ COLORS = {
             'max': np.array((104.0, 255.0, 255.0)),
             'contrast': 1.0,
             'blur': 1
+        },
+        {	#not too good at edges.
+            'min': np.array((80.0, 59.0, 90.0)),	#LH,LS,LV
+            'max': np.array((135.0, 142.0, 190.0)),	#UH,US,UV
+            'contrast': 1.0,
+            'blur': 1
         }
            
     ]
