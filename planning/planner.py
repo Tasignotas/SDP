@@ -20,26 +20,26 @@ class Planner:
         their_attacker = self._world.get_their_attacker()
         their_defender = self._world.get_their_defender()
         ball = self._world.get_ball()
-        if our_defender.get_possession():
+        if our_defender.get_possession(ball):
             # Match orientation with h_attack
             # Check for clear kick path
             # Kick ball or get MTV
             # Follow path to MTV point
             # If kick path clear then kick else repeat
             pass
-        elif our_attacker.get_possession():
+        elif our_attacker.get_possession(ball):
             # Match orientation with a_goal
             # Check for clear kick path
             # Kick ball or get MTV
             # Follow path to MTV point
             # If kick path clear then kick else repeat
             pass
-        elif their_defender.get_possession():
+        elif their_defender.get_possession(ball):
             # Check for clear kick path
             # If clear calc MTV to block
             # Follow path to MTV point
             pass
-        elif their_attacker.get_possession():
+        elif their_attacker.get_possession(ball):
             # Check for clear kick path
             # If clear calc MTV to block
             # Follow path to MTV point
