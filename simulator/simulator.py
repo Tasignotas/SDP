@@ -1,5 +1,4 @@
 import cv2
-import numpy as np
 from scipy import ndimage
 import copy
 
@@ -93,11 +92,6 @@ class Simulator(object):
         while(1):
 
             self.updatePositions(sampleActions)
-
-            # try:
-            #     self.getFrame()
-            # except:
-            #     pass
 
             self.getFrame()
 
