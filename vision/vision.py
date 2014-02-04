@@ -18,30 +18,53 @@ class Vision:
 
     def __init__(self, side='left', color='yellow', port=0):
 
-        if color not in TEAM_COLORS:
-            print 'Incorrect color assignment.', 'Valid colors are:', TEAM_COLORS
+        # Check params
+        if not self._param_check(side, color):
             return
-        if side not in SIDES:
-            print 'Incorrect side assignment.', 'Valid sides are:', SIDES
-
-        # Capture video port
-        self.capture = cv2.VideoCapture(port)
-
-        # Read in couple of frames to clear corrupted frames
-        for i in range(5):
-            status, frame = self.capture.read()
+        
+        # Initialize camera
+        self._init_camera(port)
 
         # Retrieve crop values from calibration
         self.crop_values = tools.find_extremes(
             tools.get_calibration('vision/calibrate.json')['outline'])
 
-        # Temporary: divide zones into section
-        zone_size = int(math.floor(self.crop_values[1] / 4.0))
-
-
         self.ball_tracker = BallTracker(
             (0, self.crop_values[1], 0, self.crop_values[3]), 0)
 
+        # Initialize side assignment
+        self._init_robot_trackers(side, color)        
+
+    def _param_check(self, side, color):
+        """
+        Check the params passed in.
+        """
+        if color not in TEAM_COLORS:
+            print 'Incorrect color assignment.', 'Valid colors are:', TEAM_COLORS
+            return None
+        if side not in SIDES:
+            print 'Incorrect side assignment.', 'Valid sides are:', SIDES
+            return None
+        return True
+
+    def _init_camera(self, port):
+        """
+        Initialize camera capture.
+        """
+        # Capture video port
+        self.capture = cv2.VideoCapture(port)
+
+        # Read in couple of frames to clear corrupted frames
+        for i in range(3):
+            status, frame = self.capture.read()
+
+    def _init_robot_trackers(self, side, color):
+        """
+        Initialize side assignment.
+        """
+        # Temporary: divide zones into section
+        zone_size = int(math.floor(self.crop_values[1] / 4.0))
+        
         zones = [(zone_size * i, zone_size * (i + 1), 0, self.crop_values[3]) for i in range(4)]
 
         # Do set difference to find the other color - if is too long :)
@@ -140,8 +163,12 @@ class Vision:
 	print result
         return result
 
-
     def to_vector(self, args):
+        """
+        Convert a tuple into a vector
+
+        Return a Vector
+        """
         if args is not None:
             x, y = args[0] if args[0] is not None else (None, None)
             return Vector(x, y, args[1], args[2])
