@@ -1,7 +1,6 @@
 
 
 from json import load
-from numpy import array
 from Polygon.cPolygon import Polygon
 from Polygon.Utils import pointList
 from math import atan, cos, sin, hypot, pi
@@ -104,18 +103,15 @@ class Pitch_Object(object):
         return self._vector.get_x()
 
 
-    def get_x_shift(self, d, theta):
-        angle = self._vector.get_angle()
-        return self._vector.get_x() + (d * cos(theta + angle))
-
-
     def get_y(self):
         return self._vector.get_y()
 
 
-    def get_y_shift(self, d, theta):
+    def get_position_shift(self, d, theta):
         angle = self._vector.get_angle()
-        return self._vector.get_x() + (d * sin(theta + angle))
+        x_shift = self._vector.get_x() + (d * cos(theta + angle))
+        y_shift = self._vector.get_x() + (d * sin(theta + angle))
+        return (x_shift, y_shift)
 
 
     def get_vector(self):
@@ -131,10 +127,10 @@ class Pitch_Object(object):
         (width, length, height) = self.get_dimensions()
         d = hypot(width / 2, length / 2)
         theta = atan((width * 0.5)/(height * 0.5))
-        back_right = (self.get_x_shift(d, theta-(pi/2)), self.get_y_shift(d, theta-(pi/2)))
-        back_left = (self.get_x_shift(d, -theta-(pi/2)), self.get_y_shift(d, -theta-(pi/2)))
-        front_right = (self.get_x_shift(d, -theta+(pi/2)), self.get_y_shift(d, -theta+(pi/2)))
-        front_left = (self.get_x_shift(d, theta+(pi/2)), self.get_y_shift(d, theta+(pi/2)))
+        back_right = self.get_position_shift(d, theta-(pi/2))
+        back_left = self.get_position_shift(d, -theta-(pi/2))
+        front_right = self.get_position_shift(d, -theta+(pi/2))
+        front_left = self.get_position_shift(d, theta+(pi/2))
         return Polygon((front_left, front_right, back_left, back_right))
 
 
@@ -164,10 +160,29 @@ class Robot(Pitch_Object):
         return check_angle & check_displacement
 
 
-    def get_kick_path(self, target):
+    def get_pass_path(self, robot):
         robot_poly = self.get_polygon()
         target_poly = self.get_polygon()
         return Polygon(robot_poly[0], robot_poly[1], target_poly[0], target_poly[1])
+
+
+    def get_shoot_paths(self, goal, path_width=BALL_WIDTH):
+        robot_poly = self.get_polygon()
+        goal_poly = self.get_polygon()
+        path_min = goal_poly[0] if goal_poly[0][1] <= goal_poly[1][1] else goal_poly[1]
+        path_max = goal_poly[0] if goal_poly[0][1] > goal_poly[1][1] else goal_poly[1]
+        shoot_paths = []
+        while path_min[1] <= path_max[1] - path_width:
+            y_max = path_min
+            y_max[1] = y_max[1] + path_width
+            shoot_paths.append(Polygon(robot_poly[0], robot_poly[1], path_min, y_max))
+            path_min = y_max
+        return shoot_paths
+
+
+    def get_kick_angle(self, kick_path):
+        # Check for angle change necessary for a clear kick
+        pass
 
 
     def __repr__(self):
