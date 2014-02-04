@@ -137,7 +137,7 @@ class Vision:
             'their_defender': self.to_vector(positions[2]),
             'ball': self.to_vector(positions[4])
         }
-
+	print result
         return result
 
 
