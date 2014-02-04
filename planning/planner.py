@@ -1,5 +1,5 @@
 from models import World
-from pathfinder import find_path
+from path import find_path
 
 
 ANGLE_THRESHOLD = 20
