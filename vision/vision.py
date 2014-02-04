@@ -29,13 +29,42 @@ class Vision:
         self.crop_values = tools.find_extremes(
             tools.get_calibration('vision/calibrate.json')['outline'])
 
-        # Temporary: divide zones into section
-        zone_size = int(math.floor(self.crop_values[1] / 4.0))
-
-
         self.ball_tracker = BallTracker(
             (0, self.crop_values[1], 0, self.crop_values[3]), 0)
 
+        # Initialize side assignment
+        self._init_robot_trackers(side, color)        
+
+    def _param_check(self, side, color):
+        """
+        Check the params passed in.
+        """
+        if color not in TEAM_COLORS:
+            print 'Incorrect color assignment.', 'Valid colors are:', TEAM_COLORS
+            return None
+        if side not in SIDES:
+            print 'Incorrect side assignment.', 'Valid sides are:', SIDES
+            return None
+        return True
+
+    def _init_camera(self, port):
+        """
+        Initialize camera capture.
+        """
+        # Capture video port
+        self.capture = cv2.VideoCapture(port)
+
+        # Read in couple of frames to clear corrupted frames
+        for i in range(3):
+            status, frame = self.capture.read()
+
+    def _init_robot_trackers(self, side, color):
+        """
+        Initialize side assignment.
+        """
+        # Temporary: divide zones into section
+        zone_size = int(math.floor(self.crop_values[1] / 4.0))
+        
         zones = [(zone_size * i, zone_size * (i + 1), 0, self.crop_values[3]) for i in range(4)]
 
         # Do set difference to find the other color - if is too long :)
@@ -61,26 +90,6 @@ class Vision:
                 RobotTracker(opponent_color, zones[0], 0),   # defender
                 RobotTracker(opponent_color, zones[2], zone_size * 2)
             ]
-
-    def _param_check(self, side, color):
-        """
-        Check the params passed in.
-        """
-        if color not in TEAM_COLORS:
-            print 'Incorrect color assignment.', 'Valid colors are:', TEAM_COLORS
-            return None
-        if side not in SIDES:
-            print 'Incorrect side assignment.', 'Valid sides are:', SIDES
-            return None
-        return True
-
-    def _init_camera(self, port):
-        # Capture video port
-        self.capture = cv2.VideoCapture(port)
-
-        # Read in couple of frames to clear corrupted frames
-        for i in range(3):
-            status, frame = self.capture.read()
 
     def locate(self):
         """
