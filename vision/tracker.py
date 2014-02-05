@@ -244,7 +244,7 @@ class RobotTracker(Tracker):
             cnt = contours[0]   # Take the largest contour
 
             (x,y),radius = cv2.minEnclosingCircle(cnt)
-            return (int(x + x_offset), int(y + y_offset))
+            # return (int(x + x_offset), int(y + y_offset))
         return (None, None)
 
     def _find_dot(self, frame, color, x_offset, y_offset):
@@ -364,11 +364,11 @@ class RobotTracker(Tracker):
         plate = frame[y:y + height, x:x + width]
 
         # 3. Find colored object - x and y of the 'i'
-        x_i, y_i = self._find_i(plate, 'yellow', y, x)
+        # x_i, y_i = self._find_i(plate, 'yellow', y, x)
 
-        # 4. Join the two points
-        if x_i and y_i:
-            angle = self.get_angle((x, y), (x_i, y_i))
+        # # 4. Join the two points
+        # if x_i and y_i:
+        #     angle = self.get_angle((x, y), (x_i, y_i))
 
         # 5. Return result
         queue.put((x + self.offset + width / 2, y + height / 2, angle, speed))
