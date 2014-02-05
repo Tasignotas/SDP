@@ -3,8 +3,10 @@ import tools
 from tracker import BallTracker, RobotTracker
 import math
 from multiprocessing import Process, Queue
+import sys
 import os
-from planning.models import Vector
+sys.path.append(os.path.abspath('../planning'))
+from models import Vector
 
 
 TEAM_COLORS = set(['yellow', 'blue'])
