@@ -253,7 +253,7 @@ class RobotTracker(Tracker):
             cnt = contours[0]   # Take the largest contour
 
             (x,y),radius = cv2.minEnclosingCircle(cnt)
-            # return (int(x + x_offset), int(y + y_offset))
+            return (int(x + x_offset), int(y + y_offset))
         return (None, None)
 
     def _find_dot(self, frame, color, x_offset, y_offset):
@@ -381,7 +381,11 @@ class RobotTracker(Tracker):
             #     angle = self.get_angle((x, y), (x_i, y_i))
 
         # 5. Return result
-        queue.put((x + self.offset + width / 2, y + height / 2, angle, speed))
+        queue.put({
+            'location': (x + self.offset + width / 2, y + height / 2),
+            'angle': angle,
+            'velocity': speed
+        })
         return
 
         
@@ -428,7 +432,9 @@ class BallTracker(Tracker):
               
                 queue.put({
                     'name': self.name,
-                    'location': (int(x) + self.offset, int(y))
+                    'location': (int(x) + self.offset, int(y)),
+                    'angle': None,
+                    'velocity': None
                 })
                 # queue.put([(x + self.offset, y), angle, speed])
                 return

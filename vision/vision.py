@@ -134,7 +134,7 @@ class Vision:
 
         return result
 
-    def _draw(self, frame, positions):
+    def _draw(self, frame, positions, our_color='yellow'):
         """
         Draw positions from the trackers on the screen.
 
@@ -145,12 +145,12 @@ class Vision:
         Returns:
             None. Image is displayed
         """
+        # Draw our robots
+        for position in positions[:2]:
+            self._draw_robot(frame, position, our_color)
 
-        
-        
-        # Hacky! Refactor!
-        for position in positions[:4]:
-            cv2.circle(frame, (int(position[0]), int(position[1])), 10, (255, 0, 0), 1)
+        for position in positions[2:4]:
+            self._draw_robot(frame, position, list(TEAM_COLORS - set(our_color))[0])
 
         self._draw_ball(frame, positions[4])
 
@@ -161,6 +161,18 @@ class Vision:
 
         cv2.imshow('SUCH VISION', frame)
         cv2.waitKey(4)
+
+    def _draw_robot(self, frame, position, color):
+        """
+        Draw the location of the robots given the color
+        """
+        colors = {
+            'yellow': (0, 255, 255),
+            'blue': (255, 0, 0)
+        }
+        if position:
+            center = position['location']
+            cv2.circle(frame, center, 10, colors[color], 2)
 
     def _draw_ball(self, frame, position):
         """
@@ -221,7 +233,9 @@ class Vision:
 
         Return a Vector
         """
-        return Vector(None, None, None, None)
-        if args is not None:
-            x, y = args[0] if args[0] is not None else (None, None)
-            return Vector(x, y, args[1], args[2])
+        return Vector(
+            args['location'][0],
+            args['location'][1],
+            args['angle'],
+            args['velocity']
+        )

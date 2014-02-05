@@ -10,7 +10,8 @@ class Controller:
     Primary source of robot control. Ties vision and planning together.
     """
 
-    def __init__(self, port=0, connect=False):
+    def __init__(self, port=0, connect=False, debug=False):
+        self.debug = debug
         self.vision = Vision(side='right')
         self.planner = Planner(our_side='left')
         #self.attacker = Attacker_Controller(connectionName='GRP7A', leftMotorPort=PORT_A, rightMotorPort=PORT_C, kickerMotorPort=PORT_B)
@@ -18,14 +19,17 @@ class Controller:
 
     def wow(self):
         """
+        Ready your sword, here be dragons.
+
         Main flow of the program. Run the controller with vision and planning combined.
         """
         # positions = (None,None,None,None,((0,0),0,0))
         while True:
             # Find object positions
             positions = self.vision.locate()
-            #if positions[0] is not None:
-            #    print 'Positions:', positions[0][1]
+            
+            if self.debug:
+                print positions
 
             # Find appropriate action
             actions = self.planner.plan(positions)
@@ -101,4 +105,4 @@ class Defender_Controller(Robot_Controller):
 
 
 if __name__ == '__main__':
-    c = Controller().wow()  # Such controller
+    c = Controller(debug=True).wow()  # Such controller
