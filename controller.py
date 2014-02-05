@@ -32,7 +32,7 @@ class Controller:
             #print 'Actions:', actions
 
             # Execute action
-            #self.attacker.execute(actions[0])
+            # self.attacker.execute(actions[0])
             # self.defender.execute(actions[0])
 
 
@@ -102,4 +102,3 @@ class Defender_Controller(Robot_Controller):
 
 if __name__ == '__main__':
     c = Controller().wow()  # Such controller
-    

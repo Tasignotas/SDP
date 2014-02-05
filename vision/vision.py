@@ -31,8 +31,6 @@ class Vision:
         self.calibration = tools.get_calibration('vision/calibrate.json')
         self.crop_values = tools.find_extremes(self.calibration['outline'])
 
-        # print self.crop_values
-
         self.ball_tracker = BallTracker(
             (0, self.crop_values[1], 0, self.crop_values[3]), 0)
 
@@ -147,18 +145,33 @@ class Vision:
         Returns:
             None. Image is displayed
         """
+
+        
         
         # Hacky! Refactor!
         for position in positions[:4]:
             cv2.circle(frame, (int(position[0]), int(position[1])), 10, (255, 0, 0), 1)
 
-        print positions[4]
+        self._draw_ball(frame, positions[4])
 
-        if positions[4] is not None and positions[4][0] is not None and positions[4][0][0] is not None and positions[4][0][1] is not None:
-            cv2.circle(frame, (int(positions[4][0][0]), int(positions[4][0][1])), 7, (0,0,255), 1)
+        # print positions[4]
+
+        # if positions[4] is not None and positions[4][0] is not None and positions[4][0][0] is not None and positions[4][0][1] is not None:
+        #     cv2.circle(frame, (int(positions[4][0][0]), int(positions[4][0][1])), 7, (0,0,255), 1)
 
         cv2.imshow('SUCH VISION', frame)
         cv2.waitKey(4)
+
+    def _draw_ball(self, frame, position):
+        """
+        Draw the ball as a circle. In place.
+
+        Params:
+            [dict] positions    - information about the location of the ball
+        """
+        if position is not None:
+            center = position['location']
+            cv2.circle(frame, center, 7, (0, 0, 255), 2)
 
     def _trim_image(self, frame):
         """
