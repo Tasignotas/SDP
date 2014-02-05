@@ -154,11 +154,6 @@ class Vision:
 
         self._draw_ball(frame, positions[4])
 
-        # print positions[4]
-
-        # if positions[4] is not None and positions[4][0] is not None and positions[4][0][0] is not None and positions[4][0][1] is not None:
-        #     cv2.circle(frame, (int(positions[4][0][0]), int(positions[4][0][1])), 7, (0,0,255), 1)
-
         cv2.imshow('SUCH VISION', frame)
         cv2.waitKey(4)
 
