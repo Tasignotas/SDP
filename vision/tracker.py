@@ -229,8 +229,10 @@ class RobotTracker(Tracker):
         contrast = COLORS[color][0]['contrast']
         blur = COLORS[color][0]['blur']
 
-        frame = cv2.blur(frame,(blur,blur))
-        frame = cv2.add(frame,np.array([contrast]))
+        if blur > 1:
+            frame = cv2.blur(frame,(blur,blur))
+            frame = cv2.add(frame,np.array([contrast]))
+
         frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
         # Create a mask for the t_yellow T
