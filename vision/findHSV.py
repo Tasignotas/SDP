@@ -69,7 +69,7 @@ def run(color):
 
         ret, frame = cap.read()
         frame = brighten(frame, float(BR), float(CT))
-        frame = blur(frame, float(BL))
+        frame = blur(frame, BL)
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, np.array([LH, LS, LV]), np.array([UH, US, UV]))
 
@@ -85,9 +85,10 @@ def run(color):
                 
                 selectColor[color] = config
                 
-                configFile = open("configMask.txt", "wb")
-                cPickle.dump(selectColor, configFile)
-                configFile.close()
+            configFile = open("configMask.txt", "wb")
+            cPickle.dump(selectColor, configFile)
+            print selectColor
+            configFile.close()
             break
 
     cv2.destroyAllWindows()
