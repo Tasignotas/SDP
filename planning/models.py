@@ -1,9 +1,10 @@
 
 
+from numpy.linalg import dot, norm
 from json import load
 from Polygon.cPolygon import Polygon
 from Polygon.Utils import pointList
-from math import atan, cos, sin, hypot, pi
+from math import atan, cos, sin, hypot, pi, acos
 
 
 ROBOT_LENGTH = 20
@@ -128,11 +129,12 @@ class Pitch_Object(object):
         self._vector.set_y(vector.get_y())
 
 
-    def get_polygon(self):
+    def get_polygon(self, ball=False):
         # This returns the Polygon (boundary box) around the object:
-        (width, length, height) = self.get_dimensions()
+        length = self.get_dimensions()[1]
+        width = BALL_WIDTH if ball else self.get_dimensions()[0]
         d = hypot(width / 2, length / 2)
-        theta = atan((width * 0.5)/(height * 0.5))
+        theta = atan((width * 0.5) / (length * 0.5))
         back_right = self.get_position_shift(d, theta-(pi/2))
         back_left = self.get_position_shift(d, -theta-(pi/2))
         front_right = self.get_position_shift(d, -theta+(pi/2))
@@ -168,20 +170,22 @@ class Robot(Pitch_Object):
 
 
     def get_pass_path(self, robot):
+        # Get path for passing ball between two robots
         robot_poly = self.get_polygon()
         target_poly = self.get_polygon()
         return Polygon(robot_poly[0], robot_poly[1], target_poly[0], target_poly[1])
 
 
-    def get_shoot_paths(self, goal, path_width=BALL_WIDTH):
-        robot_poly = self.get_polygon()
+    def get_shoot_paths(self, goal):
+        # Get possible shot paths between a robot and the goal
+        robot_poly = self.get_polygon(True)
         goal_poly = self.get_polygon()
-        path_min = goal_poly[0] if goal_poly[0][1] <= goal_poly[1][1] else goal_poly[1]
-        path_max = goal_poly[0] if goal_poly[0][1] > goal_poly[1][1] else goal_poly[1]
+        path_min = goal_poly[0] if goal_poly[0][1] < goal_poly[1][1] else goal_poly[1]
+        path_max = goal_poly[0] if goal_poly[0][1] >= goal_poly[1][1] else goal_poly[1]
         shoot_paths = []
-        while path_min[1] <= path_max[1] - path_width:
+        while path_min[1] <= path_max[1] - BALL_WIDTH:
             y_max = path_min
-            y_max[1] = y_max[1] + path_width
+            y_max[1] = y_max[1] + BALL_WIDTH
             shoot_paths.append(Polygon(robot_poly[0], robot_poly[1], path_min, y_max))
             path_min = y_max
         return shoot_paths
@@ -189,7 +193,14 @@ class Robot(Pitch_Object):
 
     def get_kick_angle(self, kick_path):
         # Check for angle change necessary for a clear kick
-        pass
+        robot_min = kick_path[0] if kick_path[0][1] < kick_path[1][1] else kick_path[1]
+        robot_max = kick_path[0] if kick_path[0][1] >= kick_path[1][1] else kick_path[1]
+        target_min = kick_path[2] if kick_path[2][1] < kick_path[3][1] else kick_path[3]
+        target_max = kick_path[2] if kick_path[2][1] >= kick_path[3][1] else kick_path[3]
+        path_width = (robot_min[0] - robot_max[0], robot_min[1] - robot_max[1])
+        path_length = (robot_min[0] - target_min[0], robot_min[1] - target_max[1])
+        theta = acos(dot(path_width, path_length) / (norm(path_width) * norm(path_length)))
+        return (pi / 2) - theta
 
 
     def __repr__(self):
