@@ -40,7 +40,7 @@ COLORS = {
         }
     ],
     'blue': [
-        { 
+        {
             'min': np.array((88.0, 147.0, 82.0)),    #LH,LS,LV
             'max': np.array((104.0, 255.0, 255.0)), #UH,US,UV
             'contrast': 0.0,
@@ -76,7 +76,7 @@ COLORS = {
             'contrast': 1.0,
             'blur': 0
         }
-           
+
     ]
     # (np.array((91.0, 118.0, 90.0)), np.array((169.0, 255.0, 255.0)), 1.0, 1)
 }
@@ -129,7 +129,7 @@ class RobotTracker(Tracker):
 
         Params:
             [string] color      the name of the color to pass in
-            [(left-min, right-max, top-min, bot-max)] 
+            [(left-min, right-max, top-min, bot-max)]
                                 crop  crop coordinates
             [int] offset        how much to offset the coordinates
         """
@@ -264,55 +264,6 @@ class RobotTracker(Tracker):
         """
         pass
 
-
-
-
-
-    def _find_circle(self, frame, location, offset, search_size=18):
-        (x, y) = location
-
-
-        # Define bounding box for search
-        xmin, xmax = x + offset - search_size / 2, x + offset + search_size / 2
-        ymin, ymax = y - search_size / 2, y + search_size / 2
-
-        # Trim and convert to grayscale
-        box = cv2.cvtColor(frame[ymin:ymax, xmin:xmax], cv2.COLOR_BGR2GRAY)
-
-        # Find circles in the box using Hough Contours
-        circles = cv2.HoughCircles(
-            box,
-            cv2.cv.CV_HOUGH_GRADIENT,
-            1, 20, param1=50, param2=10,
-            minRadius=3, maxRadius=7
-        )
-
-        # calculate angle if circles available
-        if circles is not None:
-            center = (circles[0][0][0] + xmin, circles[0][0][1] + ymin)
-            diff_x = center[0] - x + offset
-            diff_y = center[1] - y
-
-            # DEBUG
-            # print (diff_x, diff_y)
-
-            angle = np.arctan((np.abs(diff_y) * 1.0 / np.abs(diff_x)))
-            angle = np.degrees(angle)
-            if diff_x > 0 and diff_y < 0:
-                angle = 90 - angle
-            if diff_x > 0 and diff_y > 0:
-                angle = 180 - angle
-            if diff_x < 0 and diff_y > 0:
-                angle = 180+angle
-            if diff_x < 0 and diff_y < 0:
-                angle = 360 - angle
-
-            # What do we need this for???
-            speed = (center[0], center[1])
-            return (angle, speed)
-        else:
-            return (None, None)
-
     def get_angle(self, m, n):
         """
         Find the angle between m and n
@@ -333,10 +284,9 @@ class RobotTracker(Tracker):
 
         return angle
 
-
     def find(self, frame, queue):
         """
-        Retrieve coordinates for the robot, it's orientation and speed - if 
+        Retrieve coordinates for the robot, it's orientation and speed - if
         available.
 
         Process:
@@ -388,19 +338,19 @@ class RobotTracker(Tracker):
         })
         return
 
-        
+
 class BallTracker(Tracker):
     """
     Track red ball on the pitch.
     """
-        
+
     def __init__(self, crop, offset, name='ball'):
         """
         Initialize tracker.
 
         Params:
             [string] color      the name of the color to pass in
-            [(left-min, right-max, top-min, bot-max)] 
+            [(left-min, right-max, top-min, bot-max)]
                                 crop  crop coordinates
             [int] offset        how much to offset the coordinates
         """
@@ -414,9 +364,9 @@ class BallTracker(Tracker):
             contours, hierarchy = self.preprocess(
                 frame,
                 self.crop,
-                color['min'], 
-                color['max'], 
-                color['contrast'], 
+                color['min'],
+                color['max'],
+                color['contrast'],
                 color['blur']
             )
 
@@ -429,7 +379,7 @@ class BallTracker(Tracker):
 
                 # Get center
                 (x, y), radius = self.get_min_enclousing_circle(cnt)
-              
+
                 queue.put({
                     'name': self.name,
                     'location': (int(x) + self.offset, int(y)),
@@ -441,40 +391,3 @@ class BallTracker(Tracker):
 
         queue.put(None)
         return
-
-# REFACTOR TO POSTPROCESSING
-
-#     def getOrientation(self,newPos):
-# #        if self.
-#         oldX,oldY = self.oldPos[-1]
-#         changeX = newPos[0]-oldX
-#         changeY = newPos[1]-oldY
-#         if np.abs(changeX) <2 or np.abs(changeY) <2:
-#             changeX = newPos[0] - self.oldPos[0][0]
-#             changeY = newPos[1] - self.oldPos[0][1]
-#                  #alpha = 100
-#                  #cv2.line(frame,(newX,newY),(newX+alpha*changeX,newY+alpha*changeY),(0,255,0),3)
-#         k = np.arctan2(changeY,changeX)
-#         #if k<0:
-#         #k = np.abs(k) + np.pi
-#         #angle = k * 180/np.pi
-#         angle = np.degrees(k)
-
-#         originVector = np.array([0,1])
-#         changeVector = np.array([changeX,changeY])
-
-#         denominator = np.sqrt(np.dot(changeVector,changeVector))
-
-#         if denominator == 0:
-#             angle = None
-#         else:
-#             angle = np.arccos(
-#                 np.dot(originVector,changeVector) / (np.sqrt(np.dot(changeVector,changeVector)))
-#             )
-#             angle = np.degrees(angle)
-#             if changeX <0:
-#                 angle = 360 - angle
-#         #print(np.sqrt(np.dot(changeVector,changeVector)))
-        
-#         #print ((changeX,changeY),angle) 
-#         return (angle,changeX,changeY)

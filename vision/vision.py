@@ -23,7 +23,7 @@ class Vision:
         # Check params
         if not self._param_check(side, color):
             return
-        
+
         # Initialize camera
         self._init_camera(port)
 
@@ -35,7 +35,7 @@ class Vision:
             (0, self.crop_values[1], 0, self.crop_values[3]), 0)
 
         # Initialize side assignment
-        self._init_robot_trackers(side, color)        
+        self._init_robot_trackers(side, color)
 
     def _param_check(self, side, color):
         """
@@ -73,7 +73,7 @@ class Vision:
         """
         # Temporary: divide zones into section
         zone_size = int(math.floor(self.crop_values[1] / 4.0))
-        
+
         zones = [(zone_size * i, zone_size * (i + 1), 0, self.crop_values[3]) for i in range(4)]
 
         # Do set difference to find the other color - if is too long :)
@@ -117,7 +117,7 @@ class Vision:
 
         # Draw positions
         self._draw(frame, positions)
-            
+
         # MULTIPROCESSING DEBUG
         if PROCESSING_DEBUG:
             if hasattr(os, 'getppid'):  # only available on Unix
@@ -212,7 +212,7 @@ class Vision:
         for process in processes:
             process.start()
 
-        # Find robots and ball, use queue to 
+        # Find robots and ball, use queue to
         # avoid deadlock and share resources
         positions = [q.get() for q in queues]
 

@@ -27,7 +27,7 @@ class Controller:
         while True:
             # Find object positions
             positions = self.vision.locate()
-            
+
             if self.debug:
                 print positions
 
