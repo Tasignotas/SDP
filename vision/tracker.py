@@ -231,6 +231,7 @@ class RobotTracker(Tracker):
 
         if blur > 1:
             frame = cv2.blur(frame,(blur,blur))
+        if contrast > 1:
             frame = cv2.add(frame,np.array([contrast]))
 
         frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
