@@ -96,12 +96,16 @@ class RedTracker:
             # Crop frame
             self.frame = self.frame[self.crop[2]:self.crop[3], self.crop[0]:self.crop[1]]
 
+            self.original = self.frame.copy()
+
+
             # Apply simple kernel blur
             # Take a matrix given by second argument and calculate average of those pixels
-            self.frame = cv2.blur(self.frame, (5, 5))
+            # self.frame = cv2.blur(self.frame, (5, 5))
 
             # Set Contrast
             self.frame = cv2.add(self.frame, np.array([100.0]))
+            # self.frame = cv2.multiply(self.frame, np.array([2.0]))
 
             # Convert frame to HSV
             frame_hsv = cv2.cvtColor(self.frame, cv2.COLOR_BGR2HSV)
@@ -109,13 +113,17 @@ class RedTracker:
             # Create a mask for the t_yellow T
             frame_mask = cv2.inRange(
                 frame_hsv,
-                np.array((0.0, 114.0, 250.0)),
-                np.array((5.0, 255.0, 255.0))
+                np.array((57.0, 62.0, 38.0)),
+                np.array((85.0, 136.0, 255.0))
             )
 
+
+
             # Display the masked image
-            if gui:
-                cv2.imshow('Masked image', frame_mask)
+            # if gui:
+            #     cv2.imshow('Masked image', frame_mask)
+
+
 
             # Apply threshold to the masked image, no idea what the values mean
             return_val, threshold = cv2.threshold(frame_mask, 127, 255, 0)
@@ -123,15 +131,166 @@ class RedTracker:
             # Find contours, they describe the masked image - our T
             contours, hierarchy = cv2.findContours(
                 threshold,
-                cv2.RETR_TREE,
-                cv2.CHAIN_APPROX_SIMPLE
+                cv2.RETR_CCOMP,
+                cv2.CHAIN_APPROX_TC89_KCOS
             )
 
-            if len(contours) <= 0 or len(contours[0]) < 5:
-                print 'No contours found.'
-            else:
-                # Trim contours matrix
-                cnt = contours[0]
+            # print contours
+
+            points = [None, None, None, None]
+            left, right, top, bot = (9999,0,9999,0)
+
+            for cnt in contours:
+
+                area = cv2.contourArea(cnt)
+
+                if area > 100:
+
+                    # hull = cv2.convexHull(cnt, returnPoints=True)
+                    # print hull
+                    # defects = cv2.convexityDefects(cnt, hull)
+                    leftmost = tuple(cnt[cnt[:,:,0].argmin()][0])
+                    rightmost = tuple(cnt[cnt[:,:,0].argmax()][0])
+                    topmost = tuple(cnt[cnt[:,:,1].argmin()][0])
+                    bottommost = tuple(cnt[cnt[:,:,1].argmax()][0])
+
+                    if left > leftmost[0]:
+                        left = leftmost[0]
+                        points[0] = leftmost
+
+                    if top > topmost[1]:
+                        top = topmost[1]
+                        points[1] = topmost
+
+                    if right < rightmost[0]:
+                        right = rightmost[0]
+                        points[2] = rightmost
+
+                    if bot < bottommost[1]:
+                        bot = bottommost[1]
+                        points[3] = bottommost
+
+                # cv2.circle(self.frame, leftmost, 3, (0,0,255), -1)
+                # cv2.circle(self.frame, rightmost, 3, (0,0,255), -1)
+                # cv2.circle(self.frame, topmost, 3, (0,0,255), -1)
+                # cv2.circle(self.frame, bottommost, 3, (0,0,255), -1)
+
+                # x,y,w,h = cv2.boundingRect(cnt)
+                # cv2.rectangle(self.frame,(x,y),(x+w,y+h),(0,255,0),2)
+                # cv2.drawContours(self.frame, cnt, -1, (255,0,0), -1)
+                # cv2.minEnclosingCircle([contour])
+            # print len(contours)
+
+           
+
+            points = np.array(points, np.int32)
+
+            # print points
+
+            # cv2.polylines(self.frame, [points], True, (255,0,0), 1)
+
+            small = self.original.copy()[top:bot, left:right]
+
+            
+
+            center = ((right - left) / 2 + left, (bot - top) / 2 + top)
+
+            cv2.circle(self.frame, center, 1, (0,0,255), -1)
+
+            cv2.rectangle(self.frame, (left, top), (right, bot), (0,0,255), 1)
+
+
+            frame_hsv = cv2.cvtColor(small, cv2.COLOR_BGR2HSV)
+
+            # Create a mask for the t_yellow T
+            frame_mask = cv2.inRange(
+                frame_hsv,
+                np.array((0.0, 193.0, 137.0)),
+                np.array((50.0, 255.0, 255.0))
+            )
+
+            # cv2.imshow('small', frame_mask)
+
+            # Apply threshold to the masked image, no idea what the values mean
+            return_val, threshold = cv2.threshold(frame_mask, 127, 255, 0)
+
+            # Find contours, they describe the masked image - our T
+            contours2, hierarchy2 = cv2.findContours(
+                threshold,
+                cv2.RETR_CCOMP,
+                cv2.CHAIN_APPROX_TC89_KCOS
+            )
+
+            if len(contours2) > 0:
+
+                print len(contours2)
+
+                cnt = contours2[0]
+
+                (x,y),radius = cv2.minEnclosingCircle(cnt)
+                center2 = (int(x + left),int(y + top))
+                radius = int(radius)
+                cv2.circle(self.frame, center2,1,(0,255,0),-1)
+
+
+                x1, y1 = center
+                x2, y2 = center2
+
+                xdiff = (x1 - x2) * 5
+                ydiff = (y1 - y2) * 5
+
+                # print xdiff, ydiff
+                cv2.line(self.frame, center2, (x2 + xdiff, y2 + ydiff), (0,255, 0))
+
+            frame_hsv = cv2.cvtColor(small, cv2.COLOR_BGR2HSV)
+
+            # Create a mask for the t_yellow T
+            frame_mask = cv2.inRange(
+                frame_hsv,
+                np.array((0.0, 0.0, 38.0)),
+                np.array((45.0, 100.0, 71.0))
+            )
+
+            cv2.imshow('small', frame_mask)
+
+            # Apply threshold to the masked image, no idea what the values mean
+            return_val, threshold = cv2.threshold(frame_mask, 127, 255, 0)
+
+            # Find contours, they describe the masked image - our T
+            contours2, hierarchy2 = cv2.findContours(
+                threshold,
+                cv2.RETR_CCOMP,
+                cv2.CHAIN_APPROX_TC89_KCOS
+            )
+
+            if len(contours2) > 0:
+
+                cnt = contours2[0]
+
+                (x,y),radius = cv2.minEnclosingCircle(cnt)
+                center2 = (int(x + left),int(y + top))
+                radius = int(radius)
+                cv2.circle(self.frame, center2,5,(255,0,0),-1)
+
+
+
+
+
+
+
+
+
+
+
+            if len(contours) == 0:
+                print 'No contours' 
+
+            # if len(contours) <= 0 or len(contours[0]) < 5:
+            #     pass
+            #     # print 'No contours found.'
+            # else:
+            #     # Trim contours matrix
+            #     cnt = contours[0]
 
                 # Draw bounding ellipse and get the ellipse angle
                 # angle = self.draw_ellipse(cnt)
@@ -144,7 +303,7 @@ class RedTracker:
                 # self.draw_enclosing_circle(cnt)
 
                 # Draw crosshair
-                self.draw_crosshair(cnt)
+                # self.draw_crosshair(cnt)
 
                 # Fit a line into the T
                 # self.draw_fitted_line(frame_mask, cnt)
@@ -199,6 +358,7 @@ class RedTracker:
 
             # Display feed
             if gui:
+                
                 cv2.imshow('Red Ball Tracker', self.frame)
 
             # Wait for 4ms before continuing, terminate by pressing 'q'

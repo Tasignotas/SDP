@@ -11,9 +11,9 @@ class Controller:
     """
 
     def __init__(self, port=0, connect=False):
-        self.vision = Vision()
+        self.vision = Vision(side='right')
         self.planner = Planner(our_side='left')
-        self.attacker = Attacker_Controller(connectionName='GRP7A', leftMotorPort=PORT_A, rightMotorPort=PORT_C, kickerMotorPort=PORT_B)
+        #self.attacker = Attacker_Controller(connectionName='GRP7A', leftMotorPort=PORT_A, rightMotorPort=PORT_C, kickerMotorPort=PORT_B)
         #self.defender = Defender_Controller('GRP7A', 'PORT_X', 'PORT_X', 'PORT_X')
 
 
@@ -33,7 +33,7 @@ class Controller:
             #print 'Actions:', actions
 
             # Execute action
-            self.attacker.execute(actions[0])
+            #self.attacker.execute(actions[0])
             # self.defender.execute(actions[0])
 
 
