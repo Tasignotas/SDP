@@ -16,7 +16,6 @@ class Controller:
         #self.attacker = Attacker_Controller(connectionName='GRP7A', leftMotorPort=PORT_A, rightMotorPort=PORT_C, kickerMotorPort=PORT_B)
         #self.defender = Defender_Controller('GRP7A', 'PORT_X', 'PORT_X', 'PORT_X')
 
-
     def wow(self):
         """
         Main flow of the program. Run the controller with vision and planning combined.
@@ -39,14 +38,12 @@ class Controller:
 
 class Connection:
 
-
     def __init__(self, name='NXT'):
         print 'Connecting to NXT Brick with name %s' % name
         self.brick = locator.find_one_brick(
             name=name, method=locator.Method(usb=False))
         if self.brick:
             print 'Connection successful.'
-
 
     def close(self):
         """
@@ -70,7 +67,6 @@ class Robot_Controller(object):
         self.MOTOR_L = Motor(self.BRICK,leftMotorPort)
         self.MOTOR_R = Motor(self.BRICK,rightMotorPort)
         self.MOTOR_K = Motor(self.BRICK,kickerMotorPort)
-
 
     def execute(self, action):
         """
@@ -106,3 +102,4 @@ class Defender_Controller(Robot_Controller):
 
 if __name__ == '__main__':
     c = Controller().wow()  # Such controller
+    
