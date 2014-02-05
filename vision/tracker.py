@@ -256,13 +256,35 @@ class RobotTracker(Tracker):
             return (int(x + x_offset), int(y + y_offset))
         return (None, None)
 
-    def _find_dot(self, frame, color, x_offset, y_offset):
+    def _find_dot(self, frame, x_offset, y_offset):
         """
         Given a frame, find a colored dot by masking the image.
-
-        TODO!
         """
-        pass
+        frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+
+        # Create a mask for the t_yellow T
+        frame_mask = cv2.inRange(
+            frame_hsv,
+            np.array((0.0, 0.0, 38.0)),     # grey lower
+            np.array((45.0, 100.0, 71.0))   # grey higher
+        )
+
+        # Apply threshold to the masked image, no idea what the values mean
+        return_val, threshold = cv2.threshold(frame_mask, 127, 255, 0)
+
+        # Find contours, they describe the masked image - our T
+        contours, hierarchy = cv2.findContours(
+            threshold,
+            cv2.RETR_CCOMP,
+            cv2.CHAIN_APPROX_TC89_KCOS
+        )
+
+        if len(contours) > 0:
+            cnt = contours[0]   # Take the largest contour
+
+            (x,y),radius = cv2.minEnclosingCircle(cnt)
+            return (int(x + x_offset), int(y + y_offset))
+        return (None, None)
 
     def get_angle(self, m, n):
         """
@@ -283,6 +305,11 @@ class RobotTracker(Tracker):
             angle = 360 - angle
 
         return angle
+
+    def _find_gradient(self, m, n):
+        """
+        Calculate the gradient of
+        """
 
     def find(self, frame, queue):
         """
@@ -312,8 +339,8 @@ class RobotTracker(Tracker):
         frame = frame[self.crop[2]:self.crop[3], self.crop[0]:self.crop[1]]
 
         # Setup vars
-        angle = None
-        speed = None
+        angle, speed, dot = None, None, None
+        i = None
 
         # 1. Retrieve location of the green plate
         x, y, width, height = self._find_plate(frame.copy())   # x,y are robot positions
@@ -324,7 +351,22 @@ class RobotTracker(Tracker):
             plate = frame[y:y + height, x:x + width]
 
             # 3. Find colored object - x and y of the 'i'
-            x_i, y_i = self._find_i(plate, 'yellow', y, x)
+            x_i, y_i = self._find_i(plate, 'yellow', x, y)
+
+            # 4. Find black colored plate
+            black_x, black_y = self._find_dot(plate, x, y)
+
+            if black_x is not None and black_y is not None:
+                dot = (black_x + self.offset, black_y)
+
+            if x_i is not None and y_i is not None:
+                i = (x_i + self.offset, y_i)
+
+            # Find square center
+            center_x, center_y = x + width / 2, y + height / 2
+
+
+
 
             # # 4. Join the two points
             # if x_i and y_i:
@@ -334,7 +376,9 @@ class RobotTracker(Tracker):
         queue.put({
             'location': (x + self.offset + width / 2, y + height / 2),
             'angle': angle,
-            'velocity': speed
+            'velocity': speed,
+            'dot': dot,
+            'i': i
         })
         return
 

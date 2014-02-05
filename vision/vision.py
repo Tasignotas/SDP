@@ -157,6 +157,14 @@ class Vision:
         cv2.imshow('SUCH VISION', frame)
         cv2.waitKey(4)
 
+    def _draw_i(self, frame, position):
+        if position:
+            cv2.circle(frame, (position[0], position[1]), 1, (255, 255, 255), -1)
+
+    def _draw_dot(self, frame, position):
+        if position:
+            cv2.circle(frame, (position[0], position[1]), 1, (255, 255, 255), -1)
+
     def _draw_robot(self, frame, position, color):
         """
         Draw the location of the robots given the color
@@ -168,6 +176,12 @@ class Vision:
         if position:
             center = position['location']
             cv2.circle(frame, center, 16, colors[color], 1)
+
+        if 'dot' in position.keys():
+            self._draw_dot(frame, position['dot'])
+
+        if 'i' in position.keys():
+            self._draw_i(frame, position['i'])
 
     def _draw_ball(self, frame, position):
         """

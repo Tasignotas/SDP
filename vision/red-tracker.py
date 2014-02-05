@@ -49,7 +49,7 @@ class RedTracker:
     def draw_crosshair(self, contours):
         (x, y), radius = self.get_min_enclousing_circle(contours)
         x = int(math.floor(x))
-        y = int(math.floor(y)) 
+        y = int(math.floor(y))
         height, width, channels = self.frame.shape
         cv2.line(self.frame, (0, y), (width, y), (0, 0, 255), 1)
         cv2.line(self.frame, (x, 0), (x, height), (0, 0, 255), 1)
@@ -181,7 +181,7 @@ class RedTracker:
                 # cv2.minEnclosingCircle([contour])
             # print len(contours)
 
-           
+
 
             points = np.array(points, np.int32)
 
@@ -191,7 +191,7 @@ class RedTracker:
 
             small = self.original.copy()[top:bot, left:right]
 
-            
+
 
             center = ((right - left) / 2 + left, (bot - top) / 2 + top)
 
@@ -270,7 +270,7 @@ class RedTracker:
                 (x,y),radius = cv2.minEnclosingCircle(cnt)
                 center2 = (int(x + left),int(y + top))
                 radius = int(radius)
-                cv2.circle(self.frame, center2,5,(255,0,0),-1)
+                cv2.circle(self.frame, center2,5,(255,0,0),1)
 
 
 
@@ -283,7 +283,7 @@ class RedTracker:
 
 
             if len(contours) == 0:
-                print 'No contours' 
+                print 'No contours'
 
             # if len(contours) <= 0 or len(contours[0]) < 5:
             #     pass
@@ -319,7 +319,7 @@ class RedTracker:
                 newX,newY = point
 #                if oldPos:
 
-            
+
 		if len(predictionpoints) > 1:
 			predictionpoints.pop(0)
 			predictionpoints.append(point)
@@ -358,7 +358,7 @@ class RedTracker:
 
             # Display feed
             if gui:
-                
+
                 cv2.imshow('Red Ball Tracker', self.frame)
 
             # Wait for 4ms before continuing, terminate by pressing 'q'
