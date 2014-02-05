@@ -3,7 +3,7 @@ import numpy as np
 import cPickle
 from optparse import OptionParser
 
-CONTROLS = ["LH", "UH", "LS", "US", "LV", "UV", "BR", "CT"]
+CONTROLS = ["LH", "UH", "LS", "US", "LV", "UV", "BR", "CT", "BL"]
 MAXBAR={"LH":360, 
           "UH":360, 
           "LS":255,
@@ -11,7 +11,8 @@ MAXBAR={"LH":360,
           "LV":255,
           "UV":255,
           "BR":3,
-          "CT":100}
+          "CT":100,
+          "BL":100}
 
 def nothing(x):
     pass
@@ -20,6 +21,11 @@ def brighten(img, alpha=1.0, beta=10.0):
     mul_img = cv2.multiply(img, np.array([alpha]))
     new_img = cv2.add(mul_img,np.array([beta]))
     return new_img
+
+def blur(img, ksize=0):
+    if (ksize>1):
+        return cv2.blur(img, (ksize,ksize))
+    return img
 
 def setWindow(color):
     cv2.namedWindow(color)
@@ -48,31 +54,34 @@ def run(color):
     i = 0
     cap = cv2.VideoCapture(0)
 
+    maskWindowName = "Mask: " + color
     while(1):
         i = (i % 59) + 1
-        LH = cv2.getTrackbarPos("LH", "Mask: " + color)
-        UH = cv2.getTrackbarPos("UH", "Mask: " + color)
-        LS = cv2.getTrackbarPos("LS", "Mask: " + color)
-        US = cv2.getTrackbarPos("US", "Mask: " + color)
-        LV = cv2.getTrackbarPos("LV", "Mask: " + color)
-        UV = cv2.getTrackbarPos("UV", "Mask: " + color)
-        BR = cv2.getTrackbarPos("BR", "Mask: " + color)
-        CT = cv2.getTrackbarPos("CT", "Mask: " + color)
+        LH = cv2.getTrackbarPos("LH", maskWindowName)
+        UH = cv2.getTrackbarPos("UH", maskWindowName)
+        LS = cv2.getTrackbarPos("LS", maskWindowName)
+        US = cv2.getTrackbarPos("US", maskWindowName)
+        LV = cv2.getTrackbarPos("LV", maskWindowName)
+        UV = cv2.getTrackbarPos("UV", maskWindowName)
+        BR = cv2.getTrackbarPos("BR", maskWindowName)
+        CT = cv2.getTrackbarPos("CT", maskWindowName)
+        BL = cv2.getTrackbarPos("BL", maskWindowName)
 
         ret, frame = cap.read()
         frame = brighten(frame, float(BR), float(CT))
+        frame = blur(frame, float(BL))
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, np.array([LH, LS, LV]), np.array([UH, US, UV]))
 
         cv2.imshow(color, frame)
-        cv2.imshow("Mask: " + color, mask)
+        cv2.imshow(maskWindowName, mask)
 
         config = {}
         k = cv2.waitKey(5) & 0xFF
 
         if k == 27:
             for setting in CONTROLS:
-                config[setting] = cv2.getTrackbarPos(setting, "Mask: " + color)
+                config[setting] = cv2.getTrackbarPos(setting, maskWindowName)
                 
                 selectColor[color] = config
                 
