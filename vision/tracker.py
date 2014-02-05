@@ -222,13 +222,22 @@ class RobotTracker(Tracker):
                       (None, None) otherwise
         """
         print frame.shape
+
+        # For now, just use the first set of values in the color list.
+        lowerBoundary = COLORS[color][0]['min']
+        upperBoundary = COLORS[color][0]['max']
+        contrast = COLORS[color][0]['contrast']
+        blur = COLORS[color][0]['blur']
+
+        frame = cv2.blur(frame,(blur,blur))
+        frame = cv2.add(frame,np.array([contrast]))
         frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
         # Create a mask for the t_yellow T
         frame_mask = cv2.inRange(
             frame_hsv,
-            np.array([0, 193, 137], dtype=np.uint8),
-            np.array([50, 255, 255], dtype=np.uint8)
+            lowerBoundary, #np.array([0, 193, 137], dtype=np.uint8),
+            upperBoundary #np.array([50, 255, 255], dtype=np.uint8)
         )
 
         # Apply threshold to the masked image, no idea what the values mean
