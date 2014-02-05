@@ -172,7 +172,7 @@ class Vision:
         }
         if position:
             center = position['location']
-            cv2.circle(frame, center, 10, colors[color], 2)
+            cv2.circle(frame, center, 16, colors[color], 1)
 
     def _draw_ball(self, frame, position):
         """
@@ -233,9 +233,13 @@ class Vision:
 
         Return a Vector
         """
-        return Vector(
-            args['location'][0],
-            args['location'][1],
-            args['angle'],
-            args['velocity']
-        )
+        keys = args.keys() if args is not None else []
+        x, y, angle, velocity = None, None, None, None
+        if 'location' in keys:
+            x, y = args['location']
+        if 'angle' in keys:
+            angle = args['angle']
+        if 'velocity' in keys:
+            velocity = args['velocity']
+
+        return Vector(x, y, angle, velocity)
