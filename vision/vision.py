@@ -23,7 +23,7 @@ class Vision:
         # Check params
         if not self._param_check(side, color):
             return
-        
+
         # Initialize camera
         self._init_camera(port)
 
@@ -35,7 +35,7 @@ class Vision:
             (0, self.crop_values[1], 0, self.crop_values[3]), 0)
 
         # Initialize side assignment
-        self._init_robot_trackers(side, color)        
+        self._init_robot_trackers(side, color)
 
     def _param_check(self, side, color):
         """
@@ -73,7 +73,7 @@ class Vision:
         """
         # Temporary: divide zones into section
         zone_size = int(math.floor(self.crop_values[1] / 4.0))
-        
+
         zones = [(zone_size * i, zone_size * (i + 1), 0, self.crop_values[3]) for i in range(4)]
 
         # Do set difference to find the other color - if is too long :)
@@ -117,7 +117,7 @@ class Vision:
 
         # Draw positions
         self._draw(frame, positions)
-            
+
         # MULTIPROCESSING DEBUG
         if PROCESSING_DEBUG:
             if hasattr(os, 'getppid'):  # only available on Unix
@@ -154,13 +154,16 @@ class Vision:
 
         self._draw_ball(frame, positions[4])
 
-        # print positions[4]
-
-        # if positions[4] is not None and positions[4][0] is not None and positions[4][0][0] is not None and positions[4][0][1] is not None:
-        #     cv2.circle(frame, (int(positions[4][0][0]), int(positions[4][0][1])), 7, (0,0,255), 1)
-
         cv2.imshow('SUCH VISION', frame)
         cv2.waitKey(4)
+
+    def _draw_i(self, frame, position):
+        if position:
+            cv2.circle(frame, (position[0], position[1]), 1, (255, 255, 255), -1)
+
+    def _draw_dot(self, frame, position):
+        if position:
+            cv2.circle(frame, (position[0], position[1]), 1, (255, 255, 255), -1)
 
     def _draw_robot(self, frame, position, color):
         """
@@ -172,7 +175,13 @@ class Vision:
         }
         if position:
             center = position['location']
-            cv2.circle(frame, center, 10, colors[color], 2)
+            cv2.circle(frame, center, 16, colors[color], 1)
+
+        if 'dot' in position.keys():
+            self._draw_dot(frame, position['dot'])
+
+        if 'i' in position.keys():
+            self._draw_i(frame, position['i'])
 
     def _draw_ball(self, frame, position):
         """
@@ -217,7 +226,7 @@ class Vision:
         for process in processes:
             process.start()
 
-        # Find robots and ball, use queue to 
+        # Find robots and ball, use queue to
         # avoid deadlock and share resources
         positions = [q.get() for q in queues]
 
@@ -233,9 +242,13 @@ class Vision:
 
         Return a Vector
         """
-        return Vector(
-            args['location'][0],
-            args['location'][1],
-            args['angle'],
-            args['velocity']
-        )
+        keys = args.keys() if args is not None else []
+        x, y, angle, velocity = None, None, None, None
+        if 'location' in keys:
+            x, y = args['location']
+        if 'angle' in keys:
+            angle = args['angle']
+        if 'velocity' in keys:
+            velocity = args['velocity']
+
+        return Vector(x, y, angle, velocity)
