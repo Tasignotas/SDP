@@ -1,6 +1,7 @@
 
 
-from numpy.linalg import dot, norm
+from numpy.linalg import norm
+from numpy import dot
 from json import load
 from Polygon.cPolygon import Polygon
 from Polygon.Utils import pointList
