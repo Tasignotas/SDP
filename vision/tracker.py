@@ -374,49 +374,6 @@ class RobotTracker(Tracker):
         queue.put((x + self.offset + width / 2, y + height / 2, angle, speed))
         return
 
-        # for color in self.color:
-        #     contours, hierarchy = self.preprocess(
-        #         frame,
-        #         self.crop,
-        #         color['min'], 
-        #         color['max'], 
-        #         color['contrast'], 
-        #         color['blur']
-        #     )
-
-        #     # for contour in contours:
-        #     #     (x, y), radius = self.get_min_enclousing_circle(contour)
-        #     #     x, y = int(x) + self.offset, int(y)
-
-        #     #     is_in_polygon = cv2.pointPolygonTest(np.array([self.polygon]), (x + self.offset, y), True) 
-                
-        #     #     if is_in_polygon:
-        #     #         queue.put(((x, y), None, None))
-
-        #     if len(contours) <= 0 or len(contours[0]) < 5:
-        #         print 'No contours for %s color found.' % self.color_name
-        #         queue.put(None)
-        #     else:
-        #         # Trim contours matrix
-        #         cnt = contours[0]
-
-        #         (x, y), radius = self.get_min_enclousing_circle(cnt)
-
-        #         # Cast to integers
-        #         x, y = int(x), int(y)
-        #         try:
-        #             # Find angle and speed
-        #             angle, speed = self._find_circle(frame, (x, y), self.offset)
-
-        #         except Exception:
-        #             angle, speed = None, None
-
-        #         # Attach to queue for multiprocessing
-        #         queue.put(((x + self.offset, y), angle, speed))
-        #         return
-        # queue.put(None)
-        # return (None,None)
-
         
 class BallTracker(Tracker):
         
