@@ -139,6 +139,11 @@ class Vision:
         for position in positions[:4]:
             cv2.circle(frame, (int(position[0]), int(position[1])), 10, (255, 0, 0), 1)
 
+        print positions[4]
+
+        if positions[4] is not None and positions[4][0] is not None and positions[4][0][0] is not None and positions[4][0][1] is not None:
+            cv2.circle(frame, (int(positions[4][0][0]), int(positions[4][0][1])), 8, (0,0,255), 1)
+
         # Draw results
         # TODO: Convert to a process!
         # for val in positions:

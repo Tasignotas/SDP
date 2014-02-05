@@ -221,13 +221,14 @@ class RobotTracker(Tracker):
             [2-tuple] (x_center, y_center) of the object if available
                       (None, None) otherwise
         """
+        print frame.shape
         frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
         # Create a mask for the t_yellow T
         frame_mask = cv2.inRange(
             frame_hsv,
-            np.array((0.0, 193.0, 137.0)),
-            np.array((50.0, 255.0, 255.0))
+            np.array([0, 193, 137], dtype=np.uint8),
+            np.array([50, 255, 255], dtype=np.uint8)
         )
 
         # Apply threshold to the masked image, no idea what the values mean
@@ -359,16 +360,17 @@ class RobotTracker(Tracker):
         # 1. Retrieve location of the green plate
         x, y, width, height = self._find_plate(frame.copy())   # x,y are robot positions
 
-        # print x,y
-        # 2. Crop image
-        plate = frame[y:y + height, x:x + width]
+        if width > 0 and height > 0:
+            # print x,y
+            # 2. Crop image
+            plate = frame[y:y + height, x:x + width]
 
-        # 3. Find colored object - x and y of the 'i'
-        # x_i, y_i = self._find_i(plate, 'yellow', y, x)
+            # 3. Find colored object - x and y of the 'i'
+            x_i, y_i = self._find_i(plate, 'yellow', y, x)
 
-        # # 4. Join the two points
-        # if x_i and y_i:
-        #     angle = self.get_angle((x, y), (x_i, y_i))
+            # # 4. Join the two points
+            # if x_i and y_i:
+            #     angle = self.get_angle((x, y), (x_i, y_i))
 
         # 5. Return result
         queue.put((x + self.offset + width / 2, y + height / 2, angle, speed))
