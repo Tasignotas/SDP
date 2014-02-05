@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import math
 import tools
+import cPickle
 
 
 COLORS = {
@@ -81,6 +82,20 @@ COLORS = {
     # (np.array((91.0, 118.0, 90.0)), np.array((169.0, 255.0, 255.0)), 1.0, 1)
 }
 
+# In the code, change COLORS to GUICOLORS if you want to use the values you
+# picked with the findHSV GUI.
+GUICOLORS = COLORS
+
+def get_gui_colors():
+    global GUICOLORS
+    try:
+        pickleFile = open("configMask.txt", "rb")
+        GUICOLORS = cPickle.load(pickleFile)
+        pickleFile.close()
+    except:
+        pass
+
+get_gui_colors()
 
 class Tracker(object):
 
