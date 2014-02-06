@@ -1,6 +1,6 @@
 ##Systems Design Project - Group 7##
 
-![alt text](http://i.imgur.com/KNLi85M.png "Such Team")
+![alt text](http://i.imgur.com/Sv9SowE.png "Such Team")
 
 ------
 ###Installation
