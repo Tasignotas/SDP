@@ -3,7 +3,7 @@ from path import find_path
 
 
 ANGLE_THRESHOLD = 20
-DEFENDER_THRESHOLD = 60
+DEFENDER_THRESHOLD = 40
 
 
 class Planner:

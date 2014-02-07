@@ -255,6 +255,8 @@ class Vision:
         x, y, angle, velocity = None, None, None, None
         if 'location' in keys:
             x, y = args['location']
+        else:
+            return None
         if 'angle' in keys:
             angle = args['angle']
         if 'velocity' in keys:

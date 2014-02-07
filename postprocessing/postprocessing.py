@@ -35,6 +35,8 @@ class Postprocessing(object):
 		# This method calculates the angle and the velocity of the ball.
 		# TODO: make it able to PREDICT angle, speed and the location by specified lag.
 		# Getting the last two successful ball captures:
+		if not current_vec:
+			return None
 		angle = velocity = None
 		prev_pos = [(idx, val.get_x(), val.get_y()) for (idx, val) in enumerate(self._vectors[key]) if val]
 		if len(prev_pos) > 1:
@@ -49,6 +51,8 @@ class Postprocessing(object):
 	def analyze_robot(self, key, current_vec):
 		# This method calculates the angle and the velocity of the robot.
 		# TODO: make it able to PREDICT angle, speed and the location by specified lag.
+		if not current_vec:
+			return None
 		velocity = None
 		prev_pos = [(idx, val.get_x(), val.get_y()) for (idx, val) in enumerate(self._vectors[key]) if val]
 		if len(prev_pos) > 1:

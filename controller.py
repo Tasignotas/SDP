@@ -26,25 +26,25 @@ class Controller:
         Main flow of the program. Run the controller with vision and planning combined.
         """
         # positions = (None,None,None,None,((0,0),0,0))
-        while True:
-            # Find object positions
-            positions = self.vision.locate()
+        try:
+            while True:
+                # Find object positions
+                positions = self.vision.locate()
+                positions = self.postprocessing.analyze(positions)
+                if self.debug:
+                    print positions
 
-            print positions
+                # Find appropriate action
+                actions = self.planner.plan(positions)
+                print 'Actions:', actions['defender']
 
-            positions = self.postprocessing.analyze(positions)
-
-            #if self.debug:
-            #    print positions
-
-            # Find appropriate action
-            actions = self.planner.plan(positions)
-            print 'Actions:', actions
-
-            # Execute action
-            # self.attacker.execute(actions[0])
-            #self.defender.execute(actions['defender'])
-
+                # Execute action
+                # self.attacker.execute(actions[0])
+                # self.defender.execute(actions['defender'])
+        except:
+            if hasattr(self, 'defender'):
+                self.defender.shutdown()
+            raise
 
 class Connection:
 
@@ -85,8 +85,13 @@ class Robot_Controller(object):
         print 'Actions:'
         print action['left_motor']
         print action['right_motor']
-        #self.MOTOR_L.run(action['left_motor'], True)
-        #self.MOTOR_R.run(action['right_motor'], True)
+        self.MOTOR_L.run(action['left_motor'], True)
+        self.MOTOR_R.run(action['right_motor'], True)
+
+
+    def shutdown(self):
+        self.MOTOR_L.idle()
+        self.MOTOR_R.idle()
 
 
 class Attacker_Controller(Robot_Controller):
