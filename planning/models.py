@@ -32,6 +32,8 @@ class Coordinate(object):
     def __init__(self, x, y):
         self._x = x
         self._y = y
+        self._dx = 0
+        self._dy = 0
 
 
     def get_x(self):
@@ -42,12 +44,22 @@ class Coordinate(object):
         return self._y
 
 
+    def get_dx(self):
+        return self._dx
+
+
+    def get_dy(self):
+        return self._dy
+
+
     def set_x(self, x):
-        self._x = x if not(x == None) else self._x
+        self._dx = x - self._x if not(x is None) else 0
+        self._x = x if not(x is None) else self._x
 
 
     def set_y(self, y):
-        self._y = y if not(y == None) else self._y
+        self._dy = y - self._y if not(y is None) else 0
+        self._y = y if not(y is None) else self._y
 
 
     def __repr__(self):
@@ -61,6 +73,8 @@ class Vector(Coordinate):
         super(Vector, self).__init__(x, y)
         self._angle = angle
         self._velocity = velocity
+        self._dr = 0
+        self._dv = 0
 
 
     def get_angle(self):
@@ -71,11 +85,21 @@ class Vector(Coordinate):
         return self._velocity
 
 
+    def get_dr(self):
+        return self._dr
+
+
+    def get_dv(self):
+        return self._dv
+
+
     def set_angle(self, angle):
+        self._dr = angle - self.get_angle() if not (angle == None) else 0
         self._angle = angle if not (angle == None) else self._angle
 
 
     def set_velocity(self, velocity):
+        self._dv = velocity - self.get_velocity() if not (velocity == None) else 0
         self._velocity = velocity if not (velocity == None) else self._velocity
 
 
