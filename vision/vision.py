@@ -264,11 +264,19 @@ class Vision:
 
 
 class Camera(object):
+    """
+    Camera access wrapper.
+    """
 
     def __init__(self, port=0):
         self.capture = cv2.VideoCapture(port)
 
     def get_frame(self):
+        """
+        Retrieve a frame from the camera.
+
+        Returns the frame if available, otherwise returns None.
+        """
         status, frame = self.capture.read()
         if status:
             return frame
