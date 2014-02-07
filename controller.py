@@ -11,13 +11,13 @@ class Controller:
     Primary source of robot control. Ties vision and planning together.
     """
 
-    def __init__(self, port=0, connect=False, pitch=0, debug=False):
+    def __init__(self, port=0, connect=True, debug=False):
         self.debug = debug
-        self.vision = Vision(side='right', pitch=pitch)
-        self.planner = Planner(our_side='left')
+        self.vision = Vision(side='left')
         self.postprocessing = Postprocessing()
+        self.planner = Planner(our_side='left')
         #self.attacker = Attacker_Controller(connectionName='GRP7A', leftMotorPort=PORT_A, rightMotorPort=PORT_C, kickerMotorPort=PORT_B)
-        #self.defender = Defender_Controller('GRP7A', 'PORT_X', 'PORT_X', 'PORT_X')
+        #self.defender = Defender_Controller('GRP7A', leftMotorPort=PORT_C, rightMotorPort=PORT_B, kickerMotorPort=PORT_A)
 
     def wow(self):
         """
@@ -30,18 +30,20 @@ class Controller:
             # Find object positions
             positions = self.vision.locate()
 
+            print positions
+
             positions = self.postprocessing.analyze(positions)
 
-            if self.debug:
-                print positions
+            #if self.debug:
+            #    print positions
 
             # Find appropriate action
             actions = self.planner.plan(positions)
-            #print 'Actions:', actions
+            print 'Actions:', actions
 
             # Execute action
             # self.attacker.execute(actions[0])
-            # self.defender.execute(actions[0])
+            #self.defender.execute(actions['defender'])
 
 
 class Connection:
@@ -80,8 +82,11 @@ class Robot_Controller(object):
         """
         Execute robot action.
         """
-        self.MOTOR_L.run(action[0])
-        self.MOTOR_R.run(action[1])
+        print 'Actions:'
+        print action['left_motor']
+        print action['right_motor']
+        #self.MOTOR_L.run(action['left_motor'], True)
+        #self.MOTOR_R.run(action['right_motor'], True)
 
 
 class Attacker_Controller(Robot_Controller):
@@ -109,4 +114,4 @@ class Defender_Controller(Robot_Controller):
 
 
 if __name__ == '__main__':
-    c = Controller(debug=True, pitch=1).wow()  # Such controller
+    c = Controller(debug=True).wow()  # Such controller

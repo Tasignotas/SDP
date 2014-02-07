@@ -35,25 +35,24 @@ class Postprocessing(object):
 		# This method calculates the angle and the velocity of the ball.
 		# TODO: make it able to PREDICT angle, speed and the location by specified lag.
 		# Getting the last two successful ball captures:
+		angle = velocity = None
 		prev_pos = [(idx, val.get_x(), val.get_y()) for (idx, val) in enumerate(self._vectors[key]) if val]
 		if len(prev_pos) > 1:
 			delta_x = prev_pos[0][1] - prev_pos[1][1]
 			delta_y = prev_pos[0][2] - prev_pos[1][2]
 			ratio = delta_y/delta_x if delta_x else (float('inf') if delta_y > 0 else float('-inf'))
 			angle = (atan(ratio) * 180 / pi) % 360
-			current_vec.set_angle(angle)
 			velocity = sqrt(delta_x**2 + delta_y**2)/(prev_pos[1][0] - prev_pos[0][0])
-			current_vec.set_velocity(velocity)
-		return current_vec
+		return Vector(current_vec.get_x(), current_vec.get_y(), angle, velocity)
 
 
 	def analyze_robot(self, key, current_vec):
 		# This method calculates the angle and the velocity of the robot.
 		# TODO: make it able to PREDICT angle, speed and the location by specified lag.
+		velocity = None
 		prev_pos = [(idx, val.get_x(), val.get_y()) for (idx, val) in enumerate(self._vectors[key]) if val]
 		if len(prev_pos) > 1:
 			delta_x = prev_pos[0][1] - prev_pos[1][1]
 			delta_y = prev_pos[0][2] - prev_pos[1][2]
 			velocity = sqrt(delta_x**2 + delta_y**2)/(prev_pos[1][0] - prev_pos[0][0])
-			current_vec.set_velocity(velocity)
-		return current_vec
+		return Vector(current_vec.get_x(), current_vec.get_y(), current_vec.get_angle(), velocity)

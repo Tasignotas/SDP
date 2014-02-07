@@ -18,7 +18,7 @@ class Vision:
     Locate objects on the pitch.
     """
 
-    def __init__(self, side='right', color='yellow', port=0, pitch=0):
+    def __init__(self, side='left', color='yellow', port=0, pitch=0):
 
         # Check params
         if not self._param_check(side, color):
