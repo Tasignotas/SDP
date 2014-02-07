@@ -101,8 +101,8 @@ PITCH1 = {
     ],
     'yellow': [
         {
-            'min': np.array((16.0, 165.0, 136.0)), #LH,LS,LV
-            'max': np.array((19.0, 255.0, 255.0)), #UH,US,UV
+            'min': np.array((7.0, 176.0, 195.0)), #LH,LS,LV
+            'max': np.array((22.0, 255.0, 255.0)), #UH,US,UV
             'contrast': 1.0,
             'blur': 0
         },
@@ -127,8 +127,8 @@ PITCH1 = {
     ],
     'blue': [
         {
-            'min': np.array((88.0, 147.0, 82.0)),    #LH,LS,LV
-            'max': np.array((104.0, 255.0, 255.0)), #UH,US,UV
+            'min': np.array((74.0, 5.0, 77.0)),    #LH,LS,LV
+            'max': np.array((99.0, 255.0, 255.0)), #UH,US,UV
             'contrast': 0.0,
             'blur': 0
         },

@@ -18,7 +18,7 @@ class Vision:
     Locate objects on the pitch.
     """
 
-    def __init__(self, side='left', color='blue', port=0):
+    def __init__(self, side='right', color='yellow', port=0, pitch=0):
 
         # Check params
         if not self._param_check(side, color):
@@ -35,7 +35,7 @@ class Vision:
             (0, self.crop_values[1], 0, self.crop_values[3]), 0)
 
         # Initialize side assignment
-        self._init_robot_trackers(side, color)
+        self._init_robot_trackers(side, color, pitch)
 
     def _param_check(self, side, color):
         """
@@ -60,7 +60,7 @@ class Vision:
         for i in range(3):
             status, frame = self.capture.read()
 
-    def _init_robot_trackers(self, side, color):
+    def _init_robot_trackers(self, side, color, pitch=0):
         """
         Initialize side assignment.
 
@@ -81,23 +81,23 @@ class Vision:
 
         if side == 'left':
             self.us = [
-                RobotTracker(color, zones[0], 0),   # defender
-                RobotTracker(color, zones[2], zone_size * 2) # attacker
+                RobotTracker(color, zones[0], 0, pitch),   # defender
+                RobotTracker(color, zones[2], zone_size * 2, pitch) # attacker
             ]
 
             self.opponents = [
-                RobotTracker(opponent_color, zones[1], zone_size),
-                RobotTracker(opponent_color, zones[3], zone_size * 3)
+                RobotTracker(opponent_color, zones[1], zone_size, pitch),
+                RobotTracker(opponent_color, zones[3], zone_size * 3, pitch)
             ]
         else:
             self.us = [
-                RobotTracker(color, zones[1], zone_size),
-                RobotTracker(color, zones[3], zone_size * 3)
+                RobotTracker(color, zones[1], zone_size, pitch),
+                RobotTracker(color, zones[3], zone_size * 3, pitch)
             ]
 
             self.opponents = [
-                RobotTracker(opponent_color, zones[0], 0),   # defender
-                RobotTracker(opponent_color, zones[2], zone_size * 2)
+                RobotTracker(opponent_color, zones[0], 0, pitch),   # defender
+                RobotTracker(opponent_color, zones[2], zone_size * 2, pitch)
             ]
 
     def locate(self):
