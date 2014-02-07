@@ -379,6 +379,7 @@ class RobotTracker(Tracker):
         """
         Calculate the gradient of
         """
+        pass
 
     def find(self, frame, queue):
         """
