@@ -13,6 +13,7 @@ import numpy as np
 import cPickle
 from pykalman import KalmanFilter
 from matplotlib import pyplot as plt
+import tools
 
 from time import sleep
 
@@ -34,12 +35,18 @@ def brighten(img, alpha=1.0, beta=10.0):
     return new_img
 
 def run():
+
+    # Retrieve crop values from calibration
+    calibration = tools.get_calibration('calibrate.json')
+    crop_values = tools.find_extremes(calibration['outline'])
+    crop = crop_values
+
     capture = cv2.VideoCapture(0)
     cv2.namedWindow('Mask')
     cv2.namedWindow('Track')
 
     count = 0
-    numframes = 15
+    numframes = 30
     measuredTrack=np.zeros((numframes,2))-1
 
     stat = None
@@ -47,6 +54,8 @@ def run():
     while(1):
         count += 1
         ret, frame = capture.read()
+        frame = frame[crop[2]:crop[3], crop[0]:crop[1]]
+
         frame = brighten(frame, 1.0, float(config['contrast']))
         frame = blur(frame, config['blur'])
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -60,9 +69,12 @@ def run():
             m= np.mean(contours[0],axis=0)
             if (stat == None):
                 stat = m
-            elif (np.linalg.norm(m - stat) < 2):
-                # Filter will be reset when ball is stationary.
-                pass
+
+            # Filter is reset when ball is stationary.
+            elif (np.linalg.norm(m - stat) < 0.8):
+                measuredTrack=np.zeros((numframes,2))-1
+                count = 0
+                continue
             else:
                 stat = m
 
@@ -92,7 +104,8 @@ def run():
             try:
                 cv2.circle(frame, prediction, 10, (0, 0, 0), 2)
             except:
-                print tuple(m[0]), prediction
+                # print tuple(m[0]), prediction
+                pass
 
         cv2.imshow('Track', frame)
         cv2.imshow('Mask', mask)
@@ -109,7 +122,6 @@ def kalman(Measured):
     while (Measured[0,0] == -1.):
         Measured=np.delete(Measured,0,0)
 
-    # numMeas=Measured.shape[0]
     MarkedMeasure=np.ma.masked_less(Measured,0)
 
     Transition_Matrix=[[1,0,1,0],[0,1,0,1],[0,0,1,0],[0,0,0,1]]
@@ -132,13 +144,6 @@ def kalman(Measured):
                 observation_covariance=observationCov)
 
     (filtered_state_means, filtered_state_covariances) = kf.filter(MarkedMeasure)
-    # plt.plot(MarkedMeasure[:,0],MarkedMeasure[:,1],'xr',label='measured')
-    # plt.axis([0,600,360,0])
-    # plt.hold(True)
-    # plt.plot(filtered_state_means[:,0],filtered_state_means[:,1],'xg',label='kalman output')
-    # plt.legend(loc=2)
-    # plt.title("Constant Velocity Kalman Filter")
-    # plt.show()
     return filtered_state_means[-1]
-# sleep(3)
+
 run()
