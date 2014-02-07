@@ -5,6 +5,7 @@ import math
 from multiprocessing import Process, Queue
 import sys
 from planning.models import Vector
+from colors import BGR_COMMON
 
 
 TEAM_COLORS = set(['yellow', 'blue'])
@@ -32,19 +33,20 @@ class Vision:
         self.color = color
         self.our_side = our_side
 
-        width, height, channels = frame_shape
+        height, width, channels = frame_shape
 
         zone_size = int(math.floor(width / 4.0))
 
-        zones = [(zone_size * i, zone_size * (i + 1), 0, width) for i in range(4)]
+        zones = [(zone_size * i, zone_size * (i + 1), 0, height) for i in range(4)]
+        print zones
 
         # Do set difference to find the other color - if is too long :)
         opponent_color = (TEAM_COLORS - set([color])).pop()
 
         if our_side == 'left':
             self.us = [
-                RobotTracker(color, zones[0], 0, pitch),   # defender
-                RobotTracker(color, zones[2], zone_size * 2, pitch) # attacker
+                RobotTracker(color=color, crop=zones[0], offset=0, pitch=pitch),   # defender
+                RobotTracker(color=color, crop=zones[2], offset=zone_size * 2, pitch=pitch) # attacker
             ]
 
             self.opponents = [
@@ -64,7 +66,7 @@ class Vision:
 
         # Set up trackers
         self.ball_tracker = BallTracker(
-            (0, width, 0, height), 0)
+            (0, width, 0, height), 0, pitch)
 
     def locate(self, frame):
         """
@@ -240,6 +242,21 @@ class Camera(object):
 
 class GUI(object):
 
-    def draw(self, frame, positions, actions):
+    def draw(self, frame, positions, actions, our_color):
+        if positions['ball'] is not None:
+            self.draw_ball(frame, positions['ball'].get_x(), positions['ball'].get_y())
+
+        if positions['our_defender'] is not None:
+            self.draw_robot(
+                frame, positions['our_defender'].get_x(), positions['our_defender'].get_y(), our_color)
+
         cv2.imshow('SUCH VISION', frame)
         cv2.waitKey(4)
+
+    def draw_robot(self, frame, x, y, color, thickness=1):
+        if x is not None and y is not None:
+            cv2.circle(frame, (x, y), 16, BGR_COMMON[color], thickness)
+
+    def draw_ball(self, frame, x, y):
+        if x is not None and y is not None:
+            cv2.circle(frame, (x, y), 7, BGR_COMMON['red'], 2)

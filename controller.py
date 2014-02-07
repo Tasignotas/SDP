@@ -49,6 +49,7 @@ class Controller:
 
         # Debug flag for print statements
         self.debug = debug
+        self.color = color
 
         #self.attacker = Attacker_Controller(connectionName='GRP7A', leftMotorPort=PORT_A, rightMotorPort=PORT_C, kickerMotorPort=PORT_B)
         #self.defender = Defender_Controller('GRP7A', 'PORT_X', 'PORT_X', 'PORT_X')
@@ -79,7 +80,7 @@ class Controller:
             # self.defender.execute(actions[0])
 
             # Draw vision content and actions
-            self.GUI.draw(frame, positions, actions)
+            self.GUI.draw(frame, positions, actions, our_color=self.color)
 
 
 class Connection:
