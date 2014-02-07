@@ -1,6 +1,7 @@
 from vision.vision import Vision
 from planning.planner import Planner
 from vision.tracker import Tracker
+from postprocessing.postprocessing import Postprocessing
 import vision.tools as tools
 from nxt import *
 
@@ -10,10 +11,12 @@ class Controller:
     Primary source of robot control. Ties vision and planning together.
     """
 
-    def __init__(self, port=0, connect=False, debug=False):
+    def __init__(self, port=0, connect=False,
+        pitch=0, debug=False):
         self.debug = debug
-        self.vision = Vision(side='right')
+        self.vision = Vision(side='right', pitch=pitch)
         self.planner = Planner(our_side='left')
+        self.postprocessing = Postprocessing()
         #self.attacker = Attacker_Controller(connectionName='GRP7A', leftMotorPort=PORT_A, rightMotorPort=PORT_C, kickerMotorPort=PORT_B)
         #self.defender = Defender_Controller('GRP7A', 'PORT_X', 'PORT_X', 'PORT_X')
 
@@ -27,6 +30,8 @@ class Controller:
         while True:
             # Find object positions
             positions = self.vision.locate()
+
+            positions = self.postprocessing.analyze(positions)
 
             if self.debug:
                 print positions
@@ -105,4 +110,4 @@ class Defender_Controller(Robot_Controller):
 
 
 if __name__ == '__main__':
-    c = Controller(debug=True).wow()  # Such controller
+    c = Controller(debug=True, pitch=1).wow()  # Such controller

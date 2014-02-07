@@ -63,7 +63,7 @@ class Tracker(object):
 
 class RobotTracker(Tracker):
 
-    def __init__(self, color, crop, offset, pitch=0):
+    def __init__(self, color, crop, offset, pitch=1):
         """
         Initialize tracker.
 
@@ -82,7 +82,7 @@ class RobotTracker(Tracker):
         self.offset = offset
         self.pitch = pitch
 
-    def _find_plate(self, frame):
+    def _find_plate(self, frame, pitch=0):
         """
         Given the frame to search, find a bounding rectangle for the green plate
 
@@ -93,11 +93,18 @@ class RobotTracker(Tracker):
         frame = cv2.add(frame, np.array([100.0]))
         frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-        frame_mask = cv2.inRange(
-            frame_hsv,
-            np.array((57.0, 62.0, 38.0)),
-            np.array((85.0, 136.0, 255.0))
-        )
+        if pitch == 0:
+            frame_mask = cv2.inRange(
+                frame_hsv,
+                np.array((57.0, 62.0, 38.0)),
+                np.array((85.0, 136.0, 255.0))
+            )
+        else:
+            frame_mask = cv2.inRange(
+                frame_hsv,
+                np.array((41.0, 63.0, 183.0)),
+                np.array((60.0, 255.0, 255.0))
+            )
 
         # Apply threshold to the masked image, no idea what the values mean
         return_val, threshold = cv2.threshold(frame_mask, 127, 255, 0)
@@ -198,7 +205,7 @@ class RobotTracker(Tracker):
 
                 (x,y),radius = cv2.minEnclosingCircle(cnt)
                 return (int(x + x_offset), int(y + y_offset))
-        return (None, None)
+        return None
 
     def _find_dot(self, frame, x_offset, y_offset, center=None):
         """
@@ -209,19 +216,34 @@ class RobotTracker(Tracker):
         # Create a mask and remove anything that outside of some fixed radius
         if center is not None:
             mask = frame.copy()
-            print mask.shape
-            cv2.circle(mask, center, 16, ())
+            width, height, color_space = mask.shape
+            cv2.rectangle(mask, (0,0), (width, height), (0.0, 0.0, 0.0), -1)
+            cv2.circle(mask, center, 16, (255.0, 255.0, 255.0), -1)
+
+            mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+
+            frame = cv2.bitwise_and(frame,frame, mask=mask)
 
 
         frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
+        if self.pitch == 0:
+            frame_mask = cv2.inRange(
+                frame_hsv,
+                # Needed to change this for the computer I was on.
+                np.array((0.0,0.0,0.0)),#(0.0, 0.0, 38.0)),     # grey lower
+                np.array((360.0,86.0,112.0))#(45.0, 100.0, 71.0))   # grey higher
+            )
+        else:
+            frame_mask = cv2.inRange(
+                frame_hsv,
+                # Needed to change this for the computer I was on.
+                np.array((11.106,0.0,0.0)),#(0.0, 0.0, 38.0)),     # grey lower
+                np.array((30.0,140.0,124.0))#(45.0, 100.0, 71.0))   # grey higher
+            )
+
         # Create a mask for the
-        frame_mask = cv2.inRange(
-            frame_hsv,
-            # Needed to change this for the computer I was on.
-            np.array((0.0,0.0,0.0)),#(0.0, 0.0, 38.0)),     # grey lower
-            np.array((360.0,86.0,112.0))#(45.0, 100.0, 71.0))   # grey higher
-        )
+
 
         # Apply threshold to the masked image, no idea what the values mean
         return_val, threshold = cv2.threshold(frame_mask, 127, 255, 0)
@@ -238,7 +260,7 @@ class RobotTracker(Tracker):
 
             (x,y),radius = cv2.minEnclosingCircle(cnt)
             return (int(x + x_offset), int(y + y_offset))
-        return (None, None)
+        return None
 
     #def get_angle(self, m, n):
     #    """
@@ -344,7 +366,7 @@ class RobotTracker(Tracker):
         i = None
 
         # 1. Retrieve location of the green plate
-        x, y, width, height = self._find_plate(frame.copy())   # x,y are robot positions
+        x, y, width, height = self._find_plate(frame.copy(), self.pitch)   # x,y are robot positions
 
         if width > 0 and height > 0:
 
@@ -356,10 +378,21 @@ class RobotTracker(Tracker):
             plate = frame[y:y + height, x:x + width]
 
             # 3. Find colored object - x and y of the 'i'
-            x_i, y_i = self._find_i(plate, 'yellow', x, y)
+            plate_location = self._find_i(plate, 'yellow', x, y)
+
+            if plate_location is not None:
+                x_i, y_i = plate_location[0], plate_location[1]
+            else:
+                x_i, y_i = None, None
 
             # 4. Find black colored plate
-            black_x, black_y = self._find_dot(plate, x, y, (center_x, center_y))
+            black = self._find_dot(plate, x, y, (center_x, center_y))
+
+            if black is not None:
+                black_x = black[0]
+                black_y = black[0]
+            else:
+                black_x, black_y = None, None
 
             if black_x is not None and black_y is not None:
                 dot = (black_x + self.offset, black_y)
