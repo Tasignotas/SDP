@@ -18,7 +18,7 @@ class Vision:
     Locate objects on the pitch.
     """
 
-    def __init__(self, side='left', color='yellow', port=0):
+    def __init__(self, side='left', color='blue', port=0):
 
         # Check params
         if not self._param_check(side, color):
@@ -157,14 +157,6 @@ class Vision:
         cv2.imshow('SUCH VISION', frame)
         cv2.waitKey(4)
 
-    def _draw_i(self, frame, position):
-        if position:
-            cv2.circle(frame, (position[0], position[1]), 1, (255, 255, 255), -1)
-
-    def _draw_dot(self, frame, position):
-        if position:
-            cv2.circle(frame, (position[0], position[1]), 1, (255, 255, 255), -1)
-
     def _draw_robot(self, frame, position, color):
         """
         Draw the location of the robots given the color
@@ -182,6 +174,23 @@ class Vision:
 
         if 'i' in position.keys():
             self._draw_i(frame, position['i'])
+
+        if 'i' in position.keys() and 'dot' in position.keys():
+            self._draw_angle(frame, position['dot'], center)
+
+    def _draw_i(self, frame, position):
+        if position:
+            cv2.circle(frame, (position[0], position[1]), 1, (255, 255, 255), -1)
+
+    def _draw_dot(self, frame, position):
+        if position:
+            cv2.circle(frame, (position[0], position[1]), 1, (255, 255, 255), -1)
+
+    def _draw_angle(self, frame, dot, i):
+        if dot and i:
+            x_diff, y_diff = (dot[0] - i[0]) * 3, (dot[1] - i[1]) * 3
+            endpoint = (i[0] + x_diff, i[1] + y_diff)
+            cv2.line(frame, i, endpoint, (255,255,255), 1)
 
     def _draw_ball(self, frame, position):
         """

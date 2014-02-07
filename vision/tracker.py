@@ -3,99 +3,24 @@ import numpy as np
 import math
 import tools
 import cPickle
+from colors import PITCH0, PITCH1
 
 
-COLORS = {
-    'red': [
-        {
-            'min': np.array((0.0, 114.0, 250.0)),
-            'max': np.array((5.0, 255.0, 255.0)),
-            'contrast': 100.0,
-            'blur': 5
-        },
-        {
-            'min': np.array((0.0, 181.0, 130.0)),
-            'max': np.array((10.0, 255.0, 255.0)),
-            'contrast': 1.0,
-            'blur': 10
-        }
-    ],
-    'yellow': [
-        {
-            'min': np.array((0.0, 193.0, 137.0)), #LH,LS,LV
-            'max': np.array((50.0, 255.0, 255.0)), #UH,US,UV
-            'contrast': 1.0,
-            'blur': 0
-        },
-        {
-            'min': np.array((6.0, 154.0, 229.0)), #LH,LS,LV
-            'max': np.array((130.0, 255.0, 255.0)), #UH,US,UV
-            'contrast': 1.0,
-            'blur': 0
-        },
-        {
-            'min': np.array((10.0, 210.0, 162.0)), #LH,LS,LV
-            'max': np.array((20.0, 255.0, 255.0)), #UH,US,UV
-            'contrast': 1.0,
-            'blur': 0
-        }
-    ],
-    'blue': [
-        {
-            'min': np.array((88.0, 147.0, 82.0)),    #LH,LS,LV
-            'max': np.array((104.0, 255.0, 255.0)), #UH,US,UV
-            'contrast': 0.0,
-            'blur': 0
-        },
-        {
-            'min': np.array((87.0, 147.0, 82.0)),
-            'max': np.array((104.0, 255.0, 255.0)),
-            'contrast': 1.0,
-            'blur': 1
-        },
-        {
-            'min': np.array((87.0, 105.0, 82.0)),
-            'max': np.array((104.0, 255.0, 255.0)),
-            'contrast': 1.0,
-            'blur': 1
-        },
-        {
-            'min': np.array((87.0, 100.0, 90.0)),
-            'max': np.array((104.0, 255.0, 255.0)),
-            'contrast': 1.0,
-            'blur': 1
-        },
-        {	#not too good at edges.
-            'min': np.array((80.0, 59.0, 90.0)),	#LH,LS,LV
-            'max': np.array((135.0, 142.0, 190.0)),	#UH,US,UV
-            'contrast': 1.0,
-            'blur': 1
-        },
-        {   #not too good at edges.
-            'min': np.array((80.0, 120.0, 80.0)),    #LH,LS,LV
-            'max': np.array((163.0, 255.0, 255.0)), #UH,US,UV
-            'contrast': 1.0,
-            'blur': 0
-        }
-
-    ]
-    # (np.array((91.0, 118.0, 90.0)), np.array((169.0, 255.0, 255.0)), 1.0, 1)
-}
 
 # In the code, change COLORS to GUICOLORS if you want to use the values you
 # picked with the findHSV GUI.
-GUICOLORS = COLORS
+# GUICOLORS = COLORS
 
-def get_gui_colors():
-    global GUICOLORS
-    try:
-        pickleFile = open("configMask.txt", "rb")
-        GUICOLORS = cPickle.load(pickleFile)
-        pickleFile.close()
-    except:
-        pass
+# def get_gui_colors():
+#     global GUICOLORS
+#     try:
+#         pickleFile = open("configMask.txt", "rb")
+#         GUICOLORS = cPickle.load(pickleFile)
+#         pickleFile.close()
+#     except:
+#         pass
 
-get_gui_colors()
+# get_gui_colors()
 
 class Tracker(object):
 
@@ -138,7 +63,7 @@ class Tracker(object):
 
 class RobotTracker(Tracker):
 
-    def __init__(self, color, crop, offset):
+    def __init__(self, color, crop, offset, pitch=0):
         """
         Initialize tracker.
 
@@ -149,9 +74,13 @@ class RobotTracker(Tracker):
             [int] offset        how much to offset the coordinates
         """
         self.crop = crop
-        self.color = COLORS[color]
+        if pitch == 0:
+            self.color = PITCH0[color]
+        else:
+            self.color = PITCH1[color]
         self.color_name = color
         self.offset = offset
+        self.pitch = pitch
 
     def _find_plate(self, frame):
         """
@@ -234,51 +163,59 @@ class RobotTracker(Tracker):
             [2-tuple] (x_center, y_center) of the object if available
                       (None, None) otherwise
         """
-        # For now, just use the first set of values in the color list.
-        lowerBoundary = COLORS[color][0]['min']
-        upperBoundary = COLORS[color][0]['max']
-        contrast = COLORS[color][0]['contrast']
-        blur = COLORS[color][0]['blur']
+        for color in self.color:
+            lowerBoundary = color['min']
+            upperBoundary = color['max']
+            contrast = color['contrast']
+            blur = color['blur']
 
-        if blur > 1:
-            frame = cv2.blur(frame,(blur,blur))
-        if contrast > 1:
-            frame = cv2.add(frame,np.array([contrast]))
+            if blur > 1:
+                frame = cv2.blur(frame,(blur,blur))
+            if contrast > 1:
+                frame = cv2.add(frame,np.array([contrast]))
 
-        frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+            frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-        # Create a mask for the t_yellow T
-        frame_mask = cv2.inRange(
-            frame_hsv,
-            lowerBoundary, #np.array([0, 193, 137], dtype=np.uint8),
-            upperBoundary #np.array([50, 255, 255], dtype=np.uint8)
-        )
+            # Create a mask for the t_yellow T
+            frame_mask = cv2.inRange(
+                frame_hsv,
+                lowerBoundary, #np.array([0, 193, 137], dtype=np.uint8),
+                upperBoundary #np.array([50, 255, 255], dtype=np.uint8)
+            )
 
-        # Apply threshold to the masked image, no idea what the values mean
-        return_val, threshold = cv2.threshold(frame_mask, 127, 255, 0)
+            # Apply threshold to the masked image, no idea what the values mean
+            return_val, threshold = cv2.threshold(frame_mask, 127, 255, 0)
 
-        # Find contours, they describe the masked image - our T
-        contours, hierarchy = cv2.findContours(
-            threshold,
-            cv2.RETR_CCOMP,
-            cv2.CHAIN_APPROX_TC89_KCOS
-        )
+            # Find contours, they describe the masked image - our T
+            contours, hierarchy = cv2.findContours(
+                threshold,
+                cv2.RETR_CCOMP,
+                cv2.CHAIN_APPROX_TC89_KCOS
+            )
 
-        if len(contours) > 0:
-            cnt = contours[0]   # Take the largest contour
+            if len(contours) > 0:
+                cnt = contours[0]   # Take the largest contour
 
-            (x,y),radius = cv2.minEnclosingCircle(cnt)
-            return (int(x + x_offset), int(y + y_offset))
+                (x,y),radius = cv2.minEnclosingCircle(cnt)
+                return (int(x + x_offset), int(y + y_offset))
         return (None, None)
 
-    def _find_dot(self, frame, x_offset, y_offset):
+    def _find_dot(self, frame, x_offset, y_offset, center=None):
         """
         Given a frame, find a colored dot by masking the image.
         """
-        frame = cv2.blur(frame,(4,4)) # Needed to add this for the computer I was on.
+        frame = cv2.blur(frame,(4,4))
+
+        # Create a mask and remove anything that outside of some fixed radius
+        if center is not None:
+            mask = frame.copy()
+            print mask.shape
+            cv2.circle(mask, center, 16, ())
+
+
         frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-        # Create a mask for the t_yellow T
+        # Create a mask for the
         frame_mask = cv2.inRange(
             frame_hsv,
             # Needed to change this for the computer I was on.
@@ -335,9 +272,9 @@ class RobotTracker(Tracker):
         """
 
         # Work out if the center of the disc is close to being on the line
-        # that goes through the center of the plate and the center of the 
+        # that goes through the center of the plate and the center of the
         # i.
-        # If it is, use the center of the disc and the center of the i to 
+        # If it is, use the center of the disc and the center of the i to
         # calculate the angle.
         # Otherwise, use the center of the plate and the center of the i.
 
@@ -345,7 +282,7 @@ class RobotTracker(Tracker):
 
         m,c = self.calcLine(centerOfMass,centerOfPlate)
         tolerance = 5
-        
+
         #print np.abs(centerOfDisc[1]- (m*centerOfDisc[0]+c))
         #print np.abs(centerOfDisc[0]- ((centerOfDisc[1]-c)*1.0/m))
 
@@ -365,14 +302,15 @@ class RobotTracker(Tracker):
         if diff_x > 0 and diff_y > 0:
             angle = 180 + angle
         if diff_x < 0 and diff_y > 0:
-            angle = 90+angle 
-        
+            angle = 90+angle
+
         return angle
 
     def _find_gradient(self, m, n):
         """
         Calculate the gradient of
         """
+        pass
 
     def find(self, frame, queue):
         """
@@ -409,6 +347,10 @@ class RobotTracker(Tracker):
         x, y, width, height = self._find_plate(frame.copy())   # x,y are robot positions
 
         if width > 0 and height > 0:
+
+            # Find square center
+            center_x, center_y = x + width / 2, y + height / 2
+
             # print x,y
             # 2. Crop image
             plate = frame[y:y + height, x:x + width]
@@ -417,7 +359,7 @@ class RobotTracker(Tracker):
             x_i, y_i = self._find_i(plate, 'yellow', x, y)
 
             # 4. Find black colored plate
-            black_x, black_y = self._find_dot(plate, x, y)
+            black_x, black_y = self._find_dot(plate, x, y, (center_x, center_y))
 
             if black_x is not None and black_y is not None:
                 dot = (black_x + self.offset, black_y)
@@ -425,9 +367,8 @@ class RobotTracker(Tracker):
             if x_i is not None and y_i is not None:
                 i = (x_i + self.offset, y_i)
 
-            # Find square center
-            center_x, center_y = x + width / 2, y + height / 2
-            
+
+
             # Try working out the angle based on the center points
             #print [center_x,center_y,x_i,y_i,black_x,black_y]
             if not(None in [center_x,center_y,x_i,y_i,black_x,black_y]):
@@ -457,7 +398,7 @@ class BallTracker(Tracker):
     Track red ball on the pitch.
     """
 
-    def __init__(self, crop, offset, name='ball'):
+    def __init__(self, crop, offset, name='ball', pitch=0):
         """
         Initialize tracker.
 
@@ -468,7 +409,10 @@ class BallTracker(Tracker):
             [int] offset        how much to offset the coordinates
         """
         self.crop = crop
-        self.color = COLORS['red']
+        if pitch == 0:
+            self.color = PITCH0['red']
+        else:
+            self.color = PITCH1['red']
         self.offset = offset
         self.name = name
 

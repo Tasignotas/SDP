@@ -128,20 +128,20 @@ class Pitch_Object(object):
 
     def get_polygon_point(self, d, theta):
         # Get point for drawing polygon around object
-        angle = self._vector.get_angle()
-        delta_x = self._vector.get_x() + (d * cos(theta + angle))
-        delta_y = self._vector.get_x() + (d * sin(theta + angle))
+        angle = self.get_angle()
+        delta_x = self.get_x() + (d * cos(theta + angle))
+        delta_y = self.get_y() + (d * sin(theta + angle))
         return delta_x, delta_y
 
 
     def get_generic_polygon(self, width, length):
         # Get polygon drawn around a generic object
-        d = hypot(length * 0.5, width * 0.5)
+        dist = hypot(length * 0.5, width * 0.5)
         theta = atan2(length * 0.5, width * 0.5)
-        front_left = (self.get_polygon_point(d, theta))
-        front_right = (self.get_polygon_point(d, -theta))
-        back_left = (self.get_polygon_point(d, -(theta + pi)))
-        back_right = (self.get_polygon_point(d, theta + pi))
+        front_left = (self.get_polygon_point(dist, theta))
+        front_right = (self.get_polygon_point(dist, -theta))
+        back_left = (self.get_polygon_point(dist, -(theta + pi)))
+        back_right = (self.get_polygon_point(dist, theta + pi))
         return Polygon((front_left, front_right, back_left, back_right))
 
 
@@ -246,9 +246,15 @@ class Robot(Pitch_Object):
         return Polygon((robot_left, robot_right, path_left, path_right))
 
 
-    def get_kick_alignment(self, kick_path):
+    def get_path_alignment(self, path):
         # Get the angle alignment necessary for a clear kick
-        pass
+        robot_midpoint = ((path[0][0] + path[1][0]) * 0.5, (path[0][1] + path[1][1]) * 0.5)
+        target_midpoint = ((path[2][0] + path[3][0]) * 0.5, (path[2][3] + path[1][1]) * 0.5)
+        delta_x = target_midpoint[0] - robot_midpoint[0]
+        delta_y = target_midpoint[1] - robot_midpoint[1]
+        theta = atan2(delta_y, delta_x)
+        delta_angle = theta - self.get_angle()
+        return delta_angle
 
 
     def __repr__(self):
