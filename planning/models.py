@@ -43,11 +43,11 @@ class Coordinate(object):
 
 
     def set_x(self, x):
-        self._x = x if x else self._x
+        self._x = x if not(x == None) else self._x
 
 
     def set_y(self, y):
-        self._y = y if y else self._y
+        self._y = y if not(y == None) else self._y
 
 
     def __repr__(self):
@@ -72,11 +72,11 @@ class Vector(Coordinate):
 
 
     def set_angle(self, angle):
-        self._angle = angle if angle else self._angle
+        self._angle = angle if not (angle == None) else self._angle
 
 
     def set_velocity(self, velocity):
-        self._velocity = velocity if velocity else self._velocity
+        self._velocity = velocity if not (velocity == None) else self._velocity
 
 
     def __repr__(self):
