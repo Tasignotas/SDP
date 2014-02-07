@@ -10,6 +10,8 @@ from planning.models import Vector
 TEAM_COLORS = set(['yellow', 'blue'])
 SIDES = ['left', 'right']
 
+PROCESSING_DEBUG = False
+
 
 class Vision:
     """
@@ -21,7 +23,7 @@ class Vision:
         # Check params
         if not self._param_check(side, color):
             return
-        
+
         # Initialize camera
         self._init_camera(port)
 
@@ -29,13 +31,11 @@ class Vision:
         self.calibration = tools.get_calibration('vision/calibrate.json')
         self.crop_values = tools.find_extremes(self.calibration['outline'])
 
-        # print self.crop_values
-
         self.ball_tracker = BallTracker(
             (0, self.crop_values[1], 0, self.crop_values[3]), 0)
 
         # Initialize side assignment
-        self._init_robot_trackers(side, color)        
+        self._init_robot_trackers(side, color)
 
     def _param_check(self, side, color):
         """
@@ -63,10 +63,17 @@ class Vision:
     def _init_robot_trackers(self, side, color):
         """
         Initialize side assignment.
+
+        Params:
+            [string] side   - our side
+            [string] color  - our color
+
+        Returns:
+            None.
         """
         # Temporary: divide zones into section
         zone_size = int(math.floor(self.crop_values[1] / 4.0))
-        
+
         zones = [(zone_size * i, zone_size * (i + 1), 0, self.crop_values[3]) for i in range(4)]
 
         # Do set difference to find the other color - if is too long :)
@@ -111,19 +118,11 @@ class Vision:
         # Draw positions
         self._draw(frame, positions)
 
-        # NO IDEA WHAT THIS DOES!
-        # if positions[4]:
-        #     objects[4].oldPos.append(positions[4][0])
-        # if len(objects[4].oldPos) > 5:
-        #     objects[4].oldPos.pop(0)
-        #for i in objects:
-        # print objects[4].oldPos
-            
         # MULTIPROCESSING DEBUG
-
-        # if hasattr(os, 'getppid'):  # only available on Unix
-        #     print 'parent process:', os.getppid()
-        # print 'process id:', os.getpid()
+        if PROCESSING_DEBUG:
+            if hasattr(os, 'getppid'):  # only available on Unix
+                print 'Parent process:', os.getppid()
+            print 'Process id:', os.getpid()
 
         result = {
             'our_attacker': self.to_vector(positions[1]),
@@ -132,34 +131,91 @@ class Vision:
             'their_defender': self.to_vector(positions[2]),
             'ball': self.to_vector(positions[4])
         }
+
         return result
 
-    def _draw(self, frame, positions):
-        # print positions
-        for position in positions[:4]:
-            cv2.circle(frame, (int(position[0]), int(position[1])), 10, (255, 0, 0), 1)
+    def _draw(self, frame, positions, our_color='yellow'):
+        """
+        Draw positions from the trackers on the screen.
 
-        # Draw results
-        # TODO: Convert to a process!
-        # for val in positions:
-        #     if val is not None:
-        #         cv2.circle(frame, (val[0][0], val[0][1]), 10, (0, 255, 0), 1)
-        # for i in range(4):
-        #     if positions[i] is not None and positions[i][2] is not None:
-        #         cv2.circle(frame, (positions[i][2][0],positions[i][2][1]),5,(255,0,0),1)
-        #         cv2.line(frame,(positions[i][0][0],positions[i][0][1]),(positions[i][2][0],positions[i][2][1]),(0,0,255),3)
+        Params:
+            [np.array] frame    - the frame to draw on
+            [5-tuple] positions - positions of the robots and the ball
+
+        Returns:
+            None. Image is displayed
+        """
+        # Draw our robots
+        for position in positions[:2]:
+            self._draw_robot(frame, position, our_color)
+
+        for position in positions[2:4]:
+            self._draw_robot(frame, position, list(TEAM_COLORS - set(our_color))[0])
+
+        self._draw_ball(frame, positions[4])
 
         cv2.imshow('SUCH VISION', frame)
         cv2.waitKey(4)
 
+    def _draw_i(self, frame, position):
+        if position:
+            cv2.circle(frame, (position[0], position[1]), 1, (255, 255, 255), -1)
+
+    def _draw_dot(self, frame, position):
+        if position:
+            cv2.circle(frame, (position[0], position[1]), 1, (255, 255, 255), -1)
+
+    def _draw_robot(self, frame, position, color):
+        """
+        Draw the location of the robots given the color
+        """
+        colors = {
+            'yellow': (0, 255, 255),
+            'blue': (255, 0, 0)
+        }
+        if position:
+            center = position['location']
+            cv2.circle(frame, center, 16, colors[color], 1)
+
+        if 'dot' in position.keys():
+            self._draw_dot(frame, position['dot'])
+
+        if 'i' in position.keys():
+            self._draw_i(frame, position['i'])
+
+    def _draw_ball(self, frame, position):
+        """
+        Draw the ball as a circle. In place.
+
+        Params:
+            [dict] positions    - information about the location of the ball
+        """
+        if position is not None:
+            center = position['location']
+            cv2.circle(frame, center, 7, (0, 0, 255), 2)
+
     def _trim_image(self, frame):
-        # Trim the image
+        """
+        Given a frame, crop it to the size given in self.crop_values
+
+        Returns:
+            Cropped image
+        """
         return frame[
             self.crop_values[2]:self.crop_values[3],
             self.crop_values[0]:self.crop_values[1]
         ]
 
     def _run_trackers(self, frame):
+        """
+        Run trackers as separate processes
+
+        Params:
+            [np.frame] frame        - frame to run trackers on
+
+        Returns:
+            [5-tuple] positions     - locations of the robots and the ball
+        """
         queues = [Queue() for i in range(5)]
         objects = [self.us[0], self.us[1], self.opponents[0], self.opponents[1], self.ball_tracker]
 
@@ -170,7 +226,7 @@ class Vision:
         for process in processes:
             process.start()
 
-        # Find robots and ball, use queue to 
+        # Find robots and ball, use queue to
         # avoid deadlock and share resources
         positions = [q.get() for q in queues]
 
@@ -186,8 +242,13 @@ class Vision:
 
         Return a Vector
         """
-        return Vector(None, None, None, None)
-        if args is not None:
-            x, y = args[0] if args[0] is not None else (None, None)
-            return Vector(x, y, args[1], args[2])
+        keys = args.keys() if args is not None else []
+        x, y, angle, velocity = None, None, None, None
+        if 'location' in keys:
+            x, y = args['location']
+        if 'angle' in keys:
+            angle = args['angle']
+        if 'velocity' in keys:
+            velocity = args['velocity']
 
+        return Vector(x, y, angle, velocity)
