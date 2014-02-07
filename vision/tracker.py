@@ -275,13 +275,15 @@ class RobotTracker(Tracker):
         """
         Given a frame, find a colored dot by masking the image.
         """
+        frame = cv2.blur(frame,(4,4)) # Needed to add this for the computer I was on.
         frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
         # Create a mask for the t_yellow T
         frame_mask = cv2.inRange(
             frame_hsv,
-            np.array((0.0, 0.0, 38.0)),     # grey lower
-            np.array((45.0, 100.0, 71.0))   # grey higher
+            # Needed to change this for the computer I was on.
+            np.array((0.0,0.0,0.0)),#(0.0, 0.0, 38.0)),     # grey lower
+            np.array((360.0,86.0,112.0))#(45.0, 100.0, 71.0))   # grey higher
         )
 
         # Apply threshold to the masked image, no idea what the values mean
@@ -301,24 +303,70 @@ class RobotTracker(Tracker):
             return (int(x + x_offset), int(y + y_offset))
         return (None, None)
 
-    def get_angle(self, m, n):
+    #def get_angle(self, m, n):
+    #    """
+    #    Find the angle between m and n
+    #    """
+    #    diff_x = m[0] - n[0]
+    #    diff_y = m[1] - n[1]
+
+    #    angle = np.arctan((np.abs(diff_y) * 1.0 / np.abs(diff_x)))
+    #    angle = np.degrees(angle)
+    #    if diff_x > 0 and diff_y < 0:
+    #        angle = 90 - angle
+    #    if diff_x > 0 and diff_y > 0:
+    #        angle = 180 - angle
+    #    if diff_x < 0 and diff_y > 0:
+    #        angle = 180+angle
+    #    if diff_x < 0 and diff_y < 0:
+    #        angle = 360 - angle
+
+    #    return angle
+    def calcLine(self,(a,b),(d,e)):
+        m = (b-e)*1.0/(a-d)
+        c1 = b-m*a
+        c2 = e-m*d
+        c = ((c1+c2)/2)
+        return (m,c)
+
+    def get_angle(self,centerOfPlate,centerOfMass,centerOfDisc):
         """
-        Find the angle between m and n
+        Find the angle using the lines between the center points of the features.
         """
-        diff_x = m[0] - n[0]
-        diff_y = m[1] - n[1]
+
+        # Work out if the center of the disc is close to being on the line
+        # that goes through the center of the plate and the center of the 
+        # i.
+        # If it is, use the center of the disc and the center of the i to 
+        # calculate the angle.
+        # Otherwise, use the center of the plate and the center of the i.
+
+        #print "getting angle"
+
+        m,c = self.calcLine(centerOfMass,centerOfPlate)
+        tolerance = 5
+        
+        #print np.abs(centerOfDisc[1]- (m*centerOfDisc[0]+c))
+        #print np.abs(centerOfDisc[0]- ((centerOfDisc[1]-c)*1.0/m))
+
+        if (m*centerOfDisc[0]+c-tolerance) < centerOfDisc[1] < (m*centerOfDisc[0]+c+tolerance) and ((centerOfDisc[1]-c)*1.0/m-tolerance) < centerOfDisc[0] < ((centerOfDisc[1]-c)*1.0/m+tolerance):
+        #    m,c = calcLine(centerOfMass,centerofPlate)
+            #print "On line"
+            diff_x = centerOfDisc[0] - centerOfMass[0]
+            diff_y = centerOfDisc[1] - centerOfMass[1]
+        else:
+            # Not quite sure about calculating the angle in this case.
+            return None
 
         angle = np.arctan((np.abs(diff_y) * 1.0 / np.abs(diff_x)))
         angle = np.degrees(angle)
         if diff_x > 0 and diff_y < 0:
-            angle = 90 - angle
-        if diff_x > 0 and diff_y > 0:
-            angle = 180 - angle
-        if diff_x < 0 and diff_y > 0:
-            angle = 180+angle
-        if diff_x < 0 and diff_y < 0:
             angle = 360 - angle
-
+        if diff_x > 0 and diff_y > 0:
+            angle = 180 + angle
+        if diff_x < 0 and diff_y > 0:
+            angle = 90+angle 
+        
         return angle
 
     def _find_gradient(self, m, n):
@@ -379,6 +427,12 @@ class RobotTracker(Tracker):
 
             # Find square center
             center_x, center_y = x + width / 2, y + height / 2
+            
+            # Try working out the angle based on the center points
+            #print [center_x,center_y,x_i,y_i,black_x,black_y]
+            if not(None in [center_x,center_y,x_i,y_i,black_x,black_y]):
+                angle = self.get_angle((center_x,center_y),(x_i,y_i),(black_x,black_y))
+            #print angle
 
 
 
