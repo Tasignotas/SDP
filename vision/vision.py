@@ -261,3 +261,14 @@ class Vision:
             velocity = args['velocity']
 
         return Vector(x, y, angle, velocity)
+
+
+class Camera(object):
+
+    def __init__(self, port=0):
+        self.capture = cv2.VideoCapture(port)
+
+    def get_frame(self):
+        status, frame = self.capture.read()
+        if status:
+            return frame

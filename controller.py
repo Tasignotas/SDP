@@ -11,8 +11,7 @@ class Controller:
     Primary source of robot control. Ties vision and planning together.
     """
 
-    def __init__(self, port=0, connect=False,
-        pitch=0, debug=False):
+    def __init__(self, port=0, connect=False, pitch=0, debug=False):
         self.debug = debug
         self.vision = Vision(side='right', pitch=pitch)
         self.planner = Planner(our_side='left')
