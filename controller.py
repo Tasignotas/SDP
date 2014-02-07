@@ -1,4 +1,4 @@
-from vision.vision import Vision
+from vision.vision import Vision, Camera, GUI
 from planning.planner import Planner
 from vision.tracker import Tracker
 from postprocessing.postprocessing import Postprocessing
@@ -11,11 +11,45 @@ class Controller:
     Primary source of robot control. Ties vision and planning together.
     """
 
-    def __init__(self, port=0, connect=False, pitch=0, debug=False):
-        self.debug = debug
-        self.vision = Vision(side='right', pitch=pitch)
-        self.planner = Planner(our_side='left')
+    def __init__(self, pitch, color, our_side, port=0, connect=False, debug=False):
+        """
+        Entry point for the SDP system.
+
+        Params:
+            [int] port      port number for the camera
+            [bool] connect  connect to the nxt?
+            [int] pitch     0 - main pitch, 1 - secondary pitch
+            [bool] debug    print debug messages?
+        """
+        if pitch not in [0, 1]:
+            raise Exception('Incorrect pitch number.')
+
+        if color not in ['yellow', 'blue']:
+            raise Exception('Incorrect color.')
+
+        if our_side not in ['left', 'right']:
+            raise Exception('Icorrect side. Valid options are "left" and "right"')
+
+        # Set up camera for frames
+        self.camera = Camera(port=port)
+        frame = self.camera.get_frame()
+
+        # Set up vision
+        self.vision = Vision(
+            pitch=pitch, color=color, our_side=our_side, frame_shape=frame.shape)
+
+        # Set up postprocessing for vision
         self.postprocessing = Postprocessing()
+
+        # Set up main planner
+        self.planner = Planner(our_side=our_side)
+
+        # Set up GUI
+        self.GUI = GUI()
+
+        # Debug flag for print statements
+        self.debug = debug
+
         #self.attacker = Attacker_Controller(connectionName='GRP7A', leftMotorPort=PORT_A, rightMotorPort=PORT_C, kickerMotorPort=PORT_B)
         #self.defender = Defender_Controller('GRP7A', 'PORT_X', 'PORT_X', 'PORT_X')
 
@@ -27,10 +61,11 @@ class Controller:
         """
         # positions = (None,None,None,None,((0,0),0,0))
         while True:
+            frame = self.camera.get_frame()
             # Find object positions
-            positions = self.vision.locate()
+            positions = self.vision.locate(frame)
 
-            positions = self.postprocessing.analyze(positions)
+            # positions = self.postprocessing.analyze(positions)
 
             if self.debug:
                 print positions
@@ -42,6 +77,9 @@ class Controller:
             # Execute action
             # self.attacker.execute(actions[0])
             # self.defender.execute(actions[0])
+
+            # Draw vision content and actions
+            self.GUI.draw(frame, positions, actions)
 
 
 class Connection:
@@ -109,4 +147,4 @@ class Defender_Controller(Robot_Controller):
 
 
 if __name__ == '__main__':
-    c = Controller(debug=True, pitch=1).wow()  # Such controller
+    c = Controller(debug=True, pitch=0, color='blue', our_side='left').wow()  # Such controller

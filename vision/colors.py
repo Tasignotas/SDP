@@ -6,7 +6,7 @@ PITCH0 = {
         {
             'min': np.array((0.0, 114.0, 250.0)),
             'max': np.array((5.0, 255.0, 255.0)),
-            'contrast': 100.0,
+        'contrast': 100.0,
             'blur': 5
         },
         {
