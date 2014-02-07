@@ -1,15 +1,14 @@
 import sys
 from planning.models import Vector
+from math import atan, pi, sqrt
 
-
-LAG = 0
-ANGLE_WEIGHTS = [0.258, 0.225, 0.196, 0.17, 0.148]
 
 
 class Postprocessing(object):
 
 
 	def __init__(self):
+		self._vectors = {}
 		self._vectors['ball']= []
 		self._vectors['our_attacker'] = []
 		self._vectors['their_attacker'] = []
@@ -25,28 +24,36 @@ class Postprocessing(object):
 		"""
 		new_vector_dict = {}
 		for name, vec in vector_dict.iteritems():
-			self._vectors[key] = [vec] + self._vectors[key]
-			self._vectors[key].pop()
-			new_vector_dict[name] = self.analyze_ball(key, vec) if name == 'ball' else self.analyze_robot(key, vec)
+			self._vectors[name] = [vec] + self._vectors[name]
+			if len(self._vectors[name]) > 5:
+				self._vectors[name].pop()
+			new_vector_dict[name] = self.analyze_ball(name, vec) if name == 'ball' else self.analyze_robot(name, vec)
 		return new_vector_dict
 
 
 	def analyze_ball(self, key, current_vec):
 		# This method calculates the angle and the velocity of the ball.
 		# TODO: make it able to PREDICT angle, speed and the location by specified lag.
-
-
+		# Getting the last two successful ball captures:
+		prev_pos = [(idx, val.get_x(), val.get_y()) for (idx, val) in enumerate(self._vectors[key]) if val]
+		if len(prev_pos) > 1:
+			delta_x = prev_pos[0][1] - prev_pos[1][1]
+			delta_y = prev_pos[0][2] - prev_pos[1][2]
+			ratio = delta_y/delta_x if delta_x else (float('inf') if delta_y > 0 else float('-inf'))
+			angle = (atan(ratio) * 180 / pi) % 360
+			current_vec.set_angle(angle)
+			velocity = sqrt(delta_x**2 + delta_y**2)/(prev_pos[1][0] - prev_pos[0][0])
+			current_vec.set_velocity(velocity)
 		return current_vec
 
 
 	def analyze_robot(self, key, current_vec):
 		# This method calculates the angle and the velocity of the robot.
 		# TODO: make it able to PREDICT angle, speed and the location by specified lag.
-		previous_angles = [v.get_angle() if v else None for v in self._vectors[key]]		
-		angle_mult = sum([a if m else 0 for (a, m) in zip(ANGLE_WEIGHTS, previous_angles)])
-		if angle_mult:
-			angle = sum([(1.0 / angle_mult) * m.get_angle() if m else 0 for (a, m) in zip(ANGLE_WEIGHTS, previous_angles)])
-		else:
-			angle = None
-		
-		return Vector(current_vec.get_x(), current_vec.get_y(), angle, velocity)
+		prev_pos = [(idx, val.get_x(), val.get_y()) for (idx, val) in enumerate(self._vectors[key]) if val]
+		if len(prev_pos) > 1:
+			delta_x = prev_pos[0][1] - prev_pos[1][1]
+			delta_y = prev_pos[0][2] - prev_pos[1][2]
+			velocity = sqrt(delta_x**2 + delta_y**2)/(prev_pos[1][0] - prev_pos[0][0])
+			current_vec.set_velocity(velocity)
+		return current_vec
