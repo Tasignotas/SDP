@@ -22,6 +22,12 @@ COLORS = {
     ],
     'yellow': [
         {
+            'min': np.array((16.0, 165.0, 136.0)), #LH,LS,LV
+            'max': np.array((19.0, 255.0, 255.0)), #UH,US,UV
+            'contrast': 1.0,
+            'blur': 0
+        },
+        {
             'min': np.array((0.0, 193.0, 137.0)), #LH,LS,LV
             'max': np.array((50.0, 255.0, 255.0)), #UH,US,UV
             'contrast': 1.0,
@@ -234,41 +240,41 @@ class RobotTracker(Tracker):
             [2-tuple] (x_center, y_center) of the object if available
                       (None, None) otherwise
         """
-        # For now, just use the first set of values in the color list.
-        lowerBoundary = COLORS[color][0]['min']
-        upperBoundary = COLORS[color][0]['max']
-        contrast = COLORS[color][0]['contrast']
-        blur = COLORS[color][0]['blur']
+        for color in COLORS[color]:
+            lowerBoundary = color['min']
+            upperBoundary = color['max']
+            contrast = color['contrast']
+            blur = color['blur']
 
-        if blur > 1:
-            frame = cv2.blur(frame,(blur,blur))
-        if contrast > 1:
-            frame = cv2.add(frame,np.array([contrast]))
+            if blur > 1:
+                frame = cv2.blur(frame,(blur,blur))
+            if contrast > 1:
+                frame = cv2.add(frame,np.array([contrast]))
 
-        frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+            frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-        # Create a mask for the t_yellow T
-        frame_mask = cv2.inRange(
-            frame_hsv,
-            lowerBoundary, #np.array([0, 193, 137], dtype=np.uint8),
-            upperBoundary #np.array([50, 255, 255], dtype=np.uint8)
-        )
+            # Create a mask for the t_yellow T
+            frame_mask = cv2.inRange(
+                frame_hsv,
+                lowerBoundary, #np.array([0, 193, 137], dtype=np.uint8),
+                upperBoundary #np.array([50, 255, 255], dtype=np.uint8)
+            )
 
-        # Apply threshold to the masked image, no idea what the values mean
-        return_val, threshold = cv2.threshold(frame_mask, 127, 255, 0)
+            # Apply threshold to the masked image, no idea what the values mean
+            return_val, threshold = cv2.threshold(frame_mask, 127, 255, 0)
 
-        # Find contours, they describe the masked image - our T
-        contours, hierarchy = cv2.findContours(
-            threshold,
-            cv2.RETR_CCOMP,
-            cv2.CHAIN_APPROX_TC89_KCOS
-        )
+            # Find contours, they describe the masked image - our T
+            contours, hierarchy = cv2.findContours(
+                threshold,
+                cv2.RETR_CCOMP,
+                cv2.CHAIN_APPROX_TC89_KCOS
+            )
 
-        if len(contours) > 0:
-            cnt = contours[0]   # Take the largest contour
+            if len(contours) > 0:
+                cnt = contours[0]   # Take the largest contour
 
-            (x,y),radius = cv2.minEnclosingCircle(cnt)
-            return (int(x + x_offset), int(y + y_offset))
+                (x,y),radius = cv2.minEnclosingCircle(cnt)
+                return (int(x + x_offset), int(y + y_offset))
         return (None, None)
 
     def _find_dot(self, frame, x_offset, y_offset):
@@ -335,9 +341,9 @@ class RobotTracker(Tracker):
         """
 
         # Work out if the center of the disc is close to being on the line
-        # that goes through the center of the plate and the center of the 
+        # that goes through the center of the plate and the center of the
         # i.
-        # If it is, use the center of the disc and the center of the i to 
+        # If it is, use the center of the disc and the center of the i to
         # calculate the angle.
         # Otherwise, use the center of the plate and the center of the i.
 
@@ -345,7 +351,7 @@ class RobotTracker(Tracker):
 
         m,c = self.calcLine(centerOfMass,centerOfPlate)
         tolerance = 5
-        
+
         #print np.abs(centerOfDisc[1]- (m*centerOfDisc[0]+c))
         #print np.abs(centerOfDisc[0]- ((centerOfDisc[1]-c)*1.0/m))
 
@@ -365,8 +371,8 @@ class RobotTracker(Tracker):
         if diff_x > 0 and diff_y > 0:
             angle = 180 + angle
         if diff_x < 0 and diff_y > 0:
-            angle = 90+angle 
-        
+            angle = 90+angle
+
         return angle
 
     def _find_gradient(self, m, n):
@@ -427,7 +433,7 @@ class RobotTracker(Tracker):
 
             # Find square center
             center_x, center_y = x + width / 2, y + height / 2
-            
+
             # Try working out the angle based on the center points
             #print [center_x,center_y,x_i,y_i,black_x,black_y]
             if not(None in [center_x,center_y,x_i,y_i,black_x,black_y]):
