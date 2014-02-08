@@ -243,12 +243,22 @@ class Camera(object):
 class GUI(object):
 
     def draw(self, frame, positions, actions, our_color):
+        their_color = list(TEAM_COLORS - set([our_color]))[0]
+        print our_color
+        print their_color
+
         if positions['ball'] is not None:
             self.draw_ball(frame, positions['ball'].get_x(), positions['ball'].get_y())
 
-        if positions['our_defender'] is not None:
-            self.draw_robot(
-                frame, positions['our_defender'].get_x(), positions['our_defender'].get_y(), our_color)
+        for key in ['our_defender', 'our_attacker']:
+            if positions[key] is not None:
+                self.draw_robot(
+                    frame, positions[key].get_x(), positions[key].get_y(), our_color)
+
+        for key in ['their_defender', 'their_attacker']:
+            if positions[key] is not None:
+                self.draw_robot(
+                    frame, positions[key].get_x(), positions[key].get_y(), their_color)
 
         cv2.imshow('SUCH VISION', frame)
         cv2.waitKey(4)

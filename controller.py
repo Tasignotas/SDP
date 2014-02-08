@@ -72,7 +72,8 @@ class Controller:
                 print positions
 
             # Find appropriate action
-            actions = self.planner.plan(positions)
+            # actions = self.planner.plan(positions)
+            actions = []
             #print 'Actions:', actions
 
             # Execute action
