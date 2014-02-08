@@ -78,9 +78,6 @@ class Vision:
         # Run trackers as processes
         positions = self._run_trackers(frame)
 
-        # Draw positions
-        # self._draw(frame, positions)
-
         # MULTIPROCESSING DEBUG
         if PROCESSING_DEBUG:
             if hasattr(os, 'getppid'):  # only available on Unix
