@@ -58,12 +58,12 @@ class Tracker(object):
             cv2.RETR_TREE,
             cv2.CHAIN_APPROX_SIMPLE
         )
-        return (contours, hierarchy)
+        return (contours, hierarchy, frame_mask)
 
 
 class RobotTracker(Tracker):
 
-    def __init__(self, color, crop, offset, pitch=1):
+    def __init__(self, color, crop, offset, pitch):
         """
         Initialize tracker.
 
@@ -431,7 +431,7 @@ class BallTracker(Tracker):
     Track red ball on the pitch.
     """
 
-    def __init__(self, crop, offset, name='ball', pitch=0):
+    def __init__(self, crop, offset, pitch, name='ball'):
         """
         Initialize tracker.
 
@@ -451,7 +451,7 @@ class BallTracker(Tracker):
 
     def find(self, frame, queue):
         for color in self.color:
-            contours, hierarchy = self.preprocess(
+            contours, hierarchy, mask = self.preprocess(
                 frame,
                 self.crop,
                 color['min'],

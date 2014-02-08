@@ -1,12 +1,22 @@
 import numpy as np
 
 
+BGR_COMMON = {
+    'red': (0, 0, 255),
+    'green': (0, 255, 0),
+    'blue': (255, 0, 0),
+    'black': (0, 0, 0),
+    'white': (255, 255, 255),
+    'yellow': (0, 255, 255)
+}
+
+
 PITCH0 = {
     'red': [
         {
-            'min': np.array((0.0, 114.0, 250.0)),
+            'min': np.array((0.0, 114.0, 132.0)),
             'max': np.array((5.0, 255.0, 255.0)),
-            'contrast': 100.0,
+            'contrast': 30.0,
             'blur': 5
         },
         {

@@ -144,6 +144,7 @@ def run(color):
             break
 
     cv2.destroyAllWindows()
+    print fileConfig.config
 
 def main():
     parser = OptionParser()
