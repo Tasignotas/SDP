@@ -244,8 +244,6 @@ class GUI(object):
 
     def draw(self, frame, positions, actions, our_color):
         their_color = list(TEAM_COLORS - set([our_color]))[0]
-        print our_color
-        print their_color
 
         if positions['ball'] is not None:
             self.draw_ball(frame, positions['ball'].get_x(), positions['ball'].get_y())
