@@ -119,7 +119,7 @@ class RobotTracker(Tracker):
         # Hacky!
         # Refactor!
         points = [None for i in range(4)]
-        left, right, top, bot = (9999, 0, 9999, 0)
+        left, right, top, bot = (None, None, None, None)
 
         if not contours:
             contours = []
@@ -136,23 +136,26 @@ class RobotTracker(Tracker):
                 topmost = tuple(cnt[cnt[:,:,1].argmin()][0])
                 bottommost = tuple(cnt[cnt[:,:,1].argmax()][0])
 
-                # Extremely non pythonic. I am sorry, 3 am has it's toll
-                if left > leftmost[0]:
+                # Extremely non pythonic. I am sorry.
+                if left is None or left > leftmost[0]:
                     left = leftmost[0]
                     points[0] = leftmost
 
-                if top > topmost[1]:
+                if top is None or top > topmost[1]:
                     top = topmost[1]
                     points[1] = topmost
 
-                if right < rightmost[0]:
+                if right is None or right < rightmost[0]:
                     right = rightmost[0]
                     points[2] = rightmost
 
-                if bot < bottommost[1]:
+                if bot is None or bot < bottommost[1]:
                     bot = bottommost[1]
                     points[3] = bottommost
 
+        for i in [left, top, right, bot]:
+            if i is None:
+                return (None, None, None, None)
         return (left, top, right-left, bot - top)   # (x, y, width, height)
 
     def _find_i(self, frame, color, x_offset=0, y_offset=0):
@@ -211,18 +214,19 @@ class RobotTracker(Tracker):
         """
         Given a frame, find a colored dot by masking the image.
         """
-        frame = cv2.blur(frame,(4,4))
+        frame = cv2.blur(frame,(5,5))
+        frame = cv2.add(frame, np.array([5.0]))
 
         # Create a mask and remove anything that outside of some fixed radius
-        if center is not None:
-            mask = frame.copy()
-            width, height, color_space = mask.shape
-            cv2.rectangle(mask, (0,0), (width, height), (0.0, 0.0, 0.0), -1)
-            cv2.circle(mask, center, 16, (255.0, 255.0, 255.0), -1)
+        # if center is not None:
+        #     mask = frame.copy()
+        #     width, height, color_space = mask.shape
+        #     cv2.rectangle(mask, (0,0), (width, height), (0.0, 0.0, 0.0), -1)
+        #     cv2.circle(mask, center, 16, (255.0, 255.0, 255.0), -1)
 
-            mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+        #     mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
 
-            frame = cv2.bitwise_and(frame,frame, mask=mask)
+        #     frame = cv2.bitwise_and(frame,frame, mask=mask)
 
 
         frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -231,8 +235,8 @@ class RobotTracker(Tracker):
             frame_mask = cv2.inRange(
                 frame_hsv,
                 # Needed to change this for the computer I was on.
-                np.array((0.0,0.0,0.0)),#(0.0, 0.0, 38.0)),     # grey lower
-                np.array((360.0,86.0,112.0))#(45.0, 100.0, 71.0))   # grey higher
+                np.array((16.0, 39.0, 47.0)),#(0.0, 0.0, 38.0)),     # grey lower
+                np.array((68.0, 132.0, 74.0))#(45.0, 100.0, 71.0))   # grey higher
             )
         else:
             frame_mask = cv2.inRange(
@@ -375,7 +379,7 @@ class RobotTracker(Tracker):
 
             # print x,y
             # 2. Crop image
-            plate = frame[y:y + height, x:x + width]
+            plate = frame.copy()[y:y + height, x:x + width]
 
             # 3. Find colored object - x and y of the 'i'
             plate_location = self._find_i(plate, 'yellow', x, y)
@@ -395,7 +399,7 @@ class RobotTracker(Tracker):
                 black_x, black_y = None, None
 
             if black_x is not None and black_y is not None:
-                dot = (black_x + self.offset, black_y)
+                dot = (black_x + self.offset, black_y + height*2)
 
             if x_i is not None and y_i is not None:
                 i = (x_i + self.offset, y_i)
@@ -416,12 +420,21 @@ class RobotTracker(Tracker):
             #     angle = self.get_angle((x, y), (x_i, y_i))
 
         # 5. Return result
+        # if
+        if x is None and y is None:
+            location = None
+            box = None
+        else:
+            location = (x + self.offset + width / 2, y + height / 2)
+            box = (x + self.offset, y, width, height)
+
         queue.put({
-            'location': (x + self.offset + width / 2, y + height / 2),
+            'location': location,
             'angle': angle,
             'velocity': speed,
             'dot': dot,
-            'i': i
+            'i': i,
+            'box': box
         })
         return
 

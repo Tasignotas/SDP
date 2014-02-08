@@ -64,12 +64,14 @@ class Controller:
         while True:
             frame = self.camera.get_frame()
             # Find object positions
-            positions = self.vision.locate(frame)
+            positions, extras = self.vision.locate(frame)
+
+            # print extras
 
             # positions = self.postprocessing.analyze(positions)
 
-            if self.debug:
-                print positions
+            # if self.debug:
+            #     print positions
 
             # Find appropriate action
             # actions = self.planner.plan(positions)
@@ -81,7 +83,7 @@ class Controller:
             # self.defender.execute(actions[0])
 
             # Draw vision content and actions
-            self.GUI.draw(frame, positions, actions, our_color=self.color)
+            self.GUI.draw(frame, positions, actions, extras, our_color=self.color)
 
 
 class Connection:

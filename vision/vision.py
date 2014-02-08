@@ -38,7 +38,7 @@ class Vision:
         zone_size = int(math.floor(width / 4.0))
 
         zones = [(zone_size * i, zone_size * (i + 1), 0, height) for i in range(4)]
-        print zones
+        # print zones
 
         # Do set difference to find the other color - if is too long :)
         opponent_color = (TEAM_COLORS - set([color])).pop()
@@ -95,7 +95,7 @@ class Vision:
             'ball': self.to_vector(positions[4])
         }
 
-        return result
+        return result, positions
 
     def _draw(self, frame, positions, our_color='yellow'):
         """
@@ -108,8 +108,6 @@ class Vision:
         Returns:
             None. Image is displayed
         """
-        print positions
-
         # Draw our robots
         for position in positions[:2]:
             self._draw_robot(frame, position, our_color)
@@ -207,7 +205,7 @@ class Vision:
         keys = args.keys() if args is not None else []
         x, y, angle, velocity = None, None, None, None
         if 'location' in keys:
-            x, y = args['location']
+            x, y = args['location'] if args['location'] is not None else (None, None)
         if 'angle' in keys:
             angle = args['angle']
         if 'velocity' in keys:
@@ -242,7 +240,16 @@ class Camera(object):
 
 class GUI(object):
 
-    def draw(self, frame, positions, actions, our_color):
+    def draw(self, frame, positions, actions, extras, our_color):
+
+        # if extras not None:
+        #     extras = {
+        #         'our_attacker': extras[1],
+        #         'their_attacker': extras[3],
+        #         'our_defender': extras[0],
+        #         'their_defender': extras[2],
+        #         'ball': extras[4]
+        #     }
         their_color = list(TEAM_COLORS - set([our_color]))[0]
 
         if positions['ball'] is not None:
@@ -258,6 +265,21 @@ class GUI(object):
                 self.draw_robot(
                     frame, positions[key].get_x(), positions[key].get_y(), their_color)
 
+        if extras is not None:
+            for x in extras[:4]:
+                if 'i' in x.keys():
+                    self.draw_dot(frame, x['i'])
+
+                if 'dot' in x.keys():
+                    self.draw_dot(frame, x['dot'])
+
+                if 'box' in x.keys():
+                    self.draw_box(frame, x['box'])
+
+                if 'location' in x.keys():
+                    self.draw_dot(frame, x['location'])
+
+
         cv2.imshow('SUCH VISION', frame)
         cv2.waitKey(4)
 
@@ -268,3 +290,12 @@ class GUI(object):
     def draw_ball(self, frame, x, y):
         if x is not None and y is not None:
             cv2.circle(frame, (x, y), 7, BGR_COMMON['red'], 2)
+
+    def draw_dot(self, frame, location):
+        if location is not None:
+            cv2.circle(frame, location, 2, BGR_COMMON['white'], 1)
+
+    def draw_box(self, frame, location):
+        if location is not None:
+            x, y, width, height = location
+            cv2.rectangle(frame, (x, y), (x + width, y + height), BGR_COMMON['bright_green'], 1)

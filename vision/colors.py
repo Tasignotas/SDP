@@ -7,7 +7,8 @@ BGR_COMMON = {
     'blue': (255, 0, 0),
     'black': (0, 0, 0),
     'white': (255, 255, 255),
-    'yellow': (0, 255, 255)
+    'yellow': (0, 255, 255),
+    'bright_green': (0, 255, 102)
 }
 
 
