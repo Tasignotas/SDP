@@ -149,4 +149,11 @@ class Defender_Controller(Robot_Controller):
 
 
 if __name__ == '__main__':
-    c = Controller(debug=True, pitch=0, color='blue', our_side='left').wow()  # Such controller
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("pitch", help="[0] Main pitch, [1] Secondary pitch")
+    parser.add_argument("side", help="The side of our defender ['left', 'right'] allowed.")
+    parser.add_argument("color", help="The color of our team - ['yellow', 'blue'] allowed.")
+    args = parser.parse_args()
+    # print args
+    c = Controller(debug=True, pitch=int(args.pitch), color=args.color, our_side=args.side).wow()  # Such controller
