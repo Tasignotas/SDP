@@ -2,6 +2,10 @@
 
 ![alt text](http://i.imgur.com/Sv9SowE.png "Such Team")
 
+###Running the system
+
+In the root of the project, execute `python controller.py <pitch_number> <our_side> <our_color>` where *pitch_number* is either 0 for the main pitch and 1 for the secondary pitch. Colors are regular yellow and blue. Side can be either left or right.
+
 ------
 ###Installation
 
