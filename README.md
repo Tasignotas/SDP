@@ -10,6 +10,8 @@ Python-nxt is installed globally on DICE on level 3 of AT.
 
 To install [bluez](http://www.bluez.org/) please execute `sh scripts/install-bluez.sh`
 
+To isntall Argparse for python, download [ArgParse](http://argparse.googlecode.com/files/argparse-1.2.1.tar.gz), extract and run `python setup.py install --user`. All done.
+
 
 
 #### Debian with root access
