@@ -3,7 +3,7 @@ from numpy import roots
 from json import load
 from Polygon.cPolygon import Polygon
 from Polygon.Utils import pointList
-from math import pow, cos, sin, hypot, pi, acos, atan2
+from math import pow, cos, sin, hypot, pi, atan2
 
 # Width measures the front and back of an object
 # Length measures along the sides of an object
@@ -11,8 +11,6 @@ from math import pow, cos, sin, hypot, pi, acos, atan2
 ROBOT_WIDTH = 20
 ROBOT_LENGTH = 20
 ROBOT_HEIGHT = 10
-
-ROBOT_VELOCITY = 127
 
 BALL_WIDTH = 5
 BALL_LENGTH = 5
@@ -194,30 +192,19 @@ class Robot(Pitch_Object):
         return self._zone
 
 
-    def get_alignment_angle(self, target):
-        # Get angle necessary to align the robot with a target
-        alignment_angle = target.get_angle() + pi
-        delta_angle = alignment_angle - self.get_angle()
-        return delta_angle
-
-
-    def get_possession(self, ball):
-        # Get if the robot has possession of the ball
+    def get_ball_proximity(self, ball):
+        # Get if the robot is near the ball but may not have possession
         delta_x = ball.get_x() - self.get_x()
         delta_y = ball.get_y() - self.get_y()
-        delta_angle = ball.get_angle() - self.get_angle()
-        check_angle = abs(delta_angle) <= BALL_POSS_ANGLE
         check_displacement = hypot(delta_x, delta_y) <= BALL_POSS_DIST
-        return check_angle and check_displacement
+        return check_displacement
 
 
-    def get_path_to_point(self, x, y):
-        # Get path to a given point (x, y)
-        delta_x = x - self.get_x()
-        delta_y = y - self.get_y()
-        displacement = hypot(delta_x, delta_y)
-        theta = self.get_angle() - atan2(delta_y, delta_x)
-        return displacement, theta
+    def get_ball_possession(self, ball):
+        # Get if the robot has possession of the ball
+        delta_angle = ball.get_angle() - self.get_angle() - pi
+        check_angle = abs(delta_angle) <= BALL_POSS_ANGLE
+        return check_angle and self.get_ball_proximity(ball)
 
 
     def get_stationary_ball(self, ball):
@@ -225,19 +212,35 @@ class Robot(Pitch_Object):
         return self.get_path_to_point(ball.get_x(), ball.get_y())
 
 
-    def get_moving_ball(self, ball):
+    def get_moving_ball(self, ball, velocity):
         # Get path to intercept moving ball
         delta_x = ball.get_x() - self.get_x()
         delta_y = ball.get_y() - self.get_y()
         ball_v_x = ball.get_velocity() * cos(ball.get_angle())
         ball_v_y = ball.get_velocity() * sin(ball.get_angle())
-        a = pow(ball.get_velocity(), 2) - pow(self.get_velocity(), 2)
+        a = pow(ball.get_velocity(), 2) - pow(velocity, 2)
         b = 2 * ((ball_v_x * delta_x) + (ball_v_y * delta_y))
         c = pow(delta_x, 2) + pow(delta_y, 2)
         t = max(roots([a, b, c]))
         x = ball.get_x() + (ball_v_x * t)
         y = ball.get_y() + (ball_v_y * t)
         return self.get_path_to_point(x, y)
+
+
+    def get_path_to_point(self, x, y):
+        # Get path to a given point (x, y)
+        delta_x = x - self.get_x()
+        delta_y = y - self.get_y()
+        displacement = hypot(delta_x, delta_y)
+        theta = atan2(delta_y, delta_x) - self.get_angle()
+        return displacement, theta
+
+
+    def get_robot_alignment(self, target):
+        # Get angle necessary to align the robot with a target
+        alignment_angle = target.get_angle() + pi
+        delta_angle = alignment_angle - self.get_angle()
+        return delta_angle
 
 
     def get_pass_path(self, target):
