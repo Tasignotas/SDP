@@ -233,7 +233,7 @@ class Robot(Pitch_Object):
         delta_y = y - self.get_y()
         displacement = hypot(delta_x, delta_y)
         theta = atan2(delta_y, delta_x) - self.get_angle()
-        return displacement, theta
+        return x, y, displacement, theta
 
 
     def get_robot_alignment(self, target):
