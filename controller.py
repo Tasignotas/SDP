@@ -4,6 +4,7 @@ from vision.tracker import Tracker
 from postprocessing.postprocessing import Postprocessing
 import vision.tools as tools
 from nxt import *
+from time import sleep
 
 
 class Controller:
@@ -17,7 +18,7 @@ class Controller:
         self.postprocessing = Postprocessing()
         self.planner = Planner(our_side='left')
         #self.attacker = Attacker_Controller(connectionName='GRP7A', leftMotorPort=PORT_A, rightMotorPort=PORT_C, kickerMotorPort=PORT_B)
-        #self.defender = Defender_Controller('GRP7A', leftMotorPort=PORT_C, rightMotorPort=PORT_B, kickerMotorPort=PORT_A)
+        self.defender = Defender_Controller('GRP7D', leftMotorPort=PORT_C, rightMotorPort=PORT_A, kickerMotorPort=PORT_B)
 
     def wow(self):
         """
@@ -31,16 +32,16 @@ class Controller:
                 # Find object positions
                 positions = self.vision.locate()
                 positions = self.postprocessing.analyze(positions)
-                if self.debug:
-                    print positions
+                #if self.debug:
+                #print positions
 
                 # Find appropriate action
                 actions = self.planner.plan(positions)
-                print 'Actions:', actions['defender']
+                #print 'Actions:', actions['defender']
 
                 # Execute action
                 # self.attacker.execute(actions[0])
-                # self.defender.execute(actions['defender'])
+                self.defender.execute(actions['defender'])
         except:
             if hasattr(self, 'defender'):
                 self.defender.shutdown()

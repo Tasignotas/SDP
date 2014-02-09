@@ -3,7 +3,7 @@ from path import find_path
 
 
 ANGLE_THRESHOLD = 20
-DEFENDER_THRESHOLD = 40
+DEFENDER_THRESHOLD = 25
 
 
 class Planner:
@@ -19,7 +19,7 @@ class Planner:
         ball = self._world.get_ball()
         if abs(ball.get_y() - our_defender.get_y()) >  DEFENDER_THRESHOLD:
             if ball.get_y() < our_defender.get_y():
-                return {'defender' : {'left_motor' : 50, 'right_motor' : 50, 'kicker' : 0}}
+                return {'defender' : {'left_motor' : 80, 'right_motor' : 80, 'kicker' : 0}}
             else:
-                return {'defender' : {'left_motor' : -50, 'right_motor' : -50, 'kicker' : 0}}
+                return {'defender' : {'left_motor' : -80, 'right_motor' : -80, 'kicker' : 0}}
         return {'defender' : {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0}}
