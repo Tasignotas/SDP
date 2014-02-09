@@ -6,6 +6,11 @@ import cPickle
 from colors import PITCH0, PITCH1
 import scipy.optimize as optimization
 from collections import namedtuple
+import warnings
+
+
+# Turn off warnings for PolynomialFit
+warnings.simplefilter('ignore', np.RankWarning)
 
 
 
@@ -57,7 +62,7 @@ class Tracker(object):
         )
         return contours
 
-    # LEGACY ?
+    # TODO: Used by Ball tracker - REFACTOR
     def preprocess(self, frame, crop, min_color, max_color, contrast, blur):
         # Crop frame
         frame = frame[crop[2]:crop[3], crop[0]:crop[1]]
@@ -176,7 +181,7 @@ class RobotTracker(Tracker):
             # Return relative position to the frame given the offset
             return Center(int(x + x_offset), int(y + y_offset))
         else:
-            print 'No dot found.'
+            print 'No dot found for %s' % self.name
 
 
     #def get_angle(self, m, n):
@@ -245,12 +250,6 @@ class RobotTracker(Tracker):
 
     #     return angle
 
-    def _find_gradient(self, m, n):
-        """
-        Calculate the gradient of
-        """
-        pass
-
     def find(self, frame, queue):
         """
         Retrieve coordinates for the robot, it's orientation and speed - if
@@ -288,6 +287,21 @@ class RobotTracker(Tracker):
             inf_i = self.get_i(plate_frame, plate.x + self.offset, plate.y)
             dot = self.get_dot(plate_frame, plate.x + self.offset, plate.y)
 
+
+            if inf_i and dot:
+                data_x = np.array([plate_center.x, inf_i.x, dot.x])
+                data_y = np.array([plate_center.y, inf_i.y, dot.y])
+                params = np.polyfit(data_x, data_y, 1)
+
+                # points = (
+                #     Center(plate_center.x, plate_center.x * params[0] + params[1]),
+                #     Center(plate_center.x + 10, (plate_center.x + 10) * params[0] + params[1]))
+                points = (dot, inf_i)
+            else:
+                points = None
+
+                # print params
+
             # IN TESTING
             # if inf_i and dot:
             #     xdata = np.array([center_x, x_i, dot[0]])
@@ -316,8 +330,8 @@ class RobotTracker(Tracker):
                 'velocity': speed,
                 'dot': dot,
                 'i': inf_i,
-                'box': BoundingBox(plate.x + self.offset, plate.y, plate.width, plate.height)
-                # 'line': points
+                'box': BoundingBox(plate.x + self.offset, plate.y, plate.width, plate.height),
+                'line': points
             })
             return
 
@@ -329,7 +343,7 @@ class RobotTracker(Tracker):
             'dot': None,
             'i': None,
             'box': None,
-            # 'line': points
+            'line': None
         })
         return
 

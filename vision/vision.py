@@ -210,8 +210,8 @@ class GUI(object):
                     if x['location'] and 'location' in x.keys():
                         self.draw_dot(frame, x['location'])
 
-                # if x['line'] and 'line' in x.keys():
-                #     self.draw_line(frame, x['line'])
+                if x['line'] and 'line' in x.keys():
+                    self.draw_line(frame, x['line'])
 
 
         cv2.imshow('SUCH VISION', frame)
