@@ -15,6 +15,8 @@ Python-nxt is installed globally on DICE on level 3 of AT.
 
 To install [bluez](http://www.bluez.org/) please execute `sh scripts/install-bluez.sh`
 
+To install the Polygon library, download the [source](https://bitbucket.org/jraedler/polygon2/downloads/Polygon2-2.0.6.zip), navigate inside and execute `python setup.py install --user`.
+
 To isntall Argparse for python, download [ArgParse](http://argparse.googlecode.com/files/argparse-1.2.1.tar.gz), extract and run `python setup.py install --user`. All done.
 
 
