@@ -20,10 +20,10 @@ PITCH0 = {
         'blur': 0
     },
     'dot': {
-        'min': np.array((23.0, 35.0, 100.0)),
-        'max': np.array((61.0, 91.0, 115.0)),
-        'contrast': 1.0,
-        'blur': 4
+        'min': np.array((16.0, 39.0, 55.0)),
+        'max': np.array((68.0, 125.0, 78.0)),
+        'contrast': 5.0,
+        'blur': 5
     },
     'red': [
         {

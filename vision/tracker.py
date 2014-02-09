@@ -88,7 +88,7 @@ class Tracker(object):
         )
         return (contours, hierarchy, frame_mask)
 
-    def get_contour_extremes(self, contour):
+    def get_contour_extremes(self, cnt):
         leftmost = tuple(cnt[cnt[:,:,0].argmin()][0])
         rightmost = tuple(cnt[cnt[:,:,0].argmax()][0])
         topmost = tuple(cnt[cnt[:,:,1].argmin()][0])
@@ -113,14 +113,18 @@ class Tracker(object):
                 right.append(rightmost)
                 bot.append(bottommost)
 
-        left, top, right, bot = min(left), min(top), max(right), max(bot)
-        # x, y of top left corner, widht, height
-        return BoundingBox(left + self.offset, top, right - left, bot - top)
+        if left and top and right and bot:
+
+            left, top, right, bot = min(left, key=lambda x: x[0])[0], min(top, key=lambda x: x[1])[1], max(right, key=lambda x: x[0])[0], max(bot, key=lambda x: x[1])[1]
+
+            # x, y of top left corner, widht, height
+            return BoundingBox(left, top, right - left, bot - top)
+        return None
 
 
 class RobotTracker(Tracker):
 
-    def __init__(self, color, crop, offset, pitch):
+    def __init__(self, color, crop, offset, pitch, name):
         """
         Initialize tracker.
 
@@ -130,13 +134,13 @@ class RobotTracker(Tracker):
                                 crop  crop coordinates
             [int] offset        how much to offset the coordinates
         """
+        self.name = name
         self.crop = crop
         if pitch == 0:
             self.color = PITCH0[color]
         else:
             self.color = PITCH1[color]
 
-        self.opponent_color =
         self.color_name = color
         self.offset = offset
         self.pitch = pitch
@@ -161,16 +165,19 @@ class RobotTracker(Tracker):
                 cnt = contours[0]
                 (x,y),radius = cv2.minEnclosingCircle(cnt)
                 # Return relative position to the frame given the offset
-                return Center(int(x + x_offset + self.offset), int(y + y_offset))
+                return Center(int(x + x_offset), int(y + y_offset))
 
     def get_dot(self, frame, x_offset, y_offset):
-        adjustment = PITCH0['dot'] if pitch == 0 else PITCH1['dot']
+        adjustment = PITCH0['dot'] if self.pitch == 0 else PITCH1['dot']
         contours = self.get_contours(frame.copy(), adjustment)
         if contours and len(contours) > 0:
             cnt = contours[0]
             (x,y),radius = cv2.minEnclosingCircle(cnt)
             # Return relative position to the frame given the offset
-            return Center(int(x + x_offset + self.offset), int(y + y_offset))
+            return Center(int(x + x_offset), int(y + y_offset))
+        else:
+            print 'No dot found.'
+
 
     #def get_angle(self, m, n):
     #    """
@@ -198,45 +205,45 @@ class RobotTracker(Tracker):
         c = ((c1+c2)/2)
         return (m,c)
 
-    def get_angle(self,centerOfPlate,centerOfMass,centerOfDisc):
-        """
-        Find the angle using the lines between the center points of the features.
-        """
+    # def get_angle(self,centerOfPlate,centerOfMass,centerOfDisc):
+    #     """
+    #     Find the angle using the lines between the center points of the features.
+    #     """
 
-        # Work out if the center of the disc is close to being on the line
-        # that goes through the center of the plate and the center of the
-        # i.
-        # If it is, use the center of the disc and the center of the i to
-        # calculate the angle.
-        # Otherwise, use the center of the plate and the center of the i.
+    #     # Work out if the center of the disc is close to being on the line
+    #     # that goes through the center of the plate and the center of the
+    #     # i.
+    #     # If it is, use the center of the disc and the center of the i to
+    #     # calculate the angle.
+    #     # Otherwise, use the center of the plate and the center of the i.
 
-        #print "getting angle"
+    #     #print "getting angle"
 
-        m,c = self.calcLine(centerOfMass,centerOfPlate)
-        tolerance = 5
+    #     m,c = self.calcLine(centerOfMass,centerOfPlate)
+    #     tolerance = 5
 
-        #print np.abs(centerOfDisc[1]- (m*centerOfDisc[0]+c))
-        #print np.abs(centerOfDisc[0]- ((centerOfDisc[1]-c)*1.0/m))
+    #     #print np.abs(centerOfDisc[1]- (m*centerOfDisc[0]+c))
+    #     #print np.abs(centerOfDisc[0]- ((centerOfDisc[1]-c)*1.0/m))
 
-        if (m*centerOfDisc[0]+c-tolerance) < centerOfDisc[1] < (m*centerOfDisc[0]+c+tolerance) and ((centerOfDisc[1]-c)*1.0/m-tolerance) < centerOfDisc[0] < ((centerOfDisc[1]-c)*1.0/m+tolerance):
-        #    m,c = calcLine(centerOfMass,centerofPlate)
-            #print "On line"
-            diff_x = centerOfDisc[0] - centerOfMass[0]
-            diff_y = centerOfDisc[1] - centerOfMass[1]
-        else:
-            # Not quite sure about calculating the angle in this case.
-            return None
+    #     if (m*centerOfDisc[0]+c-tolerance) < centerOfDisc[1] < (m*centerOfDisc[0]+c+tolerance) and ((centerOfDisc[1]-c)*1.0/m-tolerance) < centerOfDisc[0] < ((centerOfDisc[1]-c)*1.0/m+tolerance):
+    #     #    m,c = calcLine(centerOfMass,centerofPlate)
+    #         #print "On line"
+    #         diff_x = centerOfDisc[0] - centerOfMass[0]cv2.minEnclosingCircle(cnt)
+    #         diff_y = centerOfDisc[1] - centerOfMass[1]
+    #     else:
+    #         # Not quite sure about calculating the angle in this case.
+    #         return None
 
-        angle = np.arctan((np.abs(diff_y) * 1.0 / np.abs(diff_x)))
-        angle = np.degrees(angle)
-        if diff_x > 0 and diff_y < 0:
-            angle = 360 - angle
-        if diff_x > 0 and diff_y > 0:
-            angle = 180 + angle
-        if diff_x < 0 and diff_y > 0:
-            angle = 90+angle
+    #     angle = np.arctan((np.abs(diff_y) * 1.0 / np.abs(diff_x)))
+    #     angle = np.degrees(angle)
+    #     if diff_x > 0 and diff_y < 0:
+    #         angle = 360 - angle
+    #     if diff_x > 0 and diff_y > 0:
+    #         angle = 180 + angle
+    #     if diff_x < 0 and diff_y > 0:
+    #         angle = 90+angle
 
-        return angle
+    #     return angle
 
     def _find_gradient(self, m, n):
         """
@@ -275,9 +282,11 @@ class RobotTracker(Tracker):
 
         if plate and plate.width > 0 and plate.height > 0:
 
-            plate_center = Center(x + width / 2, y + height / 2)
-            inf_i = self.get_i(frame, plate.x, plate.y)
-            dot = self.get_dot(frame, plate.x, plate.y)
+            plate_frame = frame.copy()[plate.y:plate.y + plate.height, plate.x:plate.x + plate.width]
+
+            plate_center = Center(plate.x + self.offset + plate.width / 2, plate.y + plate.height / 2)
+            inf_i = self.get_i(plate_frame, plate.x + self.offset, plate.y)
+            dot = self.get_dot(plate_frame, plate.x + self.offset, plate.y)
 
             # IN TESTING
             # if inf_i and dot:
@@ -297,19 +306,31 @@ class RobotTracker(Tracker):
             #     a, b, _ = best_fit[0]
 
             #     points = [(x + self.offset, a + b * (x + self.offset)), (x + self.offset - 15, a + b * (x + self.offset -15))]
+            angle = None
+            speed = None
 
             queue.put({
+                'name': self.name,
                 'location': plate_center,
                 'angle': angle,
                 'velocity': speed,
                 'dot': dot,
                 'i': inf_i,
-                'box': plate,
+                'box': BoundingBox(plate.x + self.offset, plate.y, plate.width, plate.height)
                 # 'line': points
             })
             return
 
-        queue.put(None)
+        queue.put({
+            'name': self.name,
+            'location': None,
+            'angle': None,
+            'velocity': None,
+            'dot': None,
+            'i': None,
+            'box': None,
+            # 'line': points
+        })
         return
 
 
@@ -355,7 +376,7 @@ class BallTracker(Tracker):
                 cnt = contours[0]
 
                 # Get center
-                (x, y), radius = self.get_min_enclousing_circle(cnt)
+                (x, y), radius = cv2.minEnclosingCircle(cnt)
 
                 queue.put({
                     'name': self.name,
