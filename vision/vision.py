@@ -207,6 +207,9 @@ class GUI(object):
                 if 'location' in x.keys():
                     self.draw_dot(frame, x['location'])
 
+                if 'line' in x.keys():
+                    self.draw_line(frame, x['line'])
+
 
         cv2.imshow('SUCH VISION', frame)
         cv2.waitKey(4)
@@ -227,3 +230,7 @@ class GUI(object):
         if location is not None:
             x, y, width, height = location
             cv2.rectangle(frame, (x, y), (x + width, y + height), BGR_COMMON['bright_green'], 1)
+
+    def draw_line(self, frame, points):
+        if points is not None:
+            cv2.line(frame, points[0], points[1], BGR_COMMON['red'], 2)

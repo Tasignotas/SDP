@@ -4,6 +4,7 @@ import math
 import tools
 import cPickle
 from colors import PITCH0, PITCH1
+import scipy.optimize as optimization
 
 
 
@@ -409,11 +410,39 @@ class RobotTracker(Tracker):
                 i = (x_i + self.offset, y_i)
 
 
+            # IN TESTING
+            if black and plate_location and x and y:
+                xdata = np.array([center_x, x_i, dot[0]])
+                ydata = np.array([center_y, y_i, dot[1]])
+
+                print 'x', xdata
+                print 'y', ydata
+                x0 = np.array([0.0, 0.0, 0.0])
+
+                def func(x, a, b, c):
+                    return a + b*x
+
+                best_fit = optimization.curve_fit(func, xdata, ydata, x0)
+
+                # retrieve coefficients of y = a + bx function
+                a, b, _ = best_fit[0]
+
+                points = [(x + self.offset, a + b * (x + self.offset)), (x + self.offset - 15, a + b * (x + self.offset -15))]
+
+                # points = [(center_x + self.offset, center_y), dot]
+
+            else:
+                points = None
+
+            # END OF TESTING
+
+
+
 
             # Try working out the angle based on the center points
             #print [center_x,center_y,x_i,y_i,black_x,black_y]
-            if not(None in [center_x,center_y,x_i,y_i,black_x,black_y]):
-                angle = self.get_angle((center_x,center_y),(x_i,y_i),(black_x,black_y))
+            # if not(None in [center_x,center_y,x_i,y_i,black_x,black_y]):
+            #     angle = self.get_angle((center_x,center_y),(x_i,y_i),(black_x,black_y))
             #print angle
 
 
@@ -438,7 +467,8 @@ class RobotTracker(Tracker):
             'velocity': speed,
             'dot': dot,
             'i': i,
-            'box': box
+            'box': box,
+            'line': points
         })
         return
 
