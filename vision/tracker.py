@@ -309,7 +309,7 @@ class RobotTracker(Tracker):
             elif dot:
                 angle = self.get_angle(dot, plate_center)
 
-            print angle
+            # print angle
             speed = None
 
             queue.put({
