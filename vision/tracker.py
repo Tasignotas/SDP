@@ -214,8 +214,10 @@ class RobotTracker(Tracker):
         """
         Given a frame, find a colored dot by masking the image.
         """
-        frame = cv2.blur(frame,(5,5))
-        frame = cv2.add(frame, np.array([5.0]))
+        frame = cv2.blur(frame,(4, 4))
+
+
+        # frame = cv2.add(frame, np.array([5.0]))
 
         # Create a mask and remove anything that outside of some fixed radius
         # if center is not None:
@@ -235,8 +237,8 @@ class RobotTracker(Tracker):
             frame_mask = cv2.inRange(
                 frame_hsv,
                 # Needed to change this for the computer I was on.
-                np.array((16.0, 39.0, 47.0)),#(0.0, 0.0, 38.0)),     # grey lower
-                np.array((68.0, 132.0, 74.0))#(45.0, 100.0, 71.0))   # grey higher
+                np.array((23.0, 35.0, 100.0)),#(0.0, 0.0, 38.0)),     # grey lower
+                np.array((61.0, 91.0, 115.0))#(45.0, 100.0, 71.0))   # grey higher
             )
         else:
             frame_mask = cv2.inRange(
@@ -246,7 +248,9 @@ class RobotTracker(Tracker):
                 np.array((30.0,140.0,124.0))#(45.0, 100.0, 71.0))   # grey higher
             )
 
-        # Create a mask for the
+        # cv2.imshow('mask', frame_mask)
+        # cv2.waitKey(0)
+
 
 
         # Apply threshold to the masked image, no idea what the values mean
@@ -394,12 +398,12 @@ class RobotTracker(Tracker):
 
             if black is not None:
                 black_x = black[0]
-                black_y = black[0]
+                black_y = black[1]
             else:
                 black_x, black_y = None, None
 
             if black_x is not None and black_y is not None:
-                dot = (black_x + self.offset, black_y + height*2)
+                dot = (black_x + self.offset, black_y)
 
             if x_i is not None and y_i is not None:
                 i = (x_i + self.offset, y_i)
