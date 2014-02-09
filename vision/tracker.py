@@ -183,26 +183,26 @@ class RobotTracker(Tracker):
         else:
             print 'No dot found for %s' % self.name
 
+    def get_angle(self, m, n):
+       """
+       Find the angle between m and n
+       """
+       diff_x = m[0] - n[0]
+       diff_y = m[1] - n[1]
 
-    #def get_angle(self, m, n):
-    #    """
-    #    Find the angle between m and n
-    #    """
-    #    diff_x = m[0] - n[0]
-    #    diff_y = m[1] - n[1]
+       angle = np.arctan((np.abs(diff_y) * 1.0 / np.abs(diff_x)))
+       angle = np.degrees(angle)
+       if diff_x > 0 and diff_y < 0:
+           angle = 90 - angle
+       if diff_x > 0 and diff_y > 0:
+           angle = 180 - angle
+       if diff_x < 0 and diff_y > 0:
+           angle = 180+angle
+       if diff_x < 0 and diff_y < 0:
+           angle = 360 - angle
 
-    #    angle = np.arctan((np.abs(diff_y) * 1.0 / np.abs(diff_x)))
-    #    angle = np.degrees(angle)
-    #    if diff_x > 0 and diff_y < 0:
-    #        angle = 90 - angle
-    #    if diff_x > 0 and diff_y > 0:
-    #        angle = 180 - angle
-    #    if diff_x < 0 and diff_y > 0:
-    #        angle = 180+angle
-    #    if diff_x < 0 and diff_y < 0:
-    #        angle = 360 - angle
+       return angle
 
-    #    return angle
     def calcLine(self,(a,b),(d,e)):
         m = (b-e)*1.0/(a-d)
         c1 = b-m*a
@@ -300,27 +300,16 @@ class RobotTracker(Tracker):
             else:
                 points = None
 
-                # print params
-
-            # IN TESTING
-            # if inf_i and dot:
-            #     xdata = np.array([center_x, x_i, dot[0]])
-            #     ydata = np.array([center_y, y_i, dot[1]])
-
-            #     print 'x', xdata
-            #     print 'y', ydata
-            #     x0 = np.array([0.0, 0.0, 0.0])
-
-            #     def func(x, a, b, c):
-            #         return a + b*x
-
-            #     best_fit = optimization.curve_fit(func, xdata, ydata, x0)
-
-            #     # retrieve coefficients of y = a + bx function
-            #     a, b, _ = best_fit[0]
-
-            #     points = [(x + self.offset, a + b * (x + self.offset)), (x + self.offset - 15, a + b * (x + self.offset -15))]
             angle = None
+
+            if inf_i and dot:
+                angle = self.get_angle(dot, inf_i)
+            elif inf_i:
+                angle = self.get_angle(plate_center, inf_i)
+            elif dot:
+                angle = self.get_angle(dot, plate_center)
+
+            print angle
             speed = None
 
             queue.put({

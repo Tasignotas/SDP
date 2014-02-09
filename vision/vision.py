@@ -215,7 +215,7 @@ class GUI(object):
 
 
         cv2.imshow('SUCH VISION', frame)
-        cv2.waitKey(4)
+        cv2.waitKey(3)
 
     def draw_robot(self, frame, x, y, color, thickness=1):
         if x is not None and y is not None:
