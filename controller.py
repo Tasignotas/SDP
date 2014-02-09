@@ -18,7 +18,7 @@ class Controller:
         self.postprocessing = Postprocessing()
         self.planner = Planner(our_side='left')
         #self.attacker = Attacker_Controller(connectionName='GRP7A', leftMotorPort=PORT_A, rightMotorPort=PORT_C, kickerMotorPort=PORT_B)
-        self.defender = Defender_Controller('GRP7D', leftMotorPort=PORT_C, rightMotorPort=PORT_A, kickerMotorPort=PORT_B)
+        #self.defender = Defender_Controller('GRP7D', leftMotorPort=PORT_C, rightMotorPort=PORT_A, kickerMotorPort=PORT_B)
 
     def wow(self):
         """
@@ -33,7 +33,7 @@ class Controller:
                 positions = self.vision.locate()
                 positions = self.postprocessing.analyze(positions)
                 #if self.debug:
-                #print positions
+                print positions
 
                 # Find appropriate action
                 actions = self.planner.plan(positions)
@@ -41,7 +41,7 @@ class Controller:
 
                 # Execute action
                 # self.attacker.execute(actions[0])
-                self.defender.execute(actions['defender'])
+                #self.defender.execute(actions['defender'])
         except:
             if hasattr(self, 'defender'):
                 self.defender.shutdown()
