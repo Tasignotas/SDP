@@ -2,85 +2,26 @@ import cv2
 import numpy as np
 import math
 import tools
+import cPickle
+from colors import PITCH0, PITCH1
+import scipy.optimize as optimization
 
 
-COLORS = {
-    'red': [
-        {
-            'min': np.array((0.0, 114.0, 250.0)),
-            'max': np.array((5.0, 255.0, 255.0)),
-            'contrast': 100.0,
-            'blur': 5
-        },
-        {
-            'min': np.array((0.0, 181.0, 130.0)),
-            'max': np.array((10.0, 255.0, 255.0)),
-            'contrast': 1.0,
-            'blur': 10
-        }
-    ],
-    'yellow': [
-        {
-            'min': np.array((0.0, 193.0, 137.0)), #LH,LS,LV
-            'max': np.array((50.0, 255.0, 255.0)), #UH,US,UV
-            'contrast': 1.0,
-            'blur': 0
-        },
-        {
-            'min': np.array((6.0, 154.0, 229.0)), #LH,LS,LV
-            'max': np.array((130.0, 255.0, 255.0)), #UH,US,UV
-            'contrast': 1.0,
-            'blur': 0
-        },
-        {
-            'min': np.array((10.0, 210.0, 162.0)), #LH,LS,LV
-            'max': np.array((20.0, 255.0, 255.0)), #UH,US,UV
-            'contrast': 1.0,
-            'blur': 0
-        }
-    ],
-    'blue': [
-        { 
-            'min': np.array((88.0, 147.0, 82.0)),    #LH,LS,LV
-            'max': np.array((104.0, 255.0, 255.0)), #UH,US,UV
-            'contrast': 0.0,
-            'blur': 0
-        },
-        {
-            'min': np.array((87.0, 147.0, 82.0)),
-            'max': np.array((104.0, 255.0, 255.0)),
-            'contrast': 1.0,
-            'blur': 1
-        },
-        {
-            'min': np.array((87.0, 105.0, 82.0)),
-            'max': np.array((104.0, 255.0, 255.0)),
-            'contrast': 1.0,
-            'blur': 1
-        },
-        {
-            'min': np.array((87.0, 100.0, 90.0)),
-            'max': np.array((104.0, 255.0, 255.0)),
-            'contrast': 1.0,
-            'blur': 1
-        },
-        {	#not too good at edges.
-            'min': np.array((80.0, 59.0, 90.0)),	#LH,LS,LV
-            'max': np.array((135.0, 142.0, 190.0)),	#UH,US,UV
-            'contrast': 1.0,
-            'blur': 1
-        },
-        {   #not too good at edges.
-            'min': np.array((80.0, 120.0, 80.0)),    #LH,LS,LV
-            'max': np.array((163.0, 255.0, 255.0)), #UH,US,UV
-            'contrast': 1.0,
-            'blur': 0
-        }
-           
-    ]
-    # (np.array((91.0, 118.0, 90.0)), np.array((169.0, 255.0, 255.0)), 1.0, 1)
-}
 
+# In the code, change COLORS to GUICOLORS if you want to use the values you
+# picked with the findHSV GUI.
+# GUICOLORS = COLORS
+
+# def get_gui_colors():
+#     global GUICOLORS
+#     try:
+#         pickleFile = open("configMask.txt", "rb")
+#         GUICOLORS = cPickle.load(pickleFile)
+#         pickleFile.close()
+#     except:
+#         pass
+
+# get_gui_colors()
 
 class Tracker(object):
 
@@ -118,27 +59,31 @@ class Tracker(object):
             cv2.RETR_TREE,
             cv2.CHAIN_APPROX_SIMPLE
         )
-        return (contours, hierarchy)
+        return (contours, hierarchy, frame_mask)
 
 
 class RobotTracker(Tracker):
 
-    def __init__(self, color, crop, offset):
+    def __init__(self, color, crop, offset, pitch):
         """
         Initialize tracker.
 
         Params:
             [string] color      the name of the color to pass in
-            [(left-min, right-max, top-min, bot-max)] 
+            [(left-min, right-max, top-min, bot-max)]
                                 crop  crop coordinates
             [int] offset        how much to offset the coordinates
         """
         self.crop = crop
-        self.color = COLORS[color]
+        if pitch == 0:
+            self.color = PITCH0[color]
+        else:
+            self.color = PITCH1[color]
         self.color_name = color
         self.offset = offset
+        self.pitch = pitch
 
-    def _find_plate(self, frame):
+    def _find_plate(self, frame, pitch=0):
         """
         Given the frame to search, find a bounding rectangle for the green plate
 
@@ -149,11 +94,18 @@ class RobotTracker(Tracker):
         frame = cv2.add(frame, np.array([100.0]))
         frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-        frame_mask = cv2.inRange(
-            frame_hsv,
-            np.array((57.0, 62.0, 38.0)),
-            np.array((85.0, 136.0, 255.0))
-        )
+        if pitch == 0:
+            frame_mask = cv2.inRange(
+                frame_hsv,
+                np.array((57.0, 62.0, 38.0)),
+                np.array((85.0, 136.0, 255.0))
+            )
+        else:
+            frame_mask = cv2.inRange(
+                frame_hsv,
+                np.array((41.0, 63.0, 183.0)),
+                np.array((60.0, 255.0, 255.0))
+            )
 
         # Apply threshold to the masked image, no idea what the values mean
         return_val, threshold = cv2.threshold(frame_mask, 127, 255, 0)
@@ -168,7 +120,7 @@ class RobotTracker(Tracker):
         # Hacky!
         # Refactor!
         points = [None for i in range(4)]
-        left, right, top, bot = (9999, 0, 9999, 0)
+        left, right, top, bot = (None, None, None, None)
 
         if not contours:
             contours = []
@@ -185,25 +137,26 @@ class RobotTracker(Tracker):
                 topmost = tuple(cnt[cnt[:,:,1].argmin()][0])
                 bottommost = tuple(cnt[cnt[:,:,1].argmax()][0])
 
-                # Extremely non pythonic. I am sorry, 3 am has it's toll
-                if left > leftmost[0]:
+                # Extremely non pythonic. I am sorry.
+                if left is None or left > leftmost[0]:
                     left = leftmost[0]
                     points[0] = leftmost
 
-                if top > topmost[1]:
+                if top is None or top > topmost[1]:
                     top = topmost[1]
                     points[1] = topmost
 
-                if right < rightmost[0]:
+                if right is None or right < rightmost[0]:
                     right = rightmost[0]
                     points[2] = rightmost
 
-                if bot < bottommost[1]:
+                if bot is None or bot < bottommost[1]:
                     bot = bottommost[1]
                     points[3] = bottommost
 
-        print left, top
-
+        for i in [left, top, right, bot]:
+            if i is None:
+                return (None, None, None, None)
         return (left, top, right-left, bot - top)   # (x, y, width, height)
 
     def _find_i(self, frame, color, x_offset=0, y_offset=0):
@@ -221,15 +174,85 @@ class RobotTracker(Tracker):
             [2-tuple] (x_center, y_center) of the object if available
                       (None, None) otherwise
         """
-        print frame.shape
+        for color in self.color:
+            lowerBoundary = color['min']
+            upperBoundary = color['max']
+            contrast = color['contrast']
+            blur = color['blur']
+
+            if blur > 1:
+                frame = cv2.blur(frame,(blur,blur))
+            if contrast > 1:
+                frame = cv2.add(frame,np.array([contrast]))
+
+            frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+
+            # Create a mask for the t_yellow T
+            frame_mask = cv2.inRange(
+                frame_hsv,
+                lowerBoundary, #np.array([0, 193, 137], dtype=np.uint8),
+                upperBoundary #np.array([50, 255, 255], dtype=np.uint8)
+            )
+
+            # Apply threshold to the masked image, no idea what the values mean
+            return_val, threshold = cv2.threshold(frame_mask, 127, 255, 0)
+
+            # Find contours, they describe the masked image - our T
+            contours, hierarchy = cv2.findContours(
+                threshold,
+                cv2.RETR_CCOMP,
+                cv2.CHAIN_APPROX_TC89_KCOS
+            )
+
+            if len(contours) > 0:
+                cnt = contours[0]   # Take the largest contour
+
+                (x,y),radius = cv2.minEnclosingCircle(cnt)
+                return (int(x + x_offset), int(y + y_offset))
+        return None
+
+    def _find_dot(self, frame, x_offset, y_offset, center=None):
+        """
+        Given a frame, find a colored dot by masking the image.
+        """
+        frame = cv2.blur(frame,(4, 4))
+
+
+        # frame = cv2.add(frame, np.array([5.0]))
+
+        # Create a mask and remove anything that outside of some fixed radius
+        # if center is not None:
+        #     mask = frame.copy()
+        #     width, height, color_space = mask.shape
+        #     cv2.rectangle(mask, (0,0), (width, height), (0.0, 0.0, 0.0), -1)
+        #     cv2.circle(mask, center, 16, (255.0, 255.0, 255.0), -1)
+
+        #     mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+
+        #     frame = cv2.bitwise_and(frame,frame, mask=mask)
+
+
         frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-        # Create a mask for the t_yellow T
-        frame_mask = cv2.inRange(
-            frame_hsv,
-            np.array([0, 193, 137], dtype=np.uint8),
-            np.array([50, 255, 255], dtype=np.uint8)
-        )
+        if self.pitch == 0:
+            frame_mask = cv2.inRange(
+                frame_hsv,
+                # Needed to change this for the computer I was on.
+                np.array((23.0, 35.0, 100.0)),#(0.0, 0.0, 38.0)),     # grey lower
+                np.array((61.0, 91.0, 115.0))#(45.0, 100.0, 71.0))   # grey higher
+            )
+        else:
+            frame_mask = cv2.inRange(
+                frame_hsv,
+                # Needed to change this for the computer I was on.
+                np.array((11.106,0.0,0.0)),#(0.0, 0.0, 38.0)),     # grey lower
+                np.array((30.0,140.0,124.0))#(45.0, 100.0, 71.0))   # grey higher
+            )
+
+        # cv2.imshow('mask', frame_mask)
+        # cv2.waitKey(0)
+
+
 
         # Apply threshold to the masked image, no idea what the values mean
         return_val, threshold = cv2.threshold(frame_mask, 127, 255, 0)
@@ -245,90 +268,84 @@ class RobotTracker(Tracker):
             cnt = contours[0]   # Take the largest contour
 
             (x,y),radius = cv2.minEnclosingCircle(cnt)
-            # return (int(x + x_offset), int(y + y_offset))
-        return (None, None)
+            return (int(x + x_offset), int(y + y_offset))
+        return None
 
-    def _find_dot(self, frame, color, x_offset, y_offset):
+    #def get_angle(self, m, n):
+    #    """
+    #    Find the angle between m and n
+    #    """
+    #    diff_x = m[0] - n[0]
+    #    diff_y = m[1] - n[1]
+
+    #    angle = np.arctan((np.abs(diff_y) * 1.0 / np.abs(diff_x)))
+    #    angle = np.degrees(angle)
+    #    if diff_x > 0 and diff_y < 0:
+    #        angle = 90 - angle
+    #    if diff_x > 0 and diff_y > 0:
+    #        angle = 180 - angle
+    #    if diff_x < 0 and diff_y > 0:
+    #        angle = 180+angle
+    #    if diff_x < 0 and diff_y < 0:
+    #        angle = 360 - angle
+
+    #    return angle
+    def calcLine(self,(a,b),(d,e)):
+        m = (b-e)*1.0/(a-d)
+        c1 = b-m*a
+        c2 = e-m*d
+        c = ((c1+c2)/2)
+        return (m,c)
+
+    def get_angle(self,centerOfPlate,centerOfMass,centerOfDisc):
         """
-        Given a frame, find a colored dot by masking the image.
-
-        TODO!
+        Find the angle using the lines between the center points of the features.
         """
-        pass
 
+        # Work out if the center of the disc is close to being on the line
+        # that goes through the center of the plate and the center of the
+        # i.
+        # If it is, use the center of the disc and the center of the i to
+        # calculate the angle.
+        # Otherwise, use the center of the plate and the center of the i.
 
+        #print "getting angle"
 
+        m,c = self.calcLine(centerOfMass,centerOfPlate)
+        tolerance = 5
 
+        #print np.abs(centerOfDisc[1]- (m*centerOfDisc[0]+c))
+        #print np.abs(centerOfDisc[0]- ((centerOfDisc[1]-c)*1.0/m))
 
-    def _find_circle(self, frame, location, offset, search_size=18):
-        (x, y) = location
-
-
-        # Define bounding box for search
-        xmin, xmax = x + offset - search_size / 2, x + offset + search_size / 2
-        ymin, ymax = y - search_size / 2, y + search_size / 2
-
-        # Trim and convert to grayscale
-        box = cv2.cvtColor(frame[ymin:ymax, xmin:xmax], cv2.COLOR_BGR2GRAY)
-
-        # Find circles in the box using Hough Contours
-        circles = cv2.HoughCircles(
-            box,
-            cv2.cv.CV_HOUGH_GRADIENT,
-            1, 20, param1=50, param2=10,
-            minRadius=3, maxRadius=7
-        )
-
-        # calculate angle if circles available
-        if circles is not None:
-            center = (circles[0][0][0] + xmin, circles[0][0][1] + ymin)
-            diff_x = center[0] - x + offset
-            diff_y = center[1] - y
-
-            # DEBUG
-            # print (diff_x, diff_y)
-
-            angle = np.arctan((np.abs(diff_y) * 1.0 / np.abs(diff_x)))
-            angle = np.degrees(angle)
-            if diff_x > 0 and diff_y < 0:
-                angle = 90 - angle
-            if diff_x > 0 and diff_y > 0:
-                angle = 180 - angle
-            if diff_x < 0 and diff_y > 0:
-                angle = 180+angle
-            if diff_x < 0 and diff_y < 0:
-                angle = 360 - angle
-
-            # What do we need this for???
-            speed = (center[0], center[1])
-            return (angle, speed)
+        if (m*centerOfDisc[0]+c-tolerance) < centerOfDisc[1] < (m*centerOfDisc[0]+c+tolerance) and ((centerOfDisc[1]-c)*1.0/m-tolerance) < centerOfDisc[0] < ((centerOfDisc[1]-c)*1.0/m+tolerance):
+        #    m,c = calcLine(centerOfMass,centerofPlate)
+            #print "On line"
+            diff_x = centerOfDisc[0] - centerOfMass[0]
+            diff_y = centerOfDisc[1] - centerOfMass[1]
         else:
-            return (None, None)
-
-    def get_angle(self, m, n):
-        """
-        Find the angle between m and n
-        """
-        diff_x = m[0] - n[0]
-        diff_y = m[1] - n[1]
+            # Not quite sure about calculating the angle in this case.
+            return None
 
         angle = np.arctan((np.abs(diff_y) * 1.0 / np.abs(diff_x)))
         angle = np.degrees(angle)
         if diff_x > 0 and diff_y < 0:
-            angle = 90 - angle
-        if diff_x > 0 and diff_y > 0:
-            angle = 180 - angle
-        if diff_x < 0 and diff_y > 0:
-            angle = 180+angle
-        if diff_x < 0 and diff_y < 0:
             angle = 360 - angle
+        if diff_x > 0 and diff_y > 0:
+            angle = 180 + angle
+        if diff_x < 0 and diff_y > 0:
+            angle = 90+angle
 
         return angle
 
+    def _find_gradient(self, m, n):
+        """
+        Calculate the gradient of
+        """
+        pass
 
     def find(self, frame, queue):
         """
-        Retrieve coordinates for the robot, it's orientation and speed - if 
+        Retrieve coordinates for the robot, it's orientation and speed - if
         available.
 
         Process:
@@ -354,60 +371,144 @@ class RobotTracker(Tracker):
         frame = frame[self.crop[2]:self.crop[3], self.crop[0]:self.crop[1]]
 
         # Setup vars
-        angle = None
-        speed = None
+        angle, speed, dot = None, None, None
+        i = None
 
         # 1. Retrieve location of the green plate
-        x, y, width, height = self._find_plate(frame.copy())   # x,y are robot positions
+        x, y, width, height = self._find_plate(frame.copy(), self.pitch)   # x,y are robot positions
 
         if width > 0 and height > 0:
+
+            # Find square center
+            center_x, center_y = x + width / 2, y + height / 2
+
             # print x,y
             # 2. Crop image
-            plate = frame[y:y + height, x:x + width]
+            plate = frame.copy()[y:y + height, x:x + width]
 
             # 3. Find colored object - x and y of the 'i'
-            x_i, y_i = self._find_i(plate, 'yellow', y, x)
+            plate_location = self._find_i(plate, 'yellow', x, y)
+
+            if plate_location is not None:
+                x_i, y_i = plate_location[0], plate_location[1]
+            else:
+                x_i, y_i = None, None
+
+            # 4. Find black colored plate
+            black = self._find_dot(plate, x, y, (center_x, center_y))
+
+            if black is not None:
+                black_x = black[0]
+                black_y = black[1]
+            else:
+                black_x, black_y = None, None
+
+            if black_x is not None and black_y is not None:
+                dot = (black_x + self.offset, black_y)
+
+            if x_i is not None and y_i is not None:
+                i = (x_i + self.offset, y_i)
+
+
+            # IN TESTING
+            if black and plate_location and x and y:
+                xdata = np.array([center_x, x_i, dot[0]])
+                ydata = np.array([center_y, y_i, dot[1]])
+
+                print 'x', xdata
+                print 'y', ydata
+                x0 = np.array([0.0, 0.0, 0.0])
+
+                def func(x, a, b, c):
+                    return a + b*x
+
+                best_fit = optimization.curve_fit(func, xdata, ydata, x0)
+
+                # retrieve coefficients of y = a + bx function
+                a, b, _ = best_fit[0]
+
+                points = [(x + self.offset, a + b * (x + self.offset)), (x + self.offset - 15, a + b * (x + self.offset -15))]
+
+                # points = [(center_x + self.offset, center_y), dot]
+
+            else:
+                points = None
+
+            # END OF TESTING
+
+
+
+
+            # Try working out the angle based on the center points
+            #print [center_x,center_y,x_i,y_i,black_x,black_y]
+            # if not(None in [center_x,center_y,x_i,y_i,black_x,black_y]):
+            #     angle = self.get_angle((center_x,center_y),(x_i,y_i),(black_x,black_y))
+            #print angle
+
+
+
 
             # # 4. Join the two points
             # if x_i and y_i:
             #     angle = self.get_angle((x, y), (x_i, y_i))
 
         # 5. Return result
-        queue.put((x + self.offset + width / 2, y + height / 2, angle, speed))
+        # if
+        if x is None and y is None:
+            location = None
+            box = None
+        else:
+            location = (x + self.offset + width / 2, y + height / 2)
+            box = (x + self.offset, y, width, height)
+
+        queue.put({
+            'location': location,
+            'angle': angle,
+            'velocity': speed,
+            'dot': dot,
+            'i': i,
+            'box': box,
+            'line': points
+        })
         return
 
-        
+
 class BallTracker(Tracker):
-        
-    def __init__(self, crop, offset):
+    """
+    Track red ball on the pitch.
+    """
+
+    def __init__(self, crop, offset, pitch, name='ball'):
         """
         Initialize tracker.
 
         Params:
             [string] color      the name of the color to pass in
-            [(left-min, right-max, top-min, bot-max)] 
+            [(left-min, right-max, top-min, bot-max)]
                                 crop  crop coordinates
             [int] offset        how much to offset the coordinates
         """
         self.crop = crop
-        self.color = COLORS['red']
+        if pitch == 0:
+            self.color = PITCH0['red']
+        else:
+            self.color = PITCH1['red']
         self.offset = offset
-        #self.oldPos = (0,0)#None
-        self.oldPos = [(0,0)]
+        self.name = name
 
     def find(self, frame, queue):
         for color in self.color:
-            contours, hierarchy = self.preprocess(
+            contours, hierarchy, mask = self.preprocess(
                 frame,
                 self.crop,
-                color['min'], 
-                color['max'], 
-                color['contrast'], 
+                color['min'],
+                color['max'],
+                color['contrast'],
                 color['blur']
             )
 
             if len(contours) <= 0:
-                print 'No contours found.'
+                print 'No ball found.'
                 # queue.put(None)
             else:
                 # Trim contours matrix
@@ -416,60 +517,14 @@ class BallTracker(Tracker):
                 # Get center
                 (x, y), radius = self.get_min_enclousing_circle(cnt)
 
-                x = int(x)
-                y = int(y)
-     
-                newX,newY = (x + self.offset, y)
-               
-                #if not self.oldPos:#==(-1,-1):
-                    #self.oldPos = (0,0)
-     #            angle,changeX,changeY = self.getOrientation((newX,newY))
-                vector = self.getOrientation((newX,newY))#,prevPos)
-                angle = vector[0]
-                changeX = vector[1]
-                changeY = vector[2]
-                speed = np.sqrt(changeX**2 + changeY**2) # in pixels per frame                
-                 #((x,y),orientation,speed)
-                #self.oldPos = (0,0)
-                #return ((x + self.offset, y), angle, speed)
-                #angle, speed = None, None
-                queue.put(((x + self.offset, y), angle, speed))
+                queue.put({
+                    'name': self.name,
+                    'location': (int(x) + self.offset, int(y)),
+                    'angle': None,
+                    'velocity': None
+                })
+                # queue.put([(x + self.offset, y), angle, speed])
                 return
 
         queue.put(None)
         return
-
-    def getOrientation(self,newPos):
-#        if self.
-        oldX,oldY = self.oldPos[-1]
-        changeX = newPos[0]-oldX
-        changeY = newPos[1]-oldY
-        if np.abs(changeX) <2 or np.abs(changeY) <2:
-            changeX = newPos[0] - self.oldPos[0][0]
-            changeY = newPos[1] - self.oldPos[0][1]
-                 #alpha = 100
-                 #cv2.line(frame,(newX,newY),(newX+alpha*changeX,newY+alpha*changeY),(0,255,0),3)
-        k = np.arctan2(changeY,changeX)
-        #if k<0:
-        #k = np.abs(k) + np.pi
-        #angle = k * 180/np.pi
-        angle = np.degrees(k)
-
-        originVector = np.array([0,1])
-        changeVector = np.array([changeX,changeY])
-
-        denominator = np.sqrt(np.dot(changeVector,changeVector))
-
-        if denominator == 0:
-            angle = None
-        else:
-            angle = np.arccos(
-                np.dot(originVector,changeVector) / (np.sqrt(np.dot(changeVector,changeVector)))
-            )
-            angle = np.degrees(angle)
-            if changeX <0:
-                angle = 360 - angle
-        #print(np.sqrt(np.dot(changeVector,changeVector)))
-        
-        #print ((changeX,changeY),angle) 
-        return (angle,changeX,changeY)

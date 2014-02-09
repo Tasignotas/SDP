@@ -1,14 +1,21 @@
 ##Systems Design Project - Group 7##
 
-![alt text](http://i2.kym-cdn.com/photos/images/original/000/581/723/a8b.jpg "Such Team")
-
+![alt text](http://i.imgur.com/Sv9SowE.png "Such Team")
 ------
+
+###Running the system
+
+In the root of the project, execute `python controller.py <pitch_number> <our_side> <our_color>` where *pitch_number* is either 0 for the main pitch and 1 for the secondary pitch. Colors are regular yellow and blue. Side can be either left or right.
+
+
 ###Installation
 
 #### Linux/DICE
 Python-nxt is installed globally on DICE on level 3 of AT.
 
 To install [bluez](http://www.bluez.org/) please execute `sh scripts/install-bluez.sh`
+
+To isntall Argparse for python, download [ArgParse](http://argparse.googlecode.com/files/argparse-1.2.1.tar.gz), extract and run `python setup.py install --user`. All done.
 
 
 

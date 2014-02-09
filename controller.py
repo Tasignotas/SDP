@@ -1,6 +1,7 @@
-from vision.vision import Vision
+from vision.vision import Vision, Camera, GUI
 from planning.planner import Planner
 from vision.tracker import Tracker
+from postprocessing.postprocessing import Postprocessing
 import vision.tools as tools
 from nxt import *
 
@@ -10,35 +11,82 @@ class Controller:
     Primary source of robot control. Ties vision and planning together.
     """
 
-    def __init__(self, port=0, connect=False):
-        self.vision = Vision(side='right')
-        self.planner = Planner(our_side='left')
+    def __init__(self, pitch, color, our_side, port=0, connect=False, debug=False):
+        """
+        Entry point for the SDP system.
+
+        Params:
+            [int] port      port number for the camera
+            [bool] connect  connect to the nxt?
+            [int] pitch     0 - main pitch, 1 - secondary pitch
+            [bool] debug    print debug messages?
+        """
+        if pitch not in [0, 1]:
+            raise Exception('Incorrect pitch number.')
+
+        if color not in ['yellow', 'blue']:
+            raise Exception('Incorrect color.')
+
+        if our_side not in ['left', 'right']:
+            raise Exception('Icorrect side. Valid options are "left" and "right"')
+
+        # Set up camera for frames
+        self.camera = Camera(port=port)
+        frame = self.camera.get_frame()
+
+        # Set up vision
+        self.vision = Vision(
+            pitch=pitch, color=color, our_side=our_side, frame_shape=frame.shape)
+
+        # Set up postprocessing for vision
+        self.postprocessing = Postprocessing()
+
+        # Set up main planner
+        self.planner = Planner(our_side=our_side)
+
+        # Set up GUI
+        self.GUI = GUI()
+
+        # Debug flag for print statements
+        self.debug = debug
+        self.color = color
+
         #self.attacker = Attacker_Controller(connectionName='GRP7A', leftMotorPort=PORT_A, rightMotorPort=PORT_C, kickerMotorPort=PORT_B)
         #self.defender = Defender_Controller('GRP7A', 'PORT_X', 'PORT_X', 'PORT_X')
 
-
     def wow(self):
         """
+        Ready your sword, here be dragons.
+
         Main flow of the program. Run the controller with vision and planning combined.
         """
         # positions = (None,None,None,None,((0,0),0,0))
         while True:
+            frame = self.camera.get_frame()
             # Find object positions
-            positions = self.vision.locate()
-            #if positions[0] is not None:
-            #    print 'Positions:', positions[0][1]
+            positions, extras = self.vision.locate(frame)
+
+            # print extras
+
+            # positions = self.postprocessing.analyze(positions)
+
+            # if self.debug:
+            #     print positions
 
             # Find appropriate action
-            actions = self.planner.plan(positions)
+            # actions = self.planner.plan(positions)
+            actions = []
             #print 'Actions:', actions
 
             # Execute action
-            #self.attacker.execute(actions[0])
+            # self.attacker.execute(actions[0])
             # self.defender.execute(actions[0])
+
+            # Draw vision content and actions
+            self.GUI.draw(frame, positions, actions, extras, our_color=self.color)
 
 
 class Connection:
-
 
     def __init__(self, name='NXT'):
         print 'Connecting to NXT Brick with name %s' % name
@@ -46,7 +94,6 @@ class Connection:
             name=name, method=locator.Method(usb=False))
         if self.brick:
             print 'Connection successful.'
-
 
     def close(self):
         """
@@ -70,7 +117,6 @@ class Robot_Controller(object):
         self.MOTOR_L = Motor(self.BRICK,leftMotorPort)
         self.MOTOR_R = Motor(self.BRICK,rightMotorPort)
         self.MOTOR_K = Motor(self.BRICK,kickerMotorPort)
-
 
     def execute(self, action):
         """
@@ -105,4 +151,11 @@ class Defender_Controller(Robot_Controller):
 
 
 if __name__ == '__main__':
-    c = Controller().wow()  # Such controller
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("pitch", help="[0] Main pitch, [1] Secondary pitch")
+    parser.add_argument("side", help="The side of our defender ['left', 'right'] allowed.")
+    parser.add_argument("color", help="The color of our team - ['yellow', 'blue'] allowed.")
+    args = parser.parse_args()
+    # print args
+    c = Controller(debug=True, pitch=int(args.pitch), color=args.color, our_side=args.side).wow()  # Such controller
