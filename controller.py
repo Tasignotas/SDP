@@ -55,6 +55,7 @@ class Controller:
         #self.defender = Defender_Controller('GRP7A', 'PORT_X', 'PORT_X', 'PORT_X')
 
     def wow(self):
+        #
         """
         Ready your sword, here be dragons.
 

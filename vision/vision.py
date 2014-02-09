@@ -45,23 +45,23 @@ class Vision:
 
         if our_side == 'left':
             self.us = [
-                RobotTracker(color=color, crop=zones[0], offset=0, pitch=pitch),   # defender
-                RobotTracker(color=color, crop=zones[2], offset=zone_size * 2, pitch=pitch) # attacker
+                RobotTracker(color=color, crop=zones[0], offset=0, pitch=pitch, name='Our Defender'),   # defender
+                RobotTracker(color=color, crop=zones[2], offset=zone_size * 2, pitch=pitch, name='Our Attacker') # attacker
             ]
 
             self.opponents = [
-                RobotTracker(opponent_color, zones[1], zone_size, pitch),
-                RobotTracker(opponent_color, zones[3], zone_size * 3, pitch)
+                RobotTracker(opponent_color, zones[1], zone_size, pitch, 'Their Defender'),
+                RobotTracker(opponent_color, zones[3], zone_size * 3, pitch, 'Their Attacker')
             ]
         else:
             self.us = [
-                RobotTracker(color, zones[1], zone_size, pitch),
-                RobotTracker(color, zones[3], zone_size * 3, pitch)
+                RobotTracker(color, zones[1], zone_size, pitch, 'Our defender'),
+                RobotTracker(color, zones[3], zone_size * 3, pitch, 'Our Attacker')
             ]
 
             self.opponents = [
-                RobotTracker(opponent_color, zones[0], 0, pitch),   # defender
-                RobotTracker(opponent_color, zones[2], zone_size * 2, pitch)
+                RobotTracker(opponent_color, zones[0], 0, pitch, 'Their defender'),   # defender
+                RobotTracker(opponent_color, zones[2], zone_size * 2, pitch, 'Their attacker')
             ]
 
         # Set up trackers
@@ -193,22 +193,25 @@ class GUI(object):
                 self.draw_robot(
                     frame, positions[key].get_x(), positions[key].get_y(), their_color)
 
+        # print extras
+
         if extras is not None:
             for x in extras[:4]:
-                if 'i' in x.keys():
-                    self.draw_dot(frame, x['i'])
+                if x is not None:
+                    if x['i'] and 'i' in x.keys():
+                        self.draw_dot(frame, x['i'])
 
-                if 'dot' in x.keys():
-                    self.draw_dot(frame, x['dot'])
+                    if  x['dot'] and 'dot' in x.keys():
+                        self.draw_dot(frame, x['dot'])
 
-                if 'box' in x.keys():
-                    self.draw_box(frame, x['box'])
+                    if  x['box'] and 'box' in x.keys():
+                        self.draw_box(frame, x['box'])
 
-                if 'location' in x.keys():
-                    self.draw_dot(frame, x['location'])
+                    if x['location'] and 'location' in x.keys():
+                        self.draw_dot(frame, x['location'])
 
-                if 'line' in x.keys():
-                    self.draw_line(frame, x['line'])
+                # if x['line'] and 'line' in x.keys():
+                #     self.draw_line(frame, x['line'])
 
 
         cv2.imshow('SUCH VISION', frame)
