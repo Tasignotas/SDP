@@ -13,6 +13,18 @@ BGR_COMMON = {
 
 
 PITCH0 = {
+    'plate': {
+        'min': np.array((57.0, 62.0, 38.0)),
+        'max': np.array((85.0, 136.0, 255.0)),
+        'contrast': 100.0,
+        'blur': 0
+    },
+    'dot': {
+        'min': np.array((23.0, 35.0, 100.0)),
+        'max': np.array((61.0, 91.0, 115.0)),
+        'contrast': 1.0,
+        'blur': 4
+    },
     'red': [
         {
             'min': np.array((0.0, 114.0, 132.0)),
@@ -96,6 +108,18 @@ PITCH0 = {
 }
 
 PITCH1 = {
+    'plate': {
+        'min': np.array((41.0, 63.0, 183.0)),
+        'max': np.array((60.0, 255.0, 255.0)),
+        'contrast': 100.0,
+        'blur': 0
+    },
+    'dot': {
+        'min': np.array((11.106,0.0,0.0)),
+        'max': np.array((30.0,140.0,124.0)),
+        'contrast': 1.0,
+        'blur': 4
+    },
     'red': [
         {
             'min': np.array((0.0, 114.0, 250.0)),
