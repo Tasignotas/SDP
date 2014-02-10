@@ -6,6 +6,7 @@ from multiprocessing import Process, Queue
 import sys
 from planning.models import Vector
 from colors import BGR_COMMON
+from collections import namedtuple
 
 
 TEAM_COLORS = set(['yellow', 'blue'])
@@ -37,7 +38,10 @@ class Vision:
 
         zone_size = int(math.floor(width / 4.0))
 
-        zones = [(zone_size * i, zone_size * (i + 1), 0, height) for i in range(4)]
+        zones = [(val[0], val[1], 0, height) for val in tools.get_zones(width, height)]
+        self.zones = zones
+
+        # zones = [(zone_size * i, zone_size * (i + 1), 0, height) for i in range(4)]
         # print zones
 
         # Do set difference to find the other color - if is too long :)
@@ -45,23 +49,23 @@ class Vision:
 
         if our_side == 'left':
             self.us = [
-                RobotTracker(color=color, crop=zones[0], offset=0, pitch=pitch, name='Our Defender'),   # defender
-                RobotTracker(color=color, crop=zones[2], offset=zone_size * 2, pitch=pitch, name='Our Attacker') # attacker
+                RobotTracker(color=color, crop=zones[0], offset=zones[0][0], pitch=pitch, name='Our Defender'),   # defender
+                RobotTracker(color=color, crop=zones[2], offset=zones[2][0], pitch=pitch, name='Our Attacker') # attacker
             ]
 
             self.opponents = [
-                RobotTracker(opponent_color, zones[1], zone_size, pitch, 'Their Defender'),
-                RobotTracker(opponent_color, zones[3], zone_size * 3, pitch, 'Their Attacker')
+                RobotTracker(opponent_color, zones[1], zones[1][0], pitch, 'Their Defender'),
+                RobotTracker(opponent_color, zones[3], zones[3][0], pitch, 'Their Attacker')
             ]
         else:
             self.us = [
-                RobotTracker(color, zones[1], zone_size, pitch, 'Our defender'),
-                RobotTracker(color, zones[3], zone_size * 3, pitch, 'Our Attacker')
+                RobotTracker(color, zones[1], zones[1][0], pitch, 'Our Defender'),
+                RobotTracker(color, zones[3], zones[3][0], pitch, 'Our Attacker')
             ]
 
             self.opponents = [
-                RobotTracker(opponent_color, zones[0], 0, pitch, 'Their defender'),   # defender
-                RobotTracker(opponent_color, zones[2], zone_size * 2, pitch, 'Their attacker')
+                RobotTracker(opponent_color, zones[0], zones[0][0], pitch, 'Their Defender'),   # defender
+                RobotTracker(opponent_color, zones[2], zones[2][0], pitch, 'Their Attacker')
             ]
 
         # Set up trackers
@@ -88,9 +92,9 @@ class Vision:
 
         result = {
             'our_attacker': self.to_vector(positions[1], height),
-            'their_attacker': self.to_vector(positions[3], height),
+            'their_attacker': self.to_vector(positions[2], height),
             'our_defender': self.to_vector(positions[0], height),
-            'their_defender': self.to_vector(positions[2], height),
+            'their_defender': self.to_vector(positions[3], height),
             'ball': self.to_vector(positions[4], height)
         }
 
@@ -197,6 +201,14 @@ class GUI(object):
 
     def draw(self, frame, positions, actions, extras, our_color):
 
+        height, width, channels = frame.shape
+        zones = tools.get_zones(width, height)
+        print 'GUI', zones
+
+        for zone in zones:
+            cv2.line(frame, (zone[1], 0), (zone[1], height), BGR_COMMON['red'], 1)
+
+
         positions = {
             'our_attacker': self.to_vector(extras[1]),
             'their_attacker': self.to_vector(extras[3]),
@@ -272,3 +284,4 @@ class GUI(object):
     def draw_line(self, frame, points):
         if points is not None:
             cv2.line(frame, points[0], points[1], BGR_COMMON['red'], 2)
+

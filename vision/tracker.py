@@ -262,8 +262,8 @@ class RobotTracker(Tracker):
             plate_frame = frame.copy()[plate.y:plate.y + plate.height, plate.x:plate.x + plate.width]
 
             plate_center = Center(plate.x + self.offset + plate.width / 2, plate.y + plate.height / 2)
-            inf_i = self.get_i(plate_frame, plate.x + self.offset, plate.y)
-            dot = self.get_dot(plate_frame, plate.x + self.offset, plate.y)
+            inf_i = self.get_i(plate_frame.copy(), plate.x + self.offset, plate.y)
+            dot = self.get_dot(plate_frame.copy(), plate.x + self.offset, plate.y)
 
 
             if inf_i and dot:
