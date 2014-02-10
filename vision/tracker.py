@@ -11,7 +11,7 @@ import warnings
 
 # Turn off warnings for PolynomialFit
 warnings.simplefilter('ignore', np.RankWarning)
-
+warnings.simplefilter('ignore', RuntimeWarning)
 
 
 # In the code, change COLORS to GUICOLORS if you want to use the values you
