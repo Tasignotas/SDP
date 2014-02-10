@@ -85,7 +85,7 @@ class Controller:
             # self.defender.execute(actions[0])
 
             # Draw vision content and actions
-            self.GUI.draw(frame, positions, actions, extras, our_color=self.color)
+            # self.GUI.draw(frame, positions, actions, extras, our_color=self.color)
 
 class Connection:
 

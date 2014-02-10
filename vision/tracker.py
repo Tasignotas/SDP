@@ -173,6 +173,24 @@ class RobotTracker(Tracker):
                 return Center(int(x + x_offset), int(y + y_offset))
 
     def get_dot(self, frame, x_offset, y_offset):
+        height, width, channel = frame.shape
+
+        print height, width
+
+        mask_frame = frame.copy()
+
+        cv2.rectangle(mask_frame, (0, 0), (width, height), (0,0,0), -1)
+        cv2.circle(mask_frame, (width / 2, height / 2), 14, (255, 255, 255), -1)
+
+
+
+        mask_frame = cv2.cvtColor(mask_frame, cv2.COLOR_BGR2GRAY)
+        frame = cv2.bitwise_and(frame, frame, mask=mask_frame)
+
+        cv2.imshow('frame', frame)
+        cv2.waitKey(0)
+
+
         adjustment = PITCH0['dot'] if self.pitch == 0 else PITCH1['dot']
         contours = self.get_contours(frame.copy(), adjustment)
         if contours and len(contours) > 0:

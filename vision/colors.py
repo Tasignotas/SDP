@@ -109,15 +109,15 @@ PITCH0 = {
 
 PITCH1 = {
     'plate': {
-        'min': np.array((41.0, 63.0, 183.0)),
-        'max': np.array((60.0, 255.0, 255.0)),
+        'min': np.array((35.0, 45.0, 162.0)),
+        'max': np.array((91.0, 255.0, 255.0)),
         'contrast': 100.0,
-        'blur': 0
+        'blur': 4
     },
     'dot': {
-        'min': np.array((11.106,0.0,0.0)),
-        'max': np.array((30.0,140.0,124.0)),
-        'contrast': 1.0,
+        'min': np.array((21.0,0.0,109.0)),
+        'max': np.array((94.0,255.0,180.0)),
+        'contrast': 100.0,
         'blur': 4
     },
     'red': [
@@ -162,10 +162,10 @@ PITCH1 = {
     ],
     'blue': [
         {
-            'min': np.array((74.0, 5.0, 77.0)),    #LH,LS,LV
-            'max': np.array((99.0, 255.0, 255.0)), #UH,US,UV
+            'min': np.array((90.0, 55.0, 110.0)),    #LH,LS,LV
+            'max': np.array((239.0, 103.0, 177.0)), #UH,US,UV
             'contrast': 0.0,
-            'blur': 0
+            'blur': 5
         },
         {
             'min': np.array((87.0, 147.0, 82.0)),
