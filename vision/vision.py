@@ -179,6 +179,9 @@ class Camera(object):
 
 class GUI(object):
 
+    def __init__(self):
+        self.zones = None
+
     def to_vector(self, args):
         """
         Convert a tuple into a vector
@@ -202,10 +205,10 @@ class GUI(object):
     def draw(self, frame, positions, actions, extras, our_color):
 
         height, width, channels = frame.shape
-        zones = tools.get_zones(width, height)
-        print 'GUI', zones
+        if not self.zones:
+            self.zones = tools.get_zones(width, height)
 
-        for zone in zones:
+        for zone in self.zones:
             cv2.line(frame, (zone[1], 0), (zone[1], height), BGR_COMMON['red'], 1)
 
 
