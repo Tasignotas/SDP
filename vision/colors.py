@@ -19,12 +19,18 @@ PITCH0 = {
         'contrast': 100.0,
         'blur': 7
     },
-    'dot': {
+    'dot': [{
         'min': np.array((16.0, 39.0, 55.0)),
         'max': np.array((68.0, 125.0, 78.0)),
         'contrast': 5.0,
         'blur': 5
     },
+    {
+        'min': np.array((16.0, 39.0, 55.0)),
+        'max': np.array((68.0, 125.0, 78.0)),
+        'contrast': 5.0,
+        'blur': 5
+    }],
     'red': [
         {
             'min': np.array((0.0, 114.0, 132.0)),
@@ -101,6 +107,12 @@ PITCH0 = {
             'max': np.array((163.0, 255.0, 255.0)), #UH,US,UV
             'contrast': 1.0,
             'blur': 0
+        },
+	{
+            'min': np.array((83.0, 69.0, 173.0)),
+            'max': np.array((161.0, 211.0, 194.0)),
+            'contrast': 100.0,
+            'blur': 14
         }
 
     ]
@@ -114,12 +126,18 @@ PITCH1 = {
         'contrast': 100.0,
         'blur': 0
     },
-    'dot': {
-        'min': np.array((11.106,0.0,0.0)),
-        'max': np.array((30.0,140.0,124.0)),
-        'contrast': 1.0,
+    'dot': [{
+	'min': np.array((66.0, 84.0, 61.0)),
+        'max': np.array((117.0, 163.0, 76.0)),
+        'contrast': 9.0,
         'blur': 4
-    },
+	},
+	{
+        'min': np.array((16.0, 39.0, 55.0)),
+        'max': np.array((68.0, 125.0, 78.0)),
+        'contrast': 5.0,
+        'blur': 5
+    }],
     'red': [
         {
             'min': np.array((0.0, 114.0, 250.0)),

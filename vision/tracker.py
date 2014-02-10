@@ -190,15 +190,16 @@ class RobotTracker(Tracker):
         # cv2.waitKey(0)
 
 
-        adjustment = PITCH0['dot'] if self.pitch == 0 else PITCH1['dot']
-        contours = self.get_contours(frame.copy(), adjustment)
-        if contours and len(contours) > 0:
-            cnt = contours[0]
-            (x,y),radius = cv2.minEnclosingCircle(cnt)
-            # Return relative position to the frame given the offset
-            return Center(int(x + x_offset), int(y + y_offset))
-        else:
-            print 'No dot found for %s' % self.name
+        adjustments = PITCH0['dot'] if self.pitch == 0 else PITCH1['dot']
+	for adjustment in adjustments:
+        	contours = self.get_contours(frame.copy(), adjustment)
+        	if contours and len(contours) > 0:
+           	    cnt = contours[0]
+                    (x,y),radius = cv2.minEnclosingCircle(cnt)
+                    # Return relative position to the frame given the offset
+                    return Center(int(x + x_offset), int(y + y_offset))
+        #else:
+            #print 'No dot found for %s' % self.name
 
     def get_angle(self, m, n):
        """
