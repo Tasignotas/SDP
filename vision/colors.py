@@ -14,10 +14,10 @@ BGR_COMMON = {
 
 PITCH0 = {
     'plate': {
-        'min': np.array((57.0, 62.0, 38.0)),
-        'max': np.array((85.0, 136.0, 255.0)),
+        'min': np.array((60.0, 72.0, 38.0)),
+        'max': np.array((86.0, 136.0, 255.0)),
         'contrast': 100.0,
-        'blur': 0
+        'blur': 7
     },
     'dot': {
         'min': np.array((16.0, 39.0, 55.0)),
