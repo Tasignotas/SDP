@@ -10,6 +10,7 @@ from colors import BGR_COMMON
 
 TEAM_COLORS = set(['yellow', 'blue'])
 SIDES = ['left', 'right']
+PITCHES = [0, 1]
 
 PROCESSING_DEBUG = False
 
@@ -28,7 +29,6 @@ class Vision:
             [string] color      color of our robot
             [string] our_side   our side
         """
-
         self.pitch = pitch
         self.color = color
         self.our_side = our_side
@@ -84,12 +84,14 @@ class Vision:
                 print 'Parent process:', os.getppid()
             print 'Process id:', os.getpid()
 
+        height, width, channels = frame.shape if frame is not None else (None, None, None)
+
         result = {
-            'our_attacker': self.to_vector(positions[1]),
-            'their_attacker': self.to_vector(positions[3]),
-            'our_defender': self.to_vector(positions[0]),
-            'their_defender': self.to_vector(positions[2]),
-            'ball': self.to_vector(positions[4])
+            'our_attacker': self.to_vector(positions[1], height),
+            'their_attacker': self.to_vector(positions[3], height),
+            'our_defender': self.to_vector(positions[0], height),
+            'their_defender': self.to_vector(positions[2], height),
+            'ball': self.to_vector(positions[4], height)
         }
 
         return result, positions
@@ -124,23 +126,28 @@ class Vision:
 
         return positions
 
-    def to_vector(self, args):
+    def to_vector(self, args, height):
         """
         Convert a tuple into a vector
 
         Return a Vector
         """
-        keys = args.keys() if args is not None else []
         x, y, angle, velocity = None, None, None, None
-        if 'location' in keys:
-            x, y = args['location'] if args['location'] is not None else (None, None)
-        if 'angle' in keys:
-            angle = args['angle']
-        if 'velocity' in keys:
-            velocity = args['velocity']
+        if args is not None:
+            if 'location' in args:
+                x = args['location'][0] if args['location'] is not None else None
+                y = args['location'][1] if args['location'] is not None else None
+
+                if y is not None:
+                    y = height - y
+
+            if 'angle' in args:
+                angle = args['angle']
+
+            if 'velocity' in args:
+                velocity = args['velocity']
 
         return Vector(x, y, angle, velocity)
-
 
 class Camera(object):
     """
@@ -168,7 +175,35 @@ class Camera(object):
 
 class GUI(object):
 
+    def to_vector(self, args):
+        """
+        Convert a tuple into a vector
+
+        Return a Vector
+        """
+        x, y, angle, velocity = None, None, None, None
+        if args is not None:
+            if 'location' in args:
+                x = args['location'][0] if args['location'] is not None else None
+                y = args['location'][1] if args['location'] is not None else None
+
+            if 'angle' in args:
+                angle = args['angle']
+
+            if 'velocity' in args:
+                velocity = args['velocity']
+
+        return Vector(x, y, angle, velocity)
+
     def draw(self, frame, positions, actions, extras, our_color):
+
+        positions = {
+            'our_attacker': self.to_vector(extras[1]),
+            'their_attacker': self.to_vector(extras[3]),
+            'our_defender': self.to_vector(extras[0]),
+            'their_defender': self.to_vector(extras[2]),
+            'ball': self.to_vector(extras[4])
+        }
 
         # if extras not None:
         #     extras = {

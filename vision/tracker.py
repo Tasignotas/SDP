@@ -60,6 +60,7 @@ class Tracker(object):
             cv2.RETR_TREE,
             cv2.CHAIN_APPROX_SIMPLE
         )
+        # print contours
         return contours
 
     # TODO: Used by Ball tracker - REFACTOR
@@ -173,6 +174,22 @@ class RobotTracker(Tracker):
                 return Center(int(x + x_offset), int(y + y_offset))
 
     def get_dot(self, frame, x_offset, y_offset):
+        height, width, channel = frame.shape
+
+        mask_frame = frame.copy()
+
+        cv2.rectangle(mask_frame, (0, 0), (width, height), (0,0,0), -1)
+        cv2.circle(mask_frame, (width / 2, height / 2), 16, (255, 255, 255), -1)
+
+
+
+        mask_frame = cv2.cvtColor(mask_frame, cv2.COLOR_BGR2GRAY)
+        frame = cv2.bitwise_and(frame, frame, mask=mask_frame)
+
+        # cv2.imshow('frame', frame)
+        # cv2.waitKey(0)
+
+
         adjustment = PITCH0['dot'] if self.pitch == 0 else PITCH1['dot']
         contours = self.get_contours(frame.copy(), adjustment)
         if contours and len(contours) > 0:
@@ -209,46 +226,6 @@ class RobotTracker(Tracker):
         c2 = e-m*d
         c = ((c1+c2)/2)
         return (m,c)
-
-    # def get_angle(self,centerOfPlate,centerOfMass,centerOfDisc):
-    #     """
-    #     Find the angle using the lines between the center points of the features.
-    #     """
-
-    #     # Work out if the center of the disc is close to being on the line
-    #     # that goes through the center of the plate and the center of the
-    #     # i.
-    #     # If it is, use the center of the disc and the center of the i to
-    #     # calculate the angle.
-    #     # Otherwise, use the center of the plate and the center of the i.
-
-    #     #print "getting angle"
-
-    #     m,c = self.calcLine(centerOfMass,centerOfPlate)
-    #     tolerance = 5
-
-    #     #print np.abs(centerOfDisc[1]- (m*centerOfDisc[0]+c))
-    #     #print np.abs(centerOfDisc[0]- ((centerOfDisc[1]-c)*1.0/m))
-
-    #     if (m*centerOfDisc[0]+c-tolerance) < centerOfDisc[1] < (m*centerOfDisc[0]+c+tolerance) and ((centerOfDisc[1]-c)*1.0/m-tolerance) < centerOfDisc[0] < ((centerOfDisc[1]-c)*1.0/m+tolerance):
-    #     #    m,c = calcLine(centerOfMass,centerofPlate)
-    #         #print "On line"
-    #         diff_x = centerOfDisc[0] - centerOfMass[0]cv2.minEnclosingCircle(cnt)
-    #         diff_y = centerOfDisc[1] - centerOfMass[1]
-    #     else:
-    #         # Not quite sure about calculating the angle in this case.
-    #         return None
-
-    #     angle = np.arctan((np.abs(diff_y) * 1.0 / np.abs(diff_x)))
-    #     angle = np.degrees(angle)
-    #     if diff_x > 0 and diff_y < 0:
-    #         angle = 360 - angle
-    #     if diff_x > 0 and diff_y > 0:
-    #         angle = 180 + angle
-    #     if diff_x < 0 and diff_y > 0:
-    #         angle = 90+angle
-
-    #     return angle
 
     def find(self, frame, queue):
         """
