@@ -311,7 +311,7 @@ class Goal(Pitch_Object):
 
     def __repr__(self):
         return ('zone: %s\nx: %s\ny: %s\nangle: %s\nvelocity: %s\ndimensions: %s\n' %
-                (self._zone, self.get_dimensions()[0], self.get_dimensions()[1],
+                (self._zone, self.get_x(), self.get_y(),
                  self.get_angle(), self.get_velocity(), self.get_dimensions()))
 
 class Pitch:
@@ -330,8 +330,8 @@ class Pitch:
         self._zones.append(Polygon(config_json['Zone_1']))
         self._zones.append(Polygon(config_json['Zone_2']))
         self._zones.append(Polygon(config_json['Zone_3']))
-        self._width = max([max([point[0] for point in pointList(zone)]) for zone in self._zones])
-        self._height = max([max([point[1] for point in pointList(zone)]) for zone in self._zones])
+        self._width = max([point[0] for point in config_json['outline']]) - min([point[0] for point in config_json['outline']])
+        self._height = max([point[1] for point in config_json['outline']]) - min([point[1] for point in config_json['outline']])
 
 
     def is_within_bounds(self, robot, point):
