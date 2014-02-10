@@ -1,12 +1,35 @@
 import numpy as np
 
 
+BGR_COMMON = {
+    'red': (0, 0, 255),
+    'green': (0, 255, 0),
+    'blue': (255, 0, 0),
+    'black': (0, 0, 0),
+    'white': (255, 255, 255),
+    'yellow': (0, 255, 255),
+    'bright_green': (0, 255, 102)
+}
+
+
 PITCH0 = {
+    'plate': {
+        'min': np.array((57.0, 62.0, 38.0)),
+        'max': np.array((85.0, 136.0, 255.0)),
+        'contrast': 100.0,
+        'blur': 0
+    },
+    'dot': {
+        'min': np.array((16.0, 39.0, 55.0)),
+        'max': np.array((68.0, 125.0, 78.0)),
+        'contrast': 5.0,
+        'blur': 5
+    },
     'red': [
         {
-            'min': np.array((0.0, 114.0, 250.0)),
+            'min': np.array((0.0, 114.0, 132.0)),
             'max': np.array((5.0, 255.0, 255.0)),
-            'contrast': 100.0,
+            'contrast': 30.0,
             'blur': 5
         },
         {
@@ -85,6 +108,18 @@ PITCH0 = {
 }
 
 PITCH1 = {
+    'plate': {
+        'min': np.array((41.0, 63.0, 183.0)),
+        'max': np.array((60.0, 255.0, 255.0)),
+        'contrast': 100.0,
+        'blur': 0
+    },
+    'dot': {
+        'min': np.array((11.106,0.0,0.0)),
+        'max': np.array((30.0,140.0,124.0)),
+        'contrast': 1.0,
+        'blur': 4
+    },
     'red': [
         {
             'min': np.array((0.0, 114.0, 250.0)),

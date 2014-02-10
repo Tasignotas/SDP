@@ -31,7 +31,7 @@ def get_json(filename='calibrate.json'):
 def write_json(filename='calibrate.json', data={}):
     _file = open(filename, 'w')
     _file.write(json.dumps(data))
-    _file.close()    
+    _file.close()
 
 def mask_pitch(frame, points):
     mask = frame.copy()
@@ -111,6 +111,7 @@ def crop(frame, size=None):
     x_min, x_max, y_min, y_max = size
     return frame[y_min:y_max, x_min:x_max]
 
+# LEGACY
 def adjust_light(frame, brightness=2.0, contrast=50.0):
     """
     Increase image brightness and/or contrast.
@@ -125,7 +126,7 @@ def adjust_light(frame, brightness=2.0, contrast=50.0):
     # brightness = max(3.0, float(brightness))
     # contrast = max(100.0, float(contrast))
     return cv2.add(
-        cv2.multiply(frame, np.array[brightness]), 
+        cv2.multiply(frame, np.array[brightness]),
         np.array([contrast]))
 
 def view(frame, label='Frame'):
@@ -150,18 +151,3 @@ def mask(frame, lower, higher):
     """
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     return cv2.inRange(hsv, lower, higher)
-
-def slice(frame, pieces=4):
-    """
-    TODO
-
-    Given a frame, slice into n pieces given by the argument.
-    Either use fancy methods for precise slicing or just split into n equal for now.
-    To get size do frame.shape
-
-    Returns:
-        [4-tuple  of 2-tuples]  of slized frames, offset is the
-                                distance from the left side of the original frame
-    """
-    offset = 0
-    return ((frame, offset), (frame, offset), (frame, offset), (frame, offset))

@@ -5,10 +5,12 @@ import math
 from multiprocessing import Process, Queue
 import sys
 from planning.models import Vector
+from colors import BGR_COMMON
 
 
 TEAM_COLORS = set(['yellow', 'blue'])
 SIDES = ['left', 'right']
+PITCHES = [0, 1]
 
 PROCESSING_DEBUG = False
 
@@ -18,105 +20,67 @@ class Vision:
     Locate objects on the pitch.
     """
 
-    def __init__(self, side='left', color='yellow', port=0, pitch=0):
+    def __init__(self, pitch, color, our_side, frame_shape):
+        """
+        Initialize the vision system.
 
+        Params:
+            [int] pitch         pitch number (0 or 1)
+            [string] color      color of our robot
+            [string] our_side   our side
+        """
         # Check params
         if not self._param_check(side, color):
             return
 
-        # Initialize camera
-        self._init_camera(port)
+        self.pitch = pitch
+        self.color = color
+        self.our_side = our_side
 
-        # Retrieve crop values from calibration
-        self.calibration = tools.get_calibration('vision/calibrate.json')
-        self.crop_values = tools.find_extremes(self.calibration['outline'])
+        height, width, channels = frame_shape
 
-        self.ball_tracker = BallTracker(
-            (0, self.crop_values[1], 0, self.crop_values[3]), 0)
+        zone_size = int(math.floor(width / 4.0))
 
-        # Initialize side assignment
-        self._init_robot_trackers(side, color, pitch)
-
-    def _param_check(self, side, color):
-        """
-        Check the params passed in.
-        """
-        if color not in TEAM_COLORS:
-            print 'Incorrect color assignment.', 'Valid colors are:', TEAM_COLORS
-            return None
-        if side not in SIDES:
-            print 'Incorrect side assignment.', 'Valid sides are:', SIDES
-            return None
-        return True
-
-    def _init_camera(self, port):
-        """
-        Initialize camera capture.
-        """
-        # Capture video port
-        self.capture = cv2.VideoCapture(port)
-
-        # Read in couple of frames to clear corrupted frames
-        for i in range(3):
-            status, frame = self.capture.read()
-
-    def _init_robot_trackers(self, side, color, pitch=0):
-        """
-        Initialize side assignment.
-
-        Params:
-            [string] side   - our side
-            [string] color  - our color
-
-        Returns:
-            None.
-        """
-        # Temporary: divide zones into section
-        zone_size = int(math.floor(self.crop_values[1] / 4.0))
-
-        zones = [(zone_size * i, zone_size * (i + 1), 0, self.crop_values[3]) for i in range(4)]
+        zones = [(zone_size * i, zone_size * (i + 1), 0, height) for i in range(4)]
+        # print zones
 
         # Do set difference to find the other color - if is too long :)
         opponent_color = (TEAM_COLORS - set([color])).pop()
 
-        if side == 'left':
+        if our_side == 'left':
             self.us = [
-                RobotTracker(color, zones[0], 0, pitch),   # defender
-                RobotTracker(color, zones[2], zone_size * 2, pitch) # attacker
+                RobotTracker(color=color, crop=zones[0], offset=0, pitch=pitch, name='Our Defender'),   # defender
+                RobotTracker(color=color, crop=zones[2], offset=zone_size * 2, pitch=pitch, name='Our Attacker') # attacker
             ]
 
             self.opponents = [
-                RobotTracker(opponent_color, zones[1], zone_size, pitch),
-                RobotTracker(opponent_color, zones[3], zone_size * 3, pitch)
+                RobotTracker(opponent_color, zones[1], zone_size, pitch, 'Their Defender'),
+                RobotTracker(opponent_color, zones[3], zone_size * 3, pitch, 'Their Attacker')
             ]
         else:
             self.us = [
-                RobotTracker(color, zones[1], zone_size, pitch),
-                RobotTracker(color, zones[3], zone_size * 3, pitch)
+                RobotTracker(color, zones[1], zone_size, pitch, 'Our defender'),
+                RobotTracker(color, zones[3], zone_size * 3, pitch, 'Our Attacker')
             ]
 
             self.opponents = [
-                RobotTracker(opponent_color, zones[0], 0, pitch),   # defender
-                RobotTracker(opponent_color, zones[2], zone_size * 2, pitch)
+                RobotTracker(opponent_color, zones[0], 0, pitch, 'Their defender'),   # defender
+                RobotTracker(opponent_color, zones[2], zone_size * 2, pitch, 'Their attacker')
             ]
 
-    def locate(self):
+        # Set up trackers
+        self.ball_tracker = BallTracker(
+            (0, width, 0, height), 0, pitch)
+
+    def locate(self, frame):
         """
         Find objects on the pitch using multiprocessing.
 
         Returns:
             [5-tuple] Location of the robots and the ball
         """
-        status, frame = self.capture.read()
-
-        # Crop frame
-        frame = self._trim_image(frame)
-
         # Run trackers as processes
         positions = self._run_trackers(frame)
-
-        # Draw positions
-        self._draw(frame, positions)
 
         # MULTIPROCESSING DEBUG
         if PROCESSING_DEBUG:
@@ -132,88 +96,7 @@ class Vision:
             'ball': self.to_vector(positions[4])
         }
 
-        return result
-
-    def _draw(self, frame, positions, our_color='yellow'):
-        """
-        Draw positions from the trackers on the screen.
-
-        Params:
-            [np.array] frame    - the frame to draw on
-            [5-tuple] positions - positions of the robots and the ball
-
-        Returns:
-            None. Image is displayed
-        """
-        # Draw our robots
-        for position in positions[:2]:
-            self._draw_robot(frame, position, our_color)
-
-        for position in positions[2:4]:
-            self._draw_robot(frame, position, list(TEAM_COLORS - set(our_color))[0])
-
-        self._draw_ball(frame, positions[4])
-
-        cv2.imshow('SUCH VISION', frame)
-        cv2.waitKey(4)
-
-    def _draw_robot(self, frame, position, color):
-        """
-        Draw the location of the robots given the color
-        """
-        colors = {
-            'yellow': (0, 255, 255),
-            'blue': (255, 0, 0)
-        }
-        if position:
-            center = position['location']
-            cv2.circle(frame, center, 16, colors[color], 1)
-
-        if 'dot' in position.keys():
-            self._draw_dot(frame, position['dot'])
-
-        if 'i' in position.keys():
-            self._draw_i(frame, position['i'])
-
-        if 'i' in position.keys() and 'dot' in position.keys():
-            self._draw_angle(frame, position['dot'], center)
-
-    def _draw_i(self, frame, position):
-        if position:
-            cv2.circle(frame, (position[0], position[1]), 1, (255, 255, 255), -1)
-
-    def _draw_dot(self, frame, position):
-        if position:
-            cv2.circle(frame, (position[0], position[1]), 1, (255, 255, 255), -1)
-
-    def _draw_angle(self, frame, dot, i):
-        if dot and i:
-            x_diff, y_diff = (dot[0] - i[0]) * 3, (dot[1] - i[1]) * 3
-            endpoint = (i[0] + x_diff, i[1] + y_diff)
-            cv2.line(frame, i, endpoint, (255,255,255), 1)
-
-    def _draw_ball(self, frame, position):
-        """
-        Draw the ball as a circle. In place.
-
-        Params:
-            [dict] positions    - information about the location of the ball
-        """
-        if position is not None:
-            center = position['location']
-            cv2.circle(frame, center, 7, (0, 0, 255), 2)
-
-    def _trim_image(self, frame):
-        """
-        Given a frame, crop it to the size given in self.crop_values
-
-        Returns:
-            Cropped image
-        """
-        return frame[
-            self.crop_values[2]:self.crop_values[3],
-            self.crop_values[0]:self.crop_values[1]
-        ]
+        return result, positions
 
     def _run_trackers(self, frame):
         """
@@ -254,9 +137,10 @@ class Vision:
         keys = args.keys() if args is not None else []
         x, y, angle, velocity = None, None, None, None
         if 'location' in keys:
-            x, y = args['location']
+            x, y = args['location'] if args['location'] is not None else (None, None)
         else:
             return None
+
         if 'angle' in keys:
             angle = args['angle']
         if 'velocity' in keys:
@@ -264,13 +148,114 @@ class Vision:
 
         return Vector(x, y, angle, velocity)
 
+    def _param_check(self, side, color, pitch):
+        """
+        Check the params passed in.
+        """
+        if color not in TEAM_COLORS:
+            print 'Incorrect color assignment.', 'Valid colors are:', TEAM_COLORS
+            return None
+        if our_side not in SIDES:
+            print 'Incorrect side assignment.', 'Valid sides are:', SIDES
+            return None
+        if pitch not in PITCHES:
+            print 'Incorrect pitch assignment.', 'Valid pitches are:', PITCHES
+            return None
+        return True
+
 
 class Camera(object):
+    """
+    Camera access wrapper.
+    """
 
     def __init__(self, port=0):
         self.capture = cv2.VideoCapture(port)
+        calibration = tools.get_calibration('vision/calibrate.json')
+        self.crop_values = tools.find_extremes(calibration['outline'])
 
     def get_frame(self):
+        """
+        Retrieve a frame from the camera.
+
+        Returns the frame if available, otherwise returns None.
+        """
         status, frame = self.capture.read()
         if status:
-            return frame
+            return frame[
+                self.crop_values[2]:self.crop_values[3],
+                self.crop_values[0]:self.crop_values[1]
+            ]
+
+
+class GUI(object):
+
+    def draw(self, frame, positions, actions, extras, our_color):
+
+        # if extras not None:
+        #     extras = {
+        #         'our_attacker': extras[1],
+        #         'their_attacker': extras[3],
+        #         'our_defender': extras[0],
+        #         'their_defender': extras[2],
+        #         'ball': extras[4]
+        #     }
+        their_color = list(TEAM_COLORS - set([our_color]))[0]
+
+        if positions['ball'] is not None:
+            self.draw_ball(frame, positions['ball'].get_x(), positions['ball'].get_y())
+
+        for key in ['our_defender', 'our_attacker']:
+            if positions[key] is not None:
+                self.draw_robot(
+                    frame, positions[key].get_x(), positions[key].get_y(), our_color)
+
+        for key in ['their_defender', 'their_attacker']:
+            if positions[key] is not None:
+                self.draw_robot(
+                    frame, positions[key].get_x(), positions[key].get_y(), their_color)
+
+        # print extras
+
+        if extras is not None:
+            for x in extras[:4]:
+                if x is not None:
+                    if x['i'] and 'i' in x.keys():
+                        self.draw_dot(frame, x['i'])
+
+                    if  x['dot'] and 'dot' in x.keys():
+                        self.draw_dot(frame, x['dot'])
+
+                    if  x['box'] and 'box' in x.keys():
+                        self.draw_box(frame, x['box'])
+
+                    if x['location'] and 'location' in x.keys():
+                        self.draw_dot(frame, x['location'])
+
+                if x['line'] and 'line' in x.keys():
+                    self.draw_line(frame, x['line'])
+
+
+        cv2.imshow('SUCH VISION', frame)
+        cv2.waitKey(3)
+
+    def draw_robot(self, frame, x, y, color, thickness=1):
+        if x is not None and y is not None:
+            cv2.circle(frame, (x, y), 16, BGR_COMMON[color], thickness)
+
+    def draw_ball(self, frame, x, y):
+        if x is not None and y is not None:
+            cv2.circle(frame, (x, y), 7, BGR_COMMON['red'], 2)
+
+    def draw_dot(self, frame, location):
+        if location is not None:
+            cv2.circle(frame, location, 2, BGR_COMMON['white'], 1)
+
+    def draw_box(self, frame, location):
+        if location is not None:
+            x, y, width, height = location
+            cv2.rectangle(frame, (x, y), (x + width, y + height), BGR_COMMON['bright_green'], 1)
+
+    def draw_line(self, frame, points):
+        if points is not None:
+            cv2.line(frame, points[0], points[1], BGR_COMMON['red'], 2)
