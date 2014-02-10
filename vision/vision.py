@@ -50,18 +50,18 @@ class Vision:
             ]
 
             self.opponents = [
-                RobotTracker(opponent_color, zones[1], zone_size, pitch, 'Their Defender'),
-                RobotTracker(opponent_color, zones[3], zone_size * 3, pitch, 'Their Attacker')
+                RobotTracker(opponent_color, zones[1], zone_size, pitch, 'Their Attacker'),
+                RobotTracker(opponent_color, zones[3], zone_size * 3, pitch, 'Their Defender')
             ]
         else:
             self.us = [
-                RobotTracker(color, zones[1], zone_size, pitch, 'Our defender'),
+                RobotTracker(color, zones[1], zone_size, pitch, 'Our Defender'),
                 RobotTracker(color, zones[3], zone_size * 3, pitch, 'Our Attacker')
             ]
 
             self.opponents = [
-                RobotTracker(opponent_color, zones[0], 0, pitch, 'Their defender'),   # defender
-                RobotTracker(opponent_color, zones[2], zone_size * 2, pitch, 'Their attacker')
+                RobotTracker(opponent_color, zones[0], 0, pitch, 'Their Defender'),   # defender
+                RobotTracker(opponent_color, zones[2], zone_size * 2, pitch, 'Their Attacker')
             ]
 
         # Set up trackers
@@ -88,9 +88,9 @@ class Vision:
 
         result = {
             'our_attacker': self.to_vector(positions[1], height),
-            'their_attacker': self.to_vector(positions[3], height),
+            'their_attacker': self.to_vector(positions[2], height),
             'our_defender': self.to_vector(positions[0], height),
-            'their_defender': self.to_vector(positions[2], height),
+            'their_defender': self.to_vector(positions[3], height),
             'ball': self.to_vector(positions[4], height)
         }
 

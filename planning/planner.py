@@ -40,21 +40,27 @@ class Planner:
             pass_path = their_defender.get_pass_path(their_attacker)
             intercept_plan = get_interception(pass_path, our_attacker)
             return (intercept_plan)
-        '''
-        if their_attacker.get_possession(ball):
+
+        if their_attacker.get_ball_possession(ball):
+            print 'Yes!!!'
             shoot_path = their_attacker.get_shoot_path(our_goal)
+            for point in shoot_path:
+               print point
+            raise Exception()
             intercept_plan = get_interception(shoot_path, our_defender)
             return (intercept_plan)
-        '''
         else:
+            print 'NO!!!'
             if our_attacker.get_ball_proximity(ball):
                 our_attacker.get_robot_aligment(ball)
             elif our_defender.get_ball_proximity(ball):
                 our_defender.get_robot_alignment(ball)
-            elif ball.get_velocity() == 0:
-                our_attacker.get_stationary_ball(ball)
-                our_defender.get_stationary_ball(ball)
+            '''
+        if ball.get_velocity() < 3:
+            print our_attacker.get_stationary_ball(ball)
+            #our_defender.get_stationary_ball(ball)
+            '''
             else:
                 our_attacker.get_moving_ball(ball)
                 our_defender.get_moving_ball(ball)
-        '''
+            '''

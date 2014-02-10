@@ -15,9 +15,7 @@ ROBOT_HEIGHT = 10
 BALL_WIDTH = 5
 BALL_LENGTH = 5
 BALL_HEIGHT = 5
-
-BALL_POSS_DIST = 12.5
-BALL_POSS_ANGLE = pi / 4
+BALL_POSS_THRESH = 20
 
 GOAL_WIDTH = 60
 GOAL_LENGTH = 1
@@ -30,8 +28,8 @@ class Coordinate(object):
     def __init__(self, x, y):
         self._x = x
         self._y = y
-        self._dx = 0
-        self._dy = 0
+    #    self._dx = 0
+    #    self._dy = 0
 
 
     def get_x(self):
@@ -42,21 +40,21 @@ class Coordinate(object):
         return self._y
 
 
-    def get_dx(self):
-        return self._dx
+    #def get_dx(self):
+    #    return self._dx
 
 
-    def get_dy(self):
-        return self._dy
+    #def get_dy(self):
+    #    return self._dy
 
 
     def set_x(self, x):
-        self._dx = x - self._x if not(x is None) else 0
+    #    self._dx = x - self._x if not(x is None) else 0
         self._x = x if not(x is None) else self._x
 
 
     def set_y(self, y):
-        self._dy = y - self._y if not(y is None) else 0
+    #    self._dy = y - self._y if not(y is None) else 0
         self._y = y if not(y is None) else self._y
 
 
@@ -71,8 +69,8 @@ class Vector(Coordinate):
         super(Vector, self).__init__(x, y)
         self._angle = angle
         self._velocity = velocity
-        self._dr = 0
-        self._dv = 0
+    #    self._dr = 0
+    #    self._dv = 0
 
 
     def get_angle(self):
@@ -83,21 +81,21 @@ class Vector(Coordinate):
         return self._velocity
 
 
-    def get_dr(self):
-        return self._dr
+    #def get_dr(self):
+    #    return self._dr
 
-
-    def get_dv(self):
-        return self._dv
+    
+    #def get_dv(self):
+    #    return self._dv
 
 
     def set_angle(self, angle):
-        self._dr = angle - self.get_angle() if not (angle == None) else 0
-        self._angle = angle if not (angle == None) else self._angle
+        #self._dr = angle - self.get_angle() if not (angle == None) else 0
+        self._angle = angle % (2 * pi) if not (angle == None) else self._angle
 
 
     def set_velocity(self, velocity):
-        self._dv = velocity - self.get_velocity() if not (velocity == None) else 0
+        #self._dv = velocity - self.get_velocity() if not (velocity == None) else 0
         self._velocity = velocity if not (velocity == None) else self._velocity
 
 
@@ -159,18 +157,18 @@ class Pitch_Object(object):
     def get_generic_polygon(self, width, length):
         # Get polygon drawn around a generic object
         dist = hypot(length * 0.5, width * 0.5)
-        theta = atan2(length * 0.5, width * 0.5)
+        theta = atan2(length * 0.5, width * 0.5) % (2 * pi)
         front_left = (self.get_polygon_point(dist, theta))
         front_right = (self.get_polygon_point(dist, -theta))
         back_left = (self.get_polygon_point(dist, -(theta + pi)))
         back_right = (self.get_polygon_point(dist, theta + pi))
-        return Polygon((front_left, front_right, back_left, back_right))
+        return Polygon((front_left, front_right, back_left, back_right))[0]
 
 
     def get_polygon(self):
         # Get polygon drawn around this object
         (width, length, height) = self.get_dimensions()
-        self.get_generic_polygon(width, length)
+        return self.get_generic_polygon(width, length)
 
 
     def __repr__(self):
@@ -202,9 +200,14 @@ class Robot(Pitch_Object):
 
     def get_ball_possession(self, ball):
         # Get if the robot has possession of the ball
-        delta_angle = ball.get_angle() - self.get_angle() - pi
-        check_angle = abs(delta_angle) <= BALL_POSS_ANGLE
-        return check_angle and self.get_ball_proximity(ball)
+        robot_poly = self.get_polygon()
+        center_x = (robot_poly[0][0] + robot_poly[1][0]) / 2
+        center_y = (robot_poly[0][1] + robot_poly[1][1]) / 2
+        delta_x = ball.get_x() - center_x
+        delta_y = ball.get_y() - center_y
+        ball_diameter = ball.get_dimensions()[1] / 2
+        check_displacement = hypot(delta_x, delta_y) <= ball_diameter + BALL_POSS_THRESH
+        return check_displacement
 
 
     def get_stationary_ball(self, ball):
@@ -232,7 +235,9 @@ class Robot(Pitch_Object):
         delta_x = x - self.get_x()
         delta_y = y - self.get_y()
         displacement = hypot(delta_x, delta_y)
-        theta = atan2(delta_y, delta_x) - self.get_angle()
+        print atan2(delta_y, delta_x) % (2 * pi)
+        print self.get_angle()
+        theta = atan2(delta_y, delta_x) % (2 * pi) - self.get_angle()
         return x, y, displacement, theta
 
 
@@ -253,7 +258,7 @@ class Robot(Pitch_Object):
     def get_shoot_path(self, goal):
         # Get closest possible shooting path between the robot and the goal
         robot_poly = self.get_generic_polygon(BALL_WIDTH, self.get_dimensions()[1])
-        goal_poly = self.get_polygon()
+        goal_poly = goal.get_polygon()
         goal_top = goal_poly[0] if goal_poly[0][0] == 0 else goal_poly[1]
         goal_bottom = goal_poly[1] if goal_poly[0][0] == 0 else goal_poly[0]
         robot_top = robot_poly[1] if (pi / 2) < self.get_angle() < ((3*pi) / 2) else robot_poly[0]
@@ -279,7 +284,7 @@ class Robot(Pitch_Object):
         target_midpoint = ((path[2][0] + path[3][0]) * 0.5, (path[2][3] + path[1][1]) * 0.5)
         delta_x = target_midpoint[0] - robot_midpoint[0]
         delta_y = target_midpoint[1] - robot_midpoint[1]
-        theta = atan2(delta_y, delta_x)
+        theta = atan2(delta_y, delta_x) % (2 * pi)
         delta_angle = theta - self.get_angle()
         return delta_angle
 
@@ -321,7 +326,7 @@ class Pitch:
 
 
     def __init__(self):
-        config_file = open('../vision/calibrate.json', 'r')
+        config_file = open('vision/calibrate.json', 'r')
         config_json = load(config_file)
         config_file.close()
         self._width = max([point[0] for point in config_json['outline']]) - min([point[0] for point in config_json['outline']])
@@ -399,7 +404,7 @@ class World:
 
 
     def get_their_goal(self):
-        return self._goals[1] if self.our_side == 'left' else self._goals[2]
+        return self._goals[1] if self.our_side == 'left' else self._goals[0]
 
 
     def get_pitch(self):
