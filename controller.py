@@ -69,13 +69,13 @@ class Controller:
 
             # print extras
 
-            # positions = self.postprocessing.analyze(positions)
+            positions = self.postprocessing.analyze(positions)
 
             # if self.debug:
-            #     print positions
+            print positions
 
             # Find appropriate action
-            # actions = self.planner.plan(positions)
+            actions = self.planner.plan(positions)
             actions = []
             #print 'Actions:', actions
 
