@@ -63,27 +63,6 @@ class Controller:
         Main flow of the program. Run the controller with vision and planning combined.
         """
         # positions = (None,None,None,None,((0,0),0,0))
-<<<<<<< HEAD
-        try:
-            while True:
-                # Find object positions
-                positions = self.vision.locate()
-                positions = self.postprocessing.analyze(positions)
-                #if self.debug:
-                print positions
-
-                # Find appropriate action
-                actions = self.planner.plan(positions)
-                #print 'Actions:', actions['defender']
-
-                # Execute action
-                # self.attacker.execute(actions[0])
-                #self.defender.execute(actions['defender'])
-        except:
-            if hasattr(self, 'defender'):
-                self.defender.shutdown()
-            raise
-=======
         while True:
             frame = self.camera.get_frame()
             # Find object positions
@@ -107,8 +86,6 @@ class Controller:
 
             # Draw vision content and actions
             self.GUI.draw(frame, positions, actions, extras, our_color=self.color)
-
->>>>>>> master
 
 class Connection:
 
@@ -183,9 +160,6 @@ class Defender_Controller(Robot_Controller):
 
 
 if __name__ == '__main__':
-<<<<<<< HEAD
-    c = Controller(debug=True).wow()  # Such controller
-=======
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("pitch", help="[0] Main pitch, [1] Secondary pitch")
@@ -194,4 +168,3 @@ if __name__ == '__main__':
     args = parser.parse_args()
     # print args
     c = Controller(debug=True, pitch=int(args.pitch), color=args.color, our_side=args.side).wow()  # Such controller
->>>>>>> master

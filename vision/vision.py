@@ -29,10 +29,6 @@ class Vision:
             [string] color      color of our robot
             [string] our_side   our side
         """
-        # Check params
-        if not self._param_check(side, color):
-            return
-
         self.pitch = pitch
         self.color = color
         self.our_side = our_side
@@ -147,22 +143,6 @@ class Vision:
             velocity = args['velocity']
 
         return Vector(x, y, angle, velocity)
-
-    def _param_check(self, side, color, pitch):
-        """
-        Check the params passed in.
-        """
-        if color not in TEAM_COLORS:
-            print 'Incorrect color assignment.', 'Valid colors are:', TEAM_COLORS
-            return None
-        if our_side not in SIDES:
-            print 'Incorrect side assignment.', 'Valid sides are:', SIDES
-            return None
-        if pitch not in PITCHES:
-            print 'Incorrect pitch assignment.', 'Valid pitches are:', PITCHES
-            return None
-        return True
-
 
 class Camera(object):
     """
