@@ -321,17 +321,17 @@ class Pitch:
 
 
     def __init__(self):
-        config_file = open('vision/calibrate.json', 'r')
+        config_file = open('../vision/calibrate.json', 'r')
         config_json = load(config_file)
         config_file.close()
-        # Getting the zones:
-        self._zones = []
-        self._zones.append(Polygon(config_json['Zone_0']))
-        self._zones.append(Polygon(config_json['Zone_1']))
-        self._zones.append(Polygon(config_json['Zone_2']))
-        self._zones.append(Polygon(config_json['Zone_3']))
         self._width = max([point[0] for point in config_json['outline']]) - min([point[0] for point in config_json['outline']])
         self._height = max([point[1] for point in config_json['outline']]) - min([point[1] for point in config_json['outline']])
+        # Getting the zones:
+        self._zones = []
+        self._zones.append(Polygon([(x, self._height - y) for (x, y) in config_json['Zone_0']]))
+        self._zones.append(Polygon([(x, self._height - y) for (x, y) in config_json['Zone_1']]))
+        self._zones.append(Polygon([(x, self._height - y) for (x, y) in config_json['Zone_2']]))
+        self._zones.append(Polygon([(x, self._height - y) for (x, y) in config_json['Zone_3']]))
 
 
     def is_within_bounds(self, robot, point):

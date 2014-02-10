@@ -19,7 +19,7 @@ class Planner:
         their_defender = self._world.get_their_defender()
         their_goal = self._world.get_their_goal()
         ball = self._world.get_ball()
-
+        '''
         if our_defender.get_possession(ball):
             pass_path = our_defender.get_pass_path(our_attacker)
             avoid_plan = get_avoidance(pass_path, our_defender, their_attacker)
@@ -40,12 +40,12 @@ class Planner:
             pass_path = their_defender.get_pass_path(their_attacker)
             intercept_plan = get_interception(pass_path, our_attacker)
             return (intercept_plan)
-
-        elif their_attacker.get_possession(ball):
+        '''
+        if their_attacker.get_possession(ball):
             shoot_path = their_attacker.get_shoot_path(our_goal)
             intercept_plan = get_interception(shoot_path, our_defender)
             return (intercept_plan)
-
+        '''
         else:
             if our_attacker.get_ball_proximity(ball):
                 our_attacker.get_robot_aligment(ball)
@@ -57,3 +57,4 @@ class Planner:
             else:
                 our_attacker.get_moving_ball(ball)
                 our_defender.get_moving_ball(ball)
+        '''
