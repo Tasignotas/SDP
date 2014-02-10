@@ -18,7 +18,7 @@ class Controller:
         self.postprocessing = Postprocessing()
         self.planner = Planner(our_side='left')
         #self.attacker = Attacker_Controller(connectionName='GRP7A', leftMotorPort=PORT_A, rightMotorPort=PORT_C, kickerMotorPort=PORT_B)
-        #self.defender = Defender_Controller('GRP7D', leftMotorPort=PORT_C, rightMotorPort=PORT_A, kickerMotorPort=PORT_B)
+        self.defender = Defender_Controller('GRP7D', leftMotorPort=PORT_B, rightMotorPort=PORT_C, kickerMotorPort=PORT_A)
 
     def wow(self):
         """
@@ -37,11 +37,11 @@ class Controller:
 
                 # Find appropriate action
                 actions = self.planner.plan(positions)
-                #print 'Actions:', actions['defender']
+                print 'Actions:', actions['defender']
 
                 # Execute action
                 # self.attacker.execute(actions[0])
-                #self.defender.execute(actions['defender'])
+                self.defender.execute(actions['defender'])
         except:
             if hasattr(self, 'defender'):
                 self.defender.shutdown()

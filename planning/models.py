@@ -21,7 +21,7 @@ BALL_HEIGHT = 5
 BALL_POSS_DIST = 12.5
 BALL_POSS_ANGLE = pi / 4
 
-GOAL_WIDTH = 60
+GOAL_WIDTH = 130
 GOAL_LENGTH = 1
 GOAL_HEIGHT = 10
 
@@ -318,7 +318,7 @@ class Pitch:
 
 
     def __init__(self):
-        config_file = open('../vision/calibrate.json', 'r')
+        config_file = open('vision/calibrate.json', 'r')
         config_json = load(config_file)
         config_file.close()
         # Getting the zones:
