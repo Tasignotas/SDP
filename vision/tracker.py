@@ -179,7 +179,7 @@ class RobotTracker(Tracker):
         mask_frame = frame.copy()
 
         cv2.rectangle(mask_frame, (0, 0), (width, height), (0,0,0), -1)
-        cv2.circle(mask_frame, (width / 2, height / 2), 16, (255, 255, 255), -1)
+        cv2.circle(mask_frame, (width / 2, height / 2), 15, (255, 255, 255), -1)
 
 
 
@@ -267,14 +267,11 @@ class RobotTracker(Tracker):
 
 
             if inf_i and dot:
-                data_x = np.array([plate_center.x, inf_i.x, dot.x])
-                data_y = np.array([plate_center.y, inf_i.y, dot.y])
-                params = np.polyfit(data_x, data_y, 1)
-
-                # points = (
-                #     Center(plate_center.x, plate_center.x * params[0] + params[1]),
-                #     Center(plate_center.x + 10, (plate_center.x + 10) * params[0] + params[1]))
                 points = (dot, inf_i)
+            elif inf_i:
+                points = (plate_center, inf_i)
+            elif dot:
+                points = (dot, plate_center)
             else:
                 points = None
 
