@@ -187,9 +187,6 @@ class RobotTracker(Tracker):
         mask_frame = cv2.cvtColor(mask_frame, cv2.COLOR_BGR2GRAY)
         frame = cv2.bitwise_and(frame, frame, mask=mask_frame)
 
-        cv2.imshow('frame', frame)
-        cv2.waitKey(0)
-
 
         adjustment = PITCH0['dot'] if self.pitch == 0 else PITCH1['dot']
         contours = self.get_contours(frame.copy(), adjustment)
