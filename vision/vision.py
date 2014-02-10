@@ -205,7 +205,7 @@ class GUI(object):
     def draw(self, frame, positions, actions, extras, our_color):
 
         height, width, channels = frame.shape
-        if not self.zones:
+        if self.zones is None:
             self.zones = tools.get_zones(width, height)
 
         for zone in self.zones:

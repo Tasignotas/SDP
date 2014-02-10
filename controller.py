@@ -72,7 +72,7 @@ class Controller:
             positions = self.postprocessing.analyze(positions)
 
             # if self.debug:
-            print positions
+            #     print positions
 
             # Find appropriate action
             actions = self.planner.plan(positions)

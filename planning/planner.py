@@ -57,7 +57,8 @@ class Planner:
                 our_defender.get_robot_alignment(ball)
             '''
         if ball.get_velocity() < 3:
-            print our_attacker.get_stationary_ball(ball)
+            # print our_attacker.get_stationary_ball(ball)
+            pass
             #our_defender.get_stationary_ball(ball)
             '''
             else:

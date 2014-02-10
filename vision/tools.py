@@ -30,7 +30,6 @@ def get_zones(width, height):
     mids.append(0)
     mids.append(width)
     mids.sort()
-    print [(mids[i], mids[i+1], 0, height) for i in range(4)]
     return [(mids[i], mids[i+1], 0, height) for i in range(4)]
 
 
@@ -121,7 +120,7 @@ def crop(frame, size=None):
     # if not size or not len(size):
     #     x_min, x_max, y_min, y_max = get_crop_coordinates(frame)
     # else:
-    print 'SIZE:', size
+    # print 'SIZE:', size
     x_min, x_max, y_min, y_max = size
     return frame[y_min:y_max, x_min:x_max]
 
