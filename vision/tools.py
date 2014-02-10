@@ -20,6 +20,9 @@ YELLOW_LOWER = np.array([9, 50, 50])
 YELLOW_HIGHER = np.array([11, 255, 255])
 
 
+def reverse_y(height, y):
+    return height - y
+
 def get_calibration(filename='calibrate.json'):
     _file = open(filename, 'r')
     return get_json(filename)

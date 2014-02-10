@@ -68,6 +68,8 @@ class Controller:
             # Find object positions
             positions, extras = self.vision.locate(frame)
 
+            print positions
+
             # print extras
 
             # positions = self.postprocessing.analyze(positions)
