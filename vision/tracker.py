@@ -260,6 +260,8 @@ class RobotTracker(Tracker):
 
             plate_frame = frame.copy()[plate.y:plate.y + plate.height, plate.x:plate.x + plate.width]
 
+            # plate_frame = self.kmeans(plate_frame)
+
             plate_center = Center(plate.x + self.offset + plate.width / 2, plate.y + plate.height / 2)
             inf_i = self.get_i(plate_frame, plate.x + self.offset, plate.y)
             dot = self.get_dot(plate_frame, plate.x + self.offset, plate.y)
@@ -312,6 +314,43 @@ class RobotTracker(Tracker):
             'line': None
         })
         return
+
+    def kmeans(self, plate):
+
+        prep = plate.reshape((-1,3))
+        prep = np.float32(prep)
+
+        criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
+        k = 6
+        ret, label, center = cv2.kmeans(prep, k, criteria, 12, cv2.KMEANS_RANDOM_CENTERS)
+
+        center = np.uint8(center)
+
+        res = center[label.flatten()]
+        res2 = res.reshape((plate.shape))
+
+        if self.name == 'Our attacker':
+                print "********************", self.name
+                # print cv2.cvtColor(res2, cv2.COLOR_BGR2HSV)
+                print center
+                # print res2
+                # hsv_plate = cv2.cvtColor(res2, cv2.COLOR_BGR2HSV)
+
+        
+
+        # print type(plate), plate
+        # print type(np.array(center)), np.array(center)
+
+        # cv2.imshow('res2', res2)
+        # cv2.waitKey(0)
+
+         # yellow: [121 194 233]
+         # black:  [ 42  74  49]
+         
+         # blue:   [120 114  66]
+         # black:  [ 26  43  18]
+
+        return res2
 
 
 class BallTracker(Tracker):
