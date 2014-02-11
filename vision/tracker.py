@@ -127,7 +127,8 @@ class Tracker(object):
             left, top, right, bot = min(left, key=lambda x: x[0])[0], min(top, key=lambda x: x[1])[1], max(right, key=lambda x: x[0])[0], max(bot, key=lambda x: x[1])[1]
 
             # x, y of top left corner, widht, height
-            return BoundingBox(left, top, right - left, bot - top)
+            return BoundingBox(left+1, top+1, right - left-1, bot - top-1)
+            # return BoundingBox(left, top, right - left, bot - top)
         return None
 
 
@@ -189,7 +190,7 @@ class RobotTracker(Tracker):
         mask_frame = frame.copy()
 
         cv2.rectangle(mask_frame, (0, 0), (width, height), (0,0,0), -1)
-        cv2.circle(mask_frame, (width / 2, height / 2), 15, (255, 255, 255), -1)
+        cv2.circle(mask_frame, (width / 2, height / 2), 9, (255, 255, 255), -1)
 
 
 
@@ -338,7 +339,7 @@ class RobotTracker(Tracker):
         prep = np.float32(prep)
 
         criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
-        k = 6
+        k = 5
         ret, label, colour_centers = cv2.kmeans(prep, k, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
         colour_centers = np.uint8(colour_centers)
 
