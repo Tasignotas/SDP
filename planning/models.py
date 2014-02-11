@@ -84,7 +84,7 @@ class Vector(Coordinate):
     #def get_dr(self):
     #    return self._dr
 
-    
+
     #def get_dv(self):
     #    return self._dv
 
@@ -194,7 +194,7 @@ class Robot(Pitch_Object):
         # Get if the robot is near the ball but may not have possession
         delta_x = ball.get_x() - self.get_x()
         delta_y = ball.get_y() - self.get_y()
-        check_displacement = hypot(delta_x, delta_y) <= BALL_POSS_DIST
+        check_displacement = hypot(delta_x, delta_y) <= BALL_POSS_THRESH
         return check_displacement
 
 

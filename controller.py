@@ -66,18 +66,10 @@ class Controller:
             frame = self.camera.get_frame()
             # Find object positions
             positions, extras = self.vision.locate(frame)
-
-            # print extras
-
             positions = self.postprocessing.analyze(positions)
-
-            # if self.debug:
-            #     print positions
-
             # Find appropriate action
-            actions = self.planner.plan(positions)
-            actions = []
-            #print 'Actions:', actions
+            actions = self.planner.plan(positions, part='defence')
+            print 'Actions:', actions
 
             # Execute action
             # self.attacker.execute(actions[0])
@@ -119,12 +111,6 @@ class Robot_Controller(object):
         self.MOTOR_R = Motor(self.BRICK,rightMotorPort)
         self.MOTOR_K = Motor(self.BRICK,kickerMotorPort)
 
-    def execute(self, action):
-        """
-        Execute robot action.
-        """
-        self.MOTOR_L.run(action[0])
-        self.MOTOR_R.run(action[1])
 
 
 class Attacker_Controller(Robot_Controller):
@@ -138,6 +124,13 @@ class Attacker_Controller(Robot_Controller):
         """
         super(Attacker_Controller, self).__init__(connectionName, leftMotorPort, rightMotorPort, kickerMotorPort)
 
+    def execute(self, action):
+        """
+        Execute robot action.
+        """
+        self.MOTOR_L.run(action['attacker']['left_motor'], True)
+        self.MOTOR_R.run(action['attacker']['right_motor'], True)
+
 
 class Defender_Controller(Robot_Controller):
     """
@@ -149,6 +142,13 @@ class Defender_Controller(Robot_Controller):
         Do the same setup as the Robot class, as well as anything specific to the Defender.
         """
         super(Defender_Controller, self).__init__(connectionName, leftMotorPort, rightMotorPort, kickerMotorPort)
+
+    def execute(self, action):
+        """
+        Execute robot action.
+        """
+        self.MOTOR_L.run(action['defender']['left_motor'], True)
+        self.MOTOR_R.run(action['defender']['right_motor'], True)
 
 
 if __name__ == '__main__':
