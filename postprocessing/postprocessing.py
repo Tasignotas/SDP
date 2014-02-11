@@ -42,7 +42,7 @@ class Postprocessing(object):
 			delta_x = None if (prev_pos[0][1] == None) or (prev_pos[1][1] == None) else prev_pos[0][1] - prev_pos[1][1]
 			delta_y = None if (prev_pos[0][2] == None) or (prev_pos[1][2] == None) else prev_pos[0][2] - prev_pos[1][2]
 			ratio = delta_y/delta_x if delta_x and delta_y else (float('inf') if delta_y > 0 else float('-inf'))
-			angle = atan(ratio) if not(ratio == None) else None 
+			angle = atan(ratio) if not(ratio == None) else None
 			velocity = None if (delta_x == None) or (delta_y == None) else sqrt(delta_x**2 + delta_y**2)/(prev_pos[1][0] - prev_pos[0][0])
 		return Vector(current_vec.get_x(), current_vec.get_y(), angle, velocity)
 
@@ -51,7 +51,7 @@ class Postprocessing(object):
 		# This method calculates the angle and the velocity of the robot.
 		# TODO: make it able to PREDICT angle, speed and the location by specified lag.
 		velocity = None
-		angle = radians(current_vec.get_angle()) if not(current_vec.get_angle() == None) else None
+		angle = current_vec.get_angle() if not(current_vec.get_angle() == None) else None
 		prev_pos = [(idx, val.get_x(), val.get_y()) for (idx, val) in enumerate(self._vectors[key]) if val]
 		if len(prev_pos) > 1:
 			delta_x = None if (prev_pos[0][1] == None) or (prev_pos[1][1] == None) else prev_pos[0][1] - prev_pos[1][1]
