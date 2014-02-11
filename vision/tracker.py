@@ -8,8 +8,8 @@ import scipy.optimize as optimization
 from collections import namedtuple
 import warnings
 
-# Turning off KMEANS fitting:
-# >> In the RobotTracker constructor, change the colors to PITCH0, instead of KMEANS0.
+# Turning on KMEANS fitting:
+# >> In the RobotTracker constructor, change the colors to KMEANS0 instead of PITCH0.
 
 
 # Turn off warnings for PolynomialFit
@@ -147,7 +147,7 @@ class RobotTracker(Tracker):
         self.name = name
         self.crop = crop
         if pitch == 0:
-            self.color = KMEANS0[color] #PITCH0[color]
+            self.color = PITCH0[color] #KMEANS0[color]
         else:
             self.color = PITCH1[color]
 
