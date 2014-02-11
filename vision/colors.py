@@ -219,3 +219,19 @@ PITCH1 = {
     ]
     # (np.array((91.0, 118.0, 90.0)), np.array((169.0, 255.0, 255.0)), 1.0, 1)
 }
+
+KMEANS0 = {'yellow': [
+            {
+            'min': np.array((16.0, 190.0, 136.0)), #LH,LS,LV
+            'max': np.array((19.0, 255.0, 200.0)), #UH,US,UV
+            'contrast': 1.0,
+            'blur': 0
+            }],
+          'blue': [
+            {
+            'min': np.array((88.0, 160.0, 86.0)),    #LH,LS,LV
+            'max': np.array((104.0, 190.0, 106.0)), #UH,US,UV
+            'contrast': 0.0,
+            'blur': 0
+            }]
+        }

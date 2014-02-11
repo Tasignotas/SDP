@@ -3,10 +3,13 @@ import numpy as np
 import math
 import tools
 import cPickle
-from colors import PITCH0, PITCH1
+from colors import PITCH0, PITCH1, KMEANS0
 import scipy.optimize as optimization
 from collections import namedtuple
 import warnings
+
+# Turning off KMEANS fitting:
+# >> In the RobotTracker constructor, change the colors to PITCH0, instead of KMEANS0.
 
 
 # Turn off warnings for PolynomialFit
@@ -28,6 +31,7 @@ warnings.simplefilter('ignore', RuntimeWarning)
 #         pass
 
 # get_gui_colors()
+
 BoundingBox = namedtuple('BoundingBox', 'x y width height')
 Center = namedtuple('Center', 'x y')
 
@@ -143,7 +147,7 @@ class RobotTracker(Tracker):
         self.name = name
         self.crop = crop
         if pitch == 0:
-            self.color = PITCH0[color]
+            self.color = KMEANS0[color] #PITCH0[color]
         else:
             self.color = PITCH1[color]
 
@@ -261,6 +265,10 @@ class RobotTracker(Tracker):
 
             plate_frame = frame.copy()[plate.y:plate.y + plate.height, plate.x:plate.x + plate.width]
 
+            # Use k-means for detecting the robots if the KMEANS colors are used.
+            if self.color == KMEANS0[self.color_name]:
+                plate_frame = self.kmeans(plate_frame)
+
             plate_center = Center(plate.x + self.offset + plate.width / 2, plate.y + plate.height / 2)
             inf_i = self.get_i(plate_frame.copy(), plate.x + self.offset, plate.y)
             dot = self.get_dot(plate_frame.copy(), plate.x + self.offset, plate.y)
@@ -310,6 +318,29 @@ class RobotTracker(Tracker):
             'line': None
         })
         return
+
+    def kmeans(self, plate):
+
+        prep = plate.reshape((-1,3))
+        prep = np.float32(prep)
+
+        criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
+        k = 6
+        ret, label, colour_centers = cv2.kmeans(prep, k, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
+        colour_centers = np.uint8(colour_centers)
+
+        # Get the new image based on the clusters found
+        res = colour_centers[label.flatten()]
+        res2 = res.reshape((plate.shape))
+
+        # if self.name == 'Their Defender':
+        #     colour_centers = np.array([colour_centers])
+        #     print "********************", self.name
+        #     print colour_centers
+        #     print 'HSV######'
+        #     print cv2.cvtColor(colour_centers, cv2.COLOR_BGR2HSV)
+
+        return res2
 
 
 class BallTracker(Tracker):
