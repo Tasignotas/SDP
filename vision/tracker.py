@@ -9,8 +9,7 @@ from collections import namedtuple
 import warnings
 
 # Turning on KMEANS fitting:
-# >> In the RobotTracker constructor, change the colors to KMEANS0 instead of PITCH0.
-
+KMEANS = False
 
 # Turn off warnings for PolynomialFit
 warnings.simplefilter('ignore', np.RankWarning)
@@ -266,7 +265,7 @@ class RobotTracker(Tracker):
             plate_frame = frame.copy()[plate.y:plate.y + plate.height, plate.x:plate.x + plate.width]
 
             # Use k-means for detecting the robots if the KMEANS colors are used.
-            if self.color == KMEANS0[self.color_name]:
+            if KMEANS == True:
                 plate_frame = self.kmeans(plate_frame)
 
             plate_center = Center(plate.x + self.offset + plate.width / 2, plate.y + plate.height / 2)
