@@ -171,7 +171,14 @@ class RobotTracker(Tracker):
             contours = self.get_contours(frame.copy(), adjustment)
 
             if contours and len(contours) > 0:
+
                 cnt = contours[0]
+
+                rows,cols = frame.shape[:2]
+                [vx,vy,x,y] = cv2.fitLine(cnt, cv2.DIST_LABEL_PIXEL, 0,0.01,0.01)
+                lefty = int((-x*vy/vx) + y)
+                righty = int(((cols-x)*vy/vx)+y)
+
                 (x,y),radius = cv2.minEnclosingCircle(cnt)
                 # Return relative position to the frame given the offset
                 return Center(int(x + x_offset), int(y + y_offset))
@@ -182,7 +189,7 @@ class RobotTracker(Tracker):
         mask_frame = frame.copy()
 
         cv2.rectangle(mask_frame, (0, 0), (width, height), (0,0,0), -1)
-        cv2.circle(mask_frame, (width / 2, height / 2), 15, (255, 255, 255), -1)
+        cv2.circle(mask_frame, (width / 2, height / 2), 14, (255, 255, 255), -1)
 
 
 
@@ -208,6 +215,9 @@ class RobotTracker(Tracker):
        """
        Find the angle between m and n
        """
+       baseline = (0, 1)
+
+
        diff_x = m[0] - n[0]
        diff_y = m[1] - n[1]
 
@@ -271,7 +281,6 @@ class RobotTracker(Tracker):
             plate_center = Center(plate.x + self.offset + plate.width / 2, plate.y + plate.height / 2)
             inf_i = self.get_i(plate_frame.copy(), plate.x + self.offset, plate.y)
             dot = self.get_dot(plate_frame.copy(), plate.x + self.offset, plate.y)
-
 
             if inf_i and dot:
                 points = (dot, inf_i)
