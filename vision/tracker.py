@@ -292,7 +292,10 @@ class RobotTracker(Tracker):
                 else:
                     points = None
             else:
-                if dot:
+                # print '####', self.name, np.sqrt((inf_i[0]-dot[0])**2 + (inf_i[1]-dot[1])**2)
+                if inf_i and dot and np.sqrt((inf_i[0]-dot[0])**2 + (inf_i[1]-dot[1])**2) < 13:
+                    points = (dot, inf_i)
+                elif dot:
                     points = (dot, plate_center)  
                 else:
                     points = None
