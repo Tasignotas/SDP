@@ -189,7 +189,7 @@ class RobotTracker(Tracker):
         mask_frame = frame.copy()
 
         cv2.rectangle(mask_frame, (0, 0), (width, height), (0,0,0), -1)
-        cv2.circle(mask_frame, (width / 2, height / 2), 14, (255, 255, 255), -1)
+        cv2.circle(mask_frame, (width / 2, height / 2), 15, (255, 255, 255), -1)
 
 
 
@@ -211,28 +211,28 @@ class RobotTracker(Tracker):
         #else:
             #print 'No dot found for %s' % self.name
 
-    def get_angle(self, m, n):
-       """
-       Find the angle between m and n
-       """
-       baseline = (0, 1)
+    def get_angle(self, line, dot):
+        """
+        From dot to line
+        """
+        diff_x = dot[0] - line[0]
+        diff_y = line[1] - dot[1]
+        angle = np.arctan2(diff_y, diff_x) % (2 * np.pi)
 
+            # if diff_x < 0 and diff_y > 0:
+            #     angle = -abs(angle)
 
-       diff_x = m[0] - n[0]
-       diff_y = m[1] - n[1]
-
-       angle = np.arctan((np.abs(diff_y) * 1.0 / np.abs(diff_x)))
-       angle = np.degrees(angle)
-       if diff_x > 0 and diff_y < 0:
-           angle = 90 - angle
-       if diff_x > 0 and diff_y > 0:
-           angle = 180 - angle
-       if diff_x < 0 and diff_y > 0:
-           angle = 180+angle
-       if diff_x < 0 and diff_y < 0:
-           angle = 360 - angle
-
-       return angle
+            # if diff_x > 0 and diff_y < 0:
+            #     angle = 2 * np.pi - angle
+            # if diff_x > 0 and diff_y < 0:
+            #    angle = np.pi / 2.0 - angle
+            # if diff_x > 0 and diff_y > 0:
+            #    angle = np.pi - angle
+            # if diff_x < 0 and diff_y > 0:
+            #    angle = np.pi + angle
+            # if diff_x < 0 and diff_y < 0:
+            #    angle = 2 * np.pi - angle
+        return angle
 
     def calcLine(self,(a,b),(d,e)):
         m = (b-e)*1.0/(a-d)
@@ -292,6 +292,7 @@ class RobotTracker(Tracker):
                 points = None
 
             angle = None
+            #print self.name
 
             if inf_i and dot:
                 angle = self.get_angle(dot, inf_i)
@@ -299,6 +300,10 @@ class RobotTracker(Tracker):
                 angle = self.get_angle(plate_center, inf_i)
             elif dot:
                 angle = self.get_angle(dot, plate_center)
+
+            if self.name == 'Our Defender' and angle:
+                # print "angle", angle
+                print '>>>>>', angle * 360 / (2.0 * np.pi)
 
             # print angle
             speed = None
@@ -386,7 +391,8 @@ class BallTracker(Tracker):
             )
 
             if len(contours) <= 0:
-                print 'No ball found.'
+                # print 'No ball found.'
+                pass
                 # queue.put(None)
             else:
                 # Trim contours matrix

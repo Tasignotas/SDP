@@ -54,13 +54,13 @@ class Vision:
             ]
 
             self.opponents = [
-                RobotTracker(opponent_color, zones[1], zones[1][0], pitch, 'Their Defender'),
-                RobotTracker(opponent_color, zones[3], zones[3][0], pitch, 'Their Attacker')
+                RobotTracker(opponent_color, zones[1], zones[1][0], pitch, 'Their Attacker'),
+                RobotTracker(opponent_color, zones[3], zones[3][0], pitch, 'Their Defender')
             ]
         else:
             self.us = [
-                RobotTracker(color, zones[1], zones[1][0], pitch, 'Our Defender'),
-                RobotTracker(color, zones[3], zones[3][0], pitch, 'Our Attacker')
+                RobotTracker(color, zones[1], zones[1][0], pitch, 'Our Attacker'),
+                RobotTracker(color, zones[3], zones[3][0], pitch, 'Our Defender')
             ]
 
             self.opponents = [
