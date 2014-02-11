@@ -302,7 +302,7 @@ class RobotTracker(Tracker):
                 # Only use the center of the detected blue zone if it is within a reasonable distance of the
                 # plate center (in order to avoid extremes) and if the distance between the dot and inf_i is greater
                 # than the distance between the dot and the plate center.
-                if inf_i and dot and distance(inf_i, dot) < 12 and distance(dot, plate_center) < distance(inf_i, dot):
+                if inf_i and dot and distance(inf_i, dot) < 11 and distance(dot, plate_center) < distance(inf_i, dot):
                     points = (dot, inf_i)
                     angle = self.get_angle(dot, inf_i)
                 elif dot:
