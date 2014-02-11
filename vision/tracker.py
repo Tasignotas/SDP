@@ -128,7 +128,6 @@ class Tracker(object):
 
             # x, y of top left corner, widht, height
             return BoundingBox(left+1, top+1, right - left-1, bot - top-1)
-            # return BoundingBox(left, top, right - left, bot - top)
         return None
 
 
@@ -283,26 +282,36 @@ class RobotTracker(Tracker):
             inf_i = self.get_i(plate_frame.copy(), plate.x + self.offset, plate.y)
             dot = self.get_dot(plate_frame.copy(), plate.x + self.offset, plate.y)
 
-            if inf_i and dot:
-                points = (dot, inf_i)
-            elif inf_i:
-                points = (plate_center, inf_i)
-            elif dot:
-                points = (dot, plate_center)
+            if self.color_name == 'yellow':
+                if inf_i and dot:
+                    points = (dot, inf_i)
+                elif inf_i:
+                    points = (plate_center, inf_i)
+                elif dot:
+                    points = (dot, plate_center)
+                else:
+                    points = None
             else:
-                points = None
+                if dot:
+                    points = (dot, plate_center)  
+                else:
+                    points = None
 
             angle = None
             #print self.name
 
-            if inf_i and dot:
-                angle = self.get_angle(dot, inf_i)
-            elif inf_i:
-                angle = self.get_angle(plate_center, inf_i)
-            elif dot:
-                angle = self.get_angle(dot, plate_center)
+            if self.color_name == 'yellow':
+                if inf_i and dot:
+                    angle = self.get_angle(dot, inf_i)
+                elif inf_i:
+                    angle = self.get_angle(plate_center, inf_i)
+                elif dot:
+                    angle = self.get_angle(dot, plate_center)
+            else:
+                if dot:
+                    angle = self.get_angle(dot, plate_center)
 
-            if self.name == 'Our Defender' and angle:
+            if self.name == 'Their Defender' and angle:
                 # print "angle", angle
                 print '>>>>>', angle * 360 / (2.0 * np.pi)
 
