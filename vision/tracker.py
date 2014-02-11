@@ -282,43 +282,40 @@ class RobotTracker(Tracker):
             inf_i = self.get_i(plate_frame.copy(), plate.x + self.offset, plate.y)
             dot = self.get_dot(plate_frame.copy(), plate.x + self.offset, plate.y)
 
-            if self.color_name == 'yellow':
-                if inf_i and dot:
-                    points = (dot, inf_i)
-                elif inf_i:
-                    points = (plate_center, inf_i)
-                elif dot:
-                    points = (dot, plate_center)
-                else:
-                    points = None
-            else:
-                # print '####', self.name, np.sqrt((inf_i[0]-dot[0])**2 + (inf_i[1]-dot[1])**2)
-                if inf_i and dot and np.sqrt((inf_i[0]-dot[0])**2 + (inf_i[1]-dot[1])**2) < 13:
-                    points = (dot, inf_i)
-                elif dot:
-                    points = (dot, plate_center)  
-                else:
-                    points = None
-
-            angle = None
-            #print self.name
+            # Euclidean distance
+            distance = lambda x, y: np.sqrt((x[0]-y[0])**2 + (x[1]-y[1])**2)
 
             if self.color_name == 'yellow':
                 if inf_i and dot:
+                    points = (dot, inf_i)
                     angle = self.get_angle(dot, inf_i)
                 elif inf_i:
+                    points = (plate_center, inf_i)
                     angle = self.get_angle(plate_center, inf_i)
                 elif dot:
+                    points = (dot, plate_center)
                     angle = self.get_angle(dot, plate_center)
+                else:
+                    points = None
+                    angle = None
             else:
-                if dot:
+                # Only use the center of the detected blue zone if it is within a reasonable distance of the
+                # plate center (in order to avoid extremes) and if the distance between the dot and inf_i is greater
+                # than the distance between the dot and the plate center.
+                if inf_i and dot and distance(inf_i, dot) < 12 and distance(dot, plate_center) < distance(inf_i, dot):
+                    points = (dot, inf_i)
+                    angle = self.get_angle(dot, inf_i)
+                elif dot:
+                    points = (dot, plate_center)
                     angle = self.get_angle(dot, plate_center)
+                else:
+                    points = None
+                    angle = None
 
-            if self.name == 'Their Defender' and angle:
+            if self.name == 'Their Attacker' and angle:
                 # print "angle", angle
                 print '>>>>>', angle * 360 / (2.0 * np.pi)
 
-            # print angle
             speed = None
 
             queue.put({
