@@ -52,7 +52,7 @@ class Controller:
         self.debug = debug
         self.color = color
 
-        self.attacker = Attacker_Controller(connectionName='GRP7A', leftMotorPort=PORT_C, rightMotorPort=PORT_B, kickerMotorPort=PORT_A)
+        #self.attacker = Attacker_Controller(connectionName='GRP7A', leftMotorPort=PORT_C, rightMotorPort=PORT_B, kickerMotorPort=PORT_A)
         # self.defender = Defender_Controller('GRP7D', PORT_C, PORT_A, PORT_B)
 
     def wow(self):
@@ -71,11 +71,11 @@ class Controller:
                 positions = self.postprocessing.analyze(positions)
                 # print 'Positions: ', positions
                 # Find appropriate action
-                actions = self.planner.plan(positions, part='attacker')
+                #actions = self.planner.plan(positions, part='attacker')
                 # print 'Actions:', actions
-
+                actions = []
                 # Execute action
-                self.attacker.execute(actions)
+                #self.attacker.execute(actions)
                 # self.defender.execute(actions)
 
                 # Draw vision content and actions
