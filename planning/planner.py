@@ -1,8 +1,9 @@
-from models import World
+from models import *
 from collisions import *
 from math import tan, log10
 
-ANGLE_THRESH = 0.1
+DEFENDER_THRESHOLD = 25
+UNALIGNED = True
 SPEED_CONST = 10
 
 
@@ -14,41 +15,48 @@ class Planner:
 
 
     def plan(self, position_dictionary, part='defence'):
+        global UNALIGNED
         self._world.update_positions(position_dictionary)
-        our_attacker = self._world.get_our_attacker()
         our_defender = self._world.get_our_defender()
-        our_goal = self._world.get_our_goal()
-        their_attacker = self._world.get_their_attacker()
-        their_defender = self._world.get_their_defender()
-        their_goal = self._world.get_their_goal()
         ball = self._world.get_ball()
+        top_goal_y = (self._world._pitch._height - GOAL_WIDTH) / 2
+        bottom_goal_y = top_goal_y + GOAL_WIDTH
+        distance = abs(ball.get_y() - our_defender.get_y())
         if part == 'defence':
-            x_intersect, y_intersect = self.predict_y_intersection()
-            _, _, distance, theta = our_defender.get_path_to_point(x_intersect, y_intersect)
-            if ANGLE_THRESH < theta or theta < -ANGLE_THRESH:
-                return {'defender' : {'left_motor' : -10 if theta > 0 else 10, 'right_motor' : 10 if theta > 0 else -10, 'kicker' : 0}}
-            elif distance > 10:
-                speed = log10(distance) * SPEED_CONST
-                return {'defender' : {'left_motor' : speed, 'right_motor' : speed, 'kicker' : 0}}
-            else:
-                return {'defender' : {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0}}
-        else:
-            return {'attacker' : {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0}}
+            print 'Angle difference:', abs(our_defender.get_angle() - pi/2)
+            if UNALIGNED:
+                if abs(our_defender.get_angle() - pi/2) < 0.2:
+                    UNALIGNED = False
+                    return {'defender' : {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0}}
+                return {'defender' : {'left_motor' : 5, 'right_motor' : -5, 'kicker' : 0}}
+            if (ROBOT_LENGTH/2 + top_goal_y) < ball.get_y() < (ROBOT_LENGTH/2 + bottom_goal_y) :
+                if abs(ball.get_y() - our_defender.get_y()) > DEFENDER_THRESHOLD:
+                    speed = log10(distance) * SPEED_CONST
+                    if ball.get_y() < our_defender.get_y():
+                        return {'defender' : {'left_motor' : -speed, 'right_motor' : -speed, 'kicker' : 0}}
+                    else:
+                        return {'defender' : {'left_motor' : speed, 'right_motor' : speed, 'kicker' : 0}}
+            return {'defender' : {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0}}
+            """
+
+            return {'defender' : {'left_motor' : 10, 'right_motor' : -10, 'kicker' : 0}}
+            """
+        return {'attacker' : {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0}}
 
 
 
-
+    '''
     def predict_y_intersection(self):
         our_zone = self._world._pitch._zones[self._world.get_our_defender().get_zone()]
         our_x = min([x for (x, y) in our_zone[0]]) if self._world.get_our_defender().get_zone() == 3 else max([x for (x, y) in our_zone[0]])
-        their_angle = self._world.get_their_defender().get_angle()
-        their_x = self._world.get_their_defender().get_x()
-        their_y = self._world.get_their_defender().get_y()
+        their_angle = self._world.get_our_attacker().get_angle()
+        their_x = self._world.get_our_attacker().get_x()
+        their_y = self._world.get_our_attacker().get_y()
         return our_x, their_y + tan(their_angle) * (our_x - their_x)
 
 
 
-        '''
+
         if our_defender.get_possession(ball):
             pass_path = our_defender.get_pass_path(our_attacker)
             avoid_plan = get_avoidance(pass_path, our_defender, their_attacker)

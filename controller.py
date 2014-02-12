@@ -4,6 +4,7 @@ from vision.tracker import Tracker
 from postprocessing.postprocessing import Postprocessing
 import vision.tools as tools
 from nxt import *
+from time import sleep
 
 
 class Controller:
@@ -11,7 +12,7 @@ class Controller:
     Primary source of robot control. Ties vision and planning together.
     """
 
-    def __init__(self, pitch, color, our_side, port=0, connect=False, debug=False):
+    def __init__(self, pitch, color, our_side, port=0, connect=True, debug=False):
         """
         Entry point for the SDP system.
 
@@ -52,7 +53,7 @@ class Controller:
         self.color = color
 
         #self.attacker = Attacker_Controller(connectionName='GRP7A', leftMotorPort=PORT_A, rightMotorPort=PORT_C, kickerMotorPort=PORT_B)
-        #self.defender = Defender_Controller('GRP7A', 'PORT_X', 'PORT_X', 'PORT_X')
+        self.defender = Defender_Controller('GRP7D', PORT_C, PORT_A, PORT_B)
 
     def wow(self):
         #
@@ -62,22 +63,27 @@ class Controller:
         Main flow of the program. Run the controller with vision and planning combined.
         """
         # positions = (None,None,None,None,((0,0),0,0))
-        while True:
-            frame = self.camera.get_frame()
-            # Find object positions
-            positions, extras = self.vision.locate(frame)
-            positions = self.postprocessing.analyze(positions)
-            # Find appropriate action
-            actions = self.planner.plan(positions, part='defence')
-            print 'Actions:', actions
+        try:
+            while True:
+                frame = self.camera.get_frame()
+                # Find object positions
+                positions, extras = self.vision.locate(frame)
+                positions = self.postprocessing.analyze(positions)
+                print 'Positions: ', positions
+                # Find appropriate action
+                actions = self.planner.plan(positions, part='defence')
+                print 'Actions:', actions
 
-            # Execute action
-            # self.attacker.execute(actions[0])
-            # self.defender.execute(actions[0])
+                # Execute action
+                # self.attacker.execute(actions[0])
+                self.defender.execute(actions)
 
-            # Draw vision content and actions
-            self.GUI.draw(frame, positions, actions, extras, our_color=self.color)
-
+                # Draw vision content and actions
+                self.GUI.draw(frame, positions, actions, extras, our_color=self.color)
+        except:
+            if hasattr(self, 'defender'):
+                  self.defender.shutdown()
+            raise
 
 class Connection:
 
@@ -110,6 +116,10 @@ class Robot_Controller(object):
         self.MOTOR_L = Motor(self.BRICK,leftMotorPort)
         self.MOTOR_R = Motor(self.BRICK,rightMotorPort)
         self.MOTOR_K = Motor(self.BRICK,kickerMotorPort)
+
+    def shutdown(self):
+        self.MOTOR_L.idle()
+        self.MOTOR_R.idle()
 
 
 
