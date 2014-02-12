@@ -142,10 +142,10 @@ PITCH1 = {
             'blur': 4
         },
         {
-            'min': np.array((16.0, 39.0, 55.0)),
-            'max': np.array((68.0, 125.0, 78.0)),
-            'contrast': 5.0,
-            'blur': 5
+            'min': np.array((0.0, 0.0, 31.0)),
+            'max': np.array((255.0, 255.0, 83.0)),
+            'contrast': 0.0,
+            'blur': 3
         },
         {
             'min': np.array((16.0, 39.0, 55.0)),
@@ -162,10 +162,10 @@ PITCH1 = {
             'blur': 4
         },
         {
-            'min': np.array((0.0, 152.0, 126.0)),
-            'max': np.array((255.0, 255.0, 255.0)),
+            'min': np.array((0.0, 112.0, 164.0)),
+            'max': np.array((221.0, 217.0, 255.0)),
             'contrast': 0.0,
-            'blur': 1
+            'blur': 0
         }
     ],
     'yellow': [
