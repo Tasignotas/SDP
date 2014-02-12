@@ -31,6 +31,8 @@ class Planner:
         global NO_ACTION
         global WAIT
 
+        SPEED = 8
+
         """
         {'their_attacker': x: 31, y: 159, angle: 0.0, velocity: 1.0
             , 'our_defender': x: 172, y: 63, angle: 4.81205763288, velocity: 1.0
@@ -67,40 +69,75 @@ class Planner:
             return {'defender' : {'left_motor' : 10, 'right_motor' : -10, 'kicker' : 0}}
             """
         else:
-            x, y, displacement, theta = our_attacker.get_path_to_point(
-                ball.get_x(), ball.get_y())
-            print 'DISPLACEMENT', displacement
-            print 'NO_ACTION', NO_ACTION
-            print 'HAS_BALL', HAS_BALL
-            if HAS_BALL and WAIT:
-                time.sleep(0.1)
-                WAIT = False
-            if NO_ACTION:
-                return {'attacker' : {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0}}
 
+            if HAS_BALL:
 
-            alignment = our_attacker.get_robot_alignment(ball)
+                their_goal = self._world.get_their_goal()
+                goal_top_y = their_goal.get_y()
+                goal_middle_y = goal_top_y + their_goal.get_dimensions()[0] / 2
+                print 'Goal middle', goal_middle_y
 
-            ALIGN_THRESH = 0.2 * log10(displacement)
-            SPEED = 5
-            kicker = 0
+                x, y, displacement, theta = our_attacker.get_path_to_point(their_goal.get_x(), goal_middle_y)
+                print 'Align with angle:', theta
 
-            if theta < ALIGN_THRESH or theta > 2 * pi - ALIGN_THRESH:
-                self.ball_aligned = True
-                left, right = -15, -15
-            elif theta > ALIGN_THRESH and theta < (2 * pi - ALIGN_THRESH) / 2.0:
-                left, right = SPEED, -SPEED
+                theta = theta % (2*pi)
+
+                if theta < 0.2 or theta > 2 * pi - 0.2:
+                    return {'attacker' : {'left_motor' : 0, 'right_motor' : 0, 'kicker' : -125}}
+                elif theta> 0.2 and theta < (2 * pi - 0.2) / 2.0:
+                    left, right = SPEED, -SPEED
+                else:
+                    left, right = -SPEED, SPEED
+                return {'attacker' : {'left_motor' : left, 'right_motor' : right, 'kicker' : 0}}
+
             else:
-                left, right = -SPEED, SPEED
 
-            if displacement < 26 and displacement > 20 and (theta < 0.07 or theta > 2 * pi - 0.07) and not HAS_BALL:
-                left, right = 0, 0
-                kicker = KICKER_SPEED_CAGE_IN
-                HAS_BALL = True
-                NO_ACTION = True
-                WAIT = True
+                x, y, displacement, theta = our_attacker.get_path_to_point(
+                    ball.get_x(), ball.get_y())
+                # print 'DISPLACEMENT', displacement
+                # print 'NO_ACTION', NO_ACTION
+                print 'HAS_BALL', HAS_BALL
+                if HAS_BALL and WAIT:
+                    time.sleep(0.1)
+                    WAIT = False
+                if NO_ACTION:
+                    return {'attacker' : {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0}}
 
-            return {'attacker' : {'left_motor' : left, 'right_motor' : right, 'kicker' : kicker}}
+
+                alignment = our_attacker.get_robot_alignment(ball)
+
+                ALIGN_THRESH = 0.3 * log10(displacement)
+                SPEED = 8
+                kicker = 0
+
+                ANGLE_HACK = -pi / 14
+
+                if theta < ALIGN_THRESH or theta > 2 * pi - ALIGN_THRESH:
+                    self.ball_aligned = True
+                    left, right = -SPEED, -SPEED
+                elif theta - ANGLE_HACK> ALIGN_THRESH and theta - ANGLE_HACK < (2 * pi - ALIGN_THRESH) / 2.0:
+                    left, right = SPEED, -SPEED
+                else:
+                    left, right = -SPEED, SPEED
+
+                if displacement < 24:
+                    return {'attacker' : {'left_motor' : -SPEED, 'right_motor' : -SPEED, 'kicker' : kicker}}
+
+
+                print theta
+
+                if displacement < 25 and (theta - ANGLE_HACK < 0.2 or theta - ANGLE_HACK > 2 * pi - 0.2) and not HAS_BALL:
+                    left, right = 0, 0
+                    kicker = KICKER_SPEED_CAGE_IN
+                    HAS_BALL = True
+                    NO_ACTION = True
+                    WAIT = True
+
+                return {'attacker' : {'left_motor' : left, 'right_motor' : right, 'kicker' : kicker}}
+
+    def has_ball(self, ball, robot):
+        x, y, displacement, theta = robot.get_path_to_point(ball.get_x(), ball.get_y())
+        return displacement < 26 and displacement > 24 and (theta + 0.1) < robot.get_angle() and (theta -0.1) > robot.get_angle()
 
 
 

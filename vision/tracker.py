@@ -189,7 +189,7 @@ class RobotTracker(Tracker):
         mask_frame = frame.copy()
 
         cv2.rectangle(mask_frame, (0, 0), (width, height), (0,0,0), -1)
-        cv2.circle(mask_frame, (width / 2, height / 2), 9, (255, 255, 255), -1)
+        cv2.circle(mask_frame, (width / 2, height / 2), 14, (255, 255, 255), -1)
 
 
 
