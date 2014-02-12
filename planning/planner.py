@@ -1,10 +1,19 @@
 from models import *
 from collisions import *
 from math import tan, log10
+import time
+
 
 DEFENDER_THRESHOLD = 25
 UNALIGNED = True
 SPEED_CONST = 10
+
+HAS_BALL = False
+NO_ACTION = False
+
+WAIT = False
+
+KICKER_SPEED_CAGE_IN = -63
 
 
 class Planner:
@@ -13,17 +22,33 @@ class Planner:
     def __init__(self, our_side):
         self._world = World(our_side)
 
+        self.ball_aligned = False
 
-    def plan(self, position_dictionary, part='defence'):
+
+    def plan(self, position_dictionary, part='attacker'):
         global UNALIGNED
+        global HAS_BALL
+        global NO_ACTION
+        global WAIT
+
+        """
+        {'their_attacker': x: 31, y: 159, angle: 0.0, velocity: 1.0
+            , 'our_defender': x: 172, y: 63, angle: 4.81205763288, velocity: 1.0
+            , 'our_attacker': x: 453, y: 217, angle: 2.0344439358, velocity: 0.0
+            , 'ball': x: None, y: None, angle: -1.57079632679, velocity: None
+            , 'their_defender': x: None, y: None, angle: None, velocity: None
+            }
+        """
+
         self._world.update_positions(position_dictionary)
         our_defender = self._world.get_our_defender()
+        our_attacker = self._world.get_our_attacker()
         ball = self._world.get_ball()
         top_goal_y = (self._world._pitch._height - GOAL_WIDTH) / 2
         bottom_goal_y = top_goal_y + GOAL_WIDTH
         distance = abs(ball.get_y() - our_defender.get_y())
         if part == 'defence':
-            print 'Angle difference:', abs(our_defender.get_angle() - pi/2)
+            # print 'Angle difference:', abs(our_defender.get_angle() - pi/2)
             if UNALIGNED:
                 if abs(our_defender.get_angle() - pi/2) < 0.2:
                     UNALIGNED = False
@@ -41,7 +66,41 @@ class Planner:
 
             return {'defender' : {'left_motor' : 10, 'right_motor' : -10, 'kicker' : 0}}
             """
-        return {'attacker' : {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0}}
+        else:
+            x, y, displacement, theta = our_attacker.get_path_to_point(
+                ball.get_x(), ball.get_y())
+            print 'DISPLACEMENT', displacement
+            print 'NO_ACTION', NO_ACTION
+            print 'HAS_BALL', HAS_BALL
+            if HAS_BALL and WAIT:
+                time.sleep(0.1)
+                WAIT = False
+            if NO_ACTION:
+                return {'attacker' : {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0}}
+
+
+            alignment = our_attacker.get_robot_alignment(ball)
+
+            ALIGN_THRESH = 0.2 * log10(displacement)
+            SPEED = 5
+            kicker = 0
+
+            if theta < ALIGN_THRESH or theta > 2 * pi - ALIGN_THRESH:
+                self.ball_aligned = True
+                left, right = -15, -15
+            elif theta > ALIGN_THRESH and theta < (2 * pi - ALIGN_THRESH) / 2.0:
+                left, right = SPEED, -SPEED
+            else:
+                left, right = -SPEED, SPEED
+
+            if displacement < 26 and displacement > 20 and (theta < 0.07 or theta > 2 * pi - 0.07) and not HAS_BALL:
+                left, right = 0, 0
+                kicker = KICKER_SPEED_CAGE_IN
+                HAS_BALL = True
+                NO_ACTION = True
+                WAIT = True
+
+            return {'attacker' : {'left_motor' : left, 'right_motor' : right, 'kicker' : kicker}}
 
 
 

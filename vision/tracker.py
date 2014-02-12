@@ -312,9 +312,9 @@ class RobotTracker(Tracker):
                     points = None
                     angle = None
 
-            if self.name == 'Their Attacker' and angle:
+            # if self.name == 'Their Attacker' and angle:
                 # print "angle", angle
-                print '>>>>>', angle * 360 / (2.0 * np.pi)
+                # print '>>>>>', angle * 360 / (2.0 * np.pi)
 
             speed = None
 

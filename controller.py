@@ -52,8 +52,8 @@ class Controller:
         self.debug = debug
         self.color = color
 
-        #self.attacker = Attacker_Controller(connectionName='GRP7A', leftMotorPort=PORT_A, rightMotorPort=PORT_C, kickerMotorPort=PORT_B)
-        self.defender = Defender_Controller('GRP7D', PORT_C, PORT_A, PORT_B)
+        self.attacker = Attacker_Controller(connectionName='GRP7A', leftMotorPort=PORT_C, rightMotorPort=PORT_B, kickerMotorPort=PORT_A)
+        # self.defender = Defender_Controller('GRP7D', PORT_C, PORT_A, PORT_B)
 
     def wow(self):
         #
@@ -69,14 +69,14 @@ class Controller:
                 # Find object positions
                 positions, extras = self.vision.locate(frame)
                 positions = self.postprocessing.analyze(positions)
-                print 'Positions: ', positions
+                # print 'Positions: ', positions
                 # Find appropriate action
-                actions = self.planner.plan(positions, part='defence')
-                print 'Actions:', actions
+                actions = self.planner.plan(positions, part='attacker')
+                # print 'Actions:', actions
 
                 # Execute action
-                # self.attacker.execute(actions[0])
-                self.defender.execute(actions)
+                self.attacker.execute(actions)
+                # self.defender.execute(actions)
 
                 # Draw vision content and actions
                 self.GUI.draw(frame, positions, actions, extras, our_color=self.color)
@@ -140,6 +140,13 @@ class Attacker_Controller(Robot_Controller):
         """
         self.MOTOR_L.run(action['attacker']['left_motor'], True)
         self.MOTOR_R.run(action['attacker']['right_motor'], True)
+        if action['attacker']['kicker'] != 0:
+            try:
+                self.MOTOR_K.turn(action['attacker']['kicker'], 70, False, False)
+            except Exception, e:
+                pass
+        else:
+            self.MOTOR_K.idle()
 
 
 class Defender_Controller(Robot_Controller):
