@@ -135,17 +135,17 @@ PITCH1 = {
         'blur': 8
     },
     'dot': [
-        {
-            'min': np.array((0.0, 0.0, 129.0)),
-            'max': np.array((104.0, 31.0, 179.0)),
-            'contrast': 100.0,
-            'blur': 4
-        },
-        {
-            'min': np.array((0.0, 0.0, 31.0)),
-            'max': np.array((255.0, 255.0, 83.0)),
-            'contrast': 0.0,
+        {	#better
+            'min': np.array((30.0, 0.0, 0.0)),
+            'max': np.array((101.0, 233.0, 78.0)),
+            'contrast': 2.0,
             'blur': 3
+        },
+        {	#worse
+            'min': np.array((20.0, 0.0, 53.0)),
+            'max': np.array((104.0, 255.0, 73.0)),
+            'contrast': 0.0,
+            'blur': 2
         },
         {
             'min': np.array((16.0, 39.0, 55.0)),
@@ -156,42 +156,42 @@ PITCH1 = {
     ],
     'red': [
         {
-            'min': np.array((0.0, 82.0, 0.0)),
-            'max': np.array((199.0, 255.0, 255.0)),
-            'contrast': 67.0,
-            'blur': 4
+            'min': np.array((28.0, 86.0, 0.0)),
+            'max': np.array((196.0, 255.0, 255.0)),
+            'contrast': 70.0,
+            'blur': 5
         },
         {
             'min': np.array((0.0, 112.0, 164.0)),
-            'max': np.array((221.0, 217.0, 255.0)),
-            'contrast': 0.0,
-            'blur': 0
+            'max': np.array((221.0, 255.0, 255.0)),
+            'contrast': 69.0,
+            'blur': 4
         }
     ],
     'yellow': [
         {
             'min': np.array((10.0, 93.0, 226.0)), #LH,LS,LV
-            'max': np.array((255.0, 255.0, 255.0)), #UH,US,UV
-            'contrast': 1.0,
+            'max': np.array((145.0, 255.0, 255.0)), #UH,US,UV
+            'contrast': 2.0,
             'blur': 2
         },
         {
-            'min': np.array((0.0, 116.0, 141.0)), #LH,LS,LV
-            'max': np.array((136.0, 255.0, 255.0)), #UH,US,UV
-            'contrast': 6.0,
+            'min': np.array((0.0, 89.0, 200.0)), #LH,LS,LV
+            'max': np.array((58.0, 199.0, 255.0)), #UH,US,UV
+            'contrast': 2.0,
             'blur': 2
         },
         {
-            'min': np.array((0.0, 93.0, 215.0)), #LH,LS,LV
-            'max': np.array((225.0, 255.0, 255.0)), #UH,US,UV
-            'contrast': 1.0,
+            'min': np.array((0.0, 101.0, 237.0)), #LH,LS,LV
+            'max': np.array((115.0, 255.0, 255.0)), #UH,US,UV
+            'contrast': 2.0,
             'blur': 2
         },
         {
-            'min': np.array((10.0, 210.0, 162.0)), #LH,LS,LV
-            'max': np.array((20.0, 255.0, 255.0)), #UH,US,UV
-            'contrast': 1.0,
-            'blur': 0
+            'min': np.array((13.0, 76.0, 154.0)), #LH,LS,LV
+            'max': np.array((26.0, 255.0, 255.0)), #UH,US,UV
+            'contrast': 9.0,
+            'blur': 7
         }
     ],
     'blue': [
