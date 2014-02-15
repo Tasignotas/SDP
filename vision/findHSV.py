@@ -61,7 +61,7 @@ class CalibrationGUI(object):
 
     def save_to_file(self):
 
-        pickle_file = open("configMask.txt", "wb")
+        pickle_file = open("vision/configMask.txt", "wb")
         cPickle.dump(self.config_file.config, pickle_file)
         pickle_file.close()
         print "Saved claibration to file."
@@ -92,7 +92,7 @@ class FileConfig(object):
     
     def __init__(self):
         try:
-            pickle_file = open("configMask.txt", "rb")
+            pickle_file = open("vision/configMask.txt", "rb")
             self.config = cPickle.load(pickle_file)
             pickle_file.close()
         except:

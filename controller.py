@@ -7,8 +7,6 @@ from nxt import *
 from time import sleep
 from cv2 import waitKey
 
-import sys
-
 
 class Controller:
     """
