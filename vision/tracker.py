@@ -9,7 +9,7 @@ from collections import namedtuple
 import warnings
 
 # Turning on KMEANS fitting:
-KMEANS = False
+KMEANS = True
 
 # Turn off warnings for PolynomialFit
 warnings.simplefilter('ignore', np.RankWarning)
@@ -348,8 +348,8 @@ class RobotTracker(Tracker):
         prep = np.float32(prep)
 
         criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
-        k = 5
-        ret, label, colour_centers = cv2.kmeans(prep, k, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
+        k = 4
+        ret, label, colour_centers = cv2.kmeans(prep, k, criteria, 20, cv2.KMEANS_RANDOM_CENTERS)
         colour_centers = np.uint8(colour_centers)
 
         # Get the new image based on the clusters found

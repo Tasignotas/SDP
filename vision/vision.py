@@ -8,6 +8,8 @@ from planning.models import Vector
 from colors import BGR_COMMON
 from collections import namedtuple
 
+from findHSV import CalibrationGUI
+
 
 TEAM_COLORS = set(['yellow', 'blue'])
 SIDES = ['left', 'right']
@@ -182,6 +184,7 @@ class GUI(object):
 
     def __init__(self):
         self.zones = None
+        self.calibration_gui = CalibrationGUI(pitch=0)
 
     def to_vector(self, args):
         """
@@ -212,6 +215,7 @@ class GUI(object):
         for zone in self.zones:
             cv2.line(frame, (zone[1], 0), (zone[1], height), BGR_COMMON['red'], 1)
 
+        self.calibration_gui.show(frame)
 
         positions = {
             'our_attacker': self.to_vector(extras[1]),

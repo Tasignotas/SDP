@@ -5,6 +5,9 @@ from postprocessing.postprocessing import Postprocessing
 import vision.tools as tools
 from nxt import *
 from time import sleep
+from cv2 import waitKey
+
+import sys
 
 
 class Controller:
@@ -80,6 +83,13 @@ class Controller:
 
                 # Draw vision content and actions
                 self.GUI.draw(frame, positions, actions, extras, our_color=self.color)
+
+                # Key listener for chaning color in calibration GUI and saving calibration to file
+                # For some reason, it noly responds when you hold the key down.
+                # Use 'y', 'b', 'r' to change color and 's' to save.
+                c = waitKey(1) & 0xFF
+                self.GUI.calibration_gui.key_handler.processKey(chr(c % 0x100))
+
         except:
             if hasattr(self, 'defender'):
                   self.defender.shutdown()

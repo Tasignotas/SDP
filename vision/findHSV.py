@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
 import cPickle
-from optparse import OptionParser
 
 CONTROLS = ["LH", "UH", "LS", "US", "LV", "UV", "BR", "CT", "BL"]
 MAXBAR = {"LH":360, 
@@ -26,14 +25,76 @@ INDEX = {"LH":0,
 def nothing(x):
     pass
 
+class CalibrationGUI(object):
+
+    def __init__(self, pitch):
+        self.color = 'yellow'
+        self.pitch = pitch
+        self.maskWindowName = "Mask"
+        self.key_handler = EventHandler()
+       
+        self.setWindow()
+
+    def setWindow(self):
+
+        cv2.namedWindow(self.maskWindowName)
+        self.config_file = FileConfig()
+
+        for setting in CONTROLS:
+            cv2.createTrackbar(setting, self.maskWindowName, int(self.config_file.get_value(self.color, setting)), \
+                MAXBAR[setting], nothing)
+
+        def yellow(): self.change_color('yellow')
+        def blue(): self.change_color('blue')
+        def red(): self.change_color('red')
+
+        self.key_handler.addListener('y', yellow)
+        self.key_handler.addListener('b', blue)
+        self.key_handler.addListener('r', red)
+        self.key_handler.addListener('s', self.save_to_file)
+
+    def change_color(self, color):
+
+        self.color = color
+        for setting in CONTROLS:
+            cv2.setTrackbarPos(setting, self.maskWindowName, int(self.config_file.get_value(self.color, setting)))
+
+    def save_to_file(self):
+
+        pickle_file = open("configMask.txt", "wb")
+        cPickle.dump(self.config_file.config, pickle_file)
+        pickle_file.close()
+        print "Saved claibration to file."
+
+    def show(self, frame):
+        
+        LH = cv2.getTrackbarPos("LH", self.maskWindowName)
+        UH = cv2.getTrackbarPos("UH", self.maskWindowName)
+        LS = cv2.getTrackbarPos("LS", self.maskWindowName)
+        US = cv2.getTrackbarPos("US", self.maskWindowName)
+        LV = cv2.getTrackbarPos("LV", self.maskWindowName)
+        UV = cv2.getTrackbarPos("UV", self.maskWindowName)
+        BR = cv2.getTrackbarPos("BR", self.maskWindowName)
+        CT = cv2.getTrackbarPos("CT", self.maskWindowName)
+        BL = cv2.getTrackbarPos("BL", self.maskWindowName)
+
+        mask = cv2.inRange(frame, np.array([LH, LS, LV]), np.array([UH, US, UV]))
+
+        cv2.imshow(self.maskWindowName, mask)
+
+        for setting in CONTROLS:
+            value = cv2.getTrackbarPos(setting, self.maskWindowName)
+            self.config_file.set_value(self.color, setting, float(value))
+
 # Holds the object as exported in the pickle and used in tracker.py
 # and provides access to its values.
 class FileConfig(object):
     
     def __init__(self):
         try:
-            pickleFile = open("configMask.txt", "rb")
-            self.config = cPickle.load(pickleFile)
+            pickle_file = open("configMask.txt", "rb")
+            self.config = cPickle.load(pickle_file)
+            pickle_file.close()
         except:
             self.config = {'yellow':[
                                 {'min': np.array((0.0, 0.0, 0.0)), #LH, LS, LV
@@ -58,7 +119,7 @@ class FileConfig(object):
                             ]
                         }
 
-    def getValue(self, color, setting):
+    def get_value(self, color, setting):
         if (setting in ['LH', 'LS', 'LV']):
             return self.config[color][0]['min'][INDEX[setting]]
         if (setting in ['UH', 'US', 'UV']):
@@ -71,7 +132,7 @@ class FileConfig(object):
         if (setting == 'BR'):
             return 1
 
-    def setValue(self, color, setting, value):
+    def set_value(self, color, setting, value):
         if (setting in ['LH', 'LS', 'LV']):
             self.config[color][0]['min'][INDEX[setting]] = value
         if (setting in ['UH', 'US', 'UV']):
@@ -81,85 +142,37 @@ class FileConfig(object):
         if (setting == 'BL'):
             self.config[color][0]['blur'] = value
 
-
-def brighten(img, alpha=1.0, beta=10.0):
-    mul_img = cv2.multiply(img, np.array([alpha]))
-    new_img = cv2.add(mul_img,np.array([beta]))
-    return new_img
-
-def blur(img, ksize=0):
-    if (ksize>1):
-        return cv2.blur(img, (ksize,ksize))
-    return img
-
-def setWindow(color, maskWindowName):
-    cv2.namedWindow(color)
-    cv2.namedWindow(maskWindowName)
-
-    fileConfig = FileConfig()
-
-    for setting in CONTROLS:
-        cv2.createTrackbar(setting, maskWindowName, int(fileConfig.getValue(color, setting)), \
-            MAXBAR[setting], nothing)
-
-    return fileConfig
-
-def run(color):
+# Class copied over from Team 6 / 2013
+class EventHandler:
+        
+    def __init__(self):
+        self._listeners = {}
+        self._clickListener = None
     
-    maskWindowName = "Mask: " + color
-    fileConfig = setWindow(color, maskWindowName)
-    i = 0
-    cap = cv2.VideoCapture(0)
+    def processKey(self, key):
+        if key in self._listeners.keys():
+            self._listeners[key]()
 
-    while(1):
-        i = (i % 59) + 1
-        LH = cv2.getTrackbarPos("LH", maskWindowName)
-        UH = cv2.getTrackbarPos("UH", maskWindowName)
-        LS = cv2.getTrackbarPos("LS", maskWindowName)
-        US = cv2.getTrackbarPos("US", maskWindowName)
-        LV = cv2.getTrackbarPos("LV", maskWindowName)
-        UV = cv2.getTrackbarPos("UV", maskWindowName)
-        BR = cv2.getTrackbarPos("BR", maskWindowName)
-        CT = cv2.getTrackbarPos("CT", maskWindowName)
-        BL = cv2.getTrackbarPos("BL", maskWindowName)
+    def processClick(self, where):
+        if self._clickListener is not None:
+            self._clickListener(where)
+        
+    def addListener(self, key, callback):
+        """
+        Adds a function callback for a key.
+        """
+        
+        assert callable(callback), '"callback" must be callable'
+        
+        self._listeners[key] = callback
 
-        ret, frame = cap.read()
-        frame = brighten(frame, float(BR), float(CT))
-        frame = blur(frame, BL)
-        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        mask = cv2.inRange(hsv, np.array([LH, LS, LV]), np.array([UH, US, UV]))
+    def setClickListener(self, callback):
+        """
+        Sets a function to be called on clicking on the image.
+        The function will be passed a tuple with the (x,y) of the click.
 
-        cv2.imshow(color, frame)
-        cv2.imshow(maskWindowName, mask)
-
-        k = cv2.waitKey(5) & 0xFF
-        if k == 27:
-            for setting in CONTROLS:
-                value = cv2.getTrackbarPos(setting, maskWindowName)
-                fileConfig.setValue(color, setting, float(value))
-
-            pickleFile = open("configMask.txt", "wb")
-            cPickle.dump(fileConfig.config, pickleFile)
-            pickleFile.close()
-            break
-
-    cv2.destroyAllWindows()
-    print fileConfig.config
-
-def main():
-    parser = OptionParser()
-    color = 'all'
-    parser.add_option("-c", "--color", dest="color",
-                      help="all / yellow / red / blue")
-    (opts, args) = parser.parse_args()
-    if opts == 'None':
-        opts = 'all'
-    selectColor = {}
-    if (color in ['all', 'yellow']):
-        run('yellow')
-    if (color in ['all', 'blue']):
-        run('blue')
-    if (color in ['all', 'red']):
-        run('red')
-
-main()
+        Setting a new callback will override the last one (or pass None to clear)
+        """
+        assert callback is None or callable(callback), '"callback" must be callable'
+        
+        self._clickListener = callback
