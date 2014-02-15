@@ -26,37 +26,33 @@ class Coordinate(object):
 
 
     def __init__(self, x, y):
-        self._x = x
-        self._y = y
-    #    self._dx = 0
-    #    self._dy = 0
+        if x == None or y == None:
+            raise ValueError('Can not initialize to attributes to None')
+        else:
+            self._x = x
+            self._y = y
 
-
-    def get_x(self):
+    @property
+    def x(self):
         return self._x
 
-
-    def get_y(self):
+    @property
+    def y(self):
         return self._y
 
+    @x.setter
+    def x(self, new_x):
+        if new_x == None:
+            raise ValueError('Can not set attributes of Coordinate to None')
+        else:
+            self._x = new_x
 
-    #def get_dx(self):
-    #    return self._dx
-
-
-    #def get_dy(self):
-    #    return self._dy
-
-
-    def set_x(self, x):
-    #    self._dx = x - self._x if not(x is None) else 0
-        self._x = x if not(x is None) else self._x
-
-
-    def set_y(self, y):
-    #    self._dy = y - self._y if not(y is None) else 0
-        self._y = y if not(y is None) else self._y
-
+    @y.setter
+    def y(self, new_y):
+        if new_y == None:
+            raise ValueError('Can not set attributes of Coordinate to None')
+        else:
+            self._y = new_y
 
     def __repr__(self):
         return 'x: %s, y: %s\n' % (self._x, self._y)
@@ -101,7 +97,7 @@ class Vector(Coordinate):
 
     def __repr__(self):
         return ('x: %s, y: %s, angle: %s, velocity: %s\n' %
-                (self.get_x(), self.get_y(),
+                (self.x, self.y,
                  self._angle, self._velocity))
 
 
@@ -128,11 +124,11 @@ class Pitch_Object(object):
 
 
     def get_x(self):
-        return self._vector.get_x()
+        return self._vector.x
 
 
     def get_y(self):
-        return self._vector.get_y()
+        return self._vector.y
 
 
     def get_vector(self):
@@ -142,15 +138,15 @@ class Pitch_Object(object):
     def set_vector(self, vector):
         self._vector.set_angle(vector.get_angle())
         self._vector.set_velocity(vector.get_velocity())
-        self._vector.set_x(vector.get_x())
-        self._vector.set_y(vector.get_y())
+        self._vector.set_x(vector.x)
+        self._vector.set_y(vector.y)
 
 
     def get_polygon_point(self, d, theta):
         # Get point for drawing polygon around object
         angle = self.get_angle()
-        delta_x = self.get_x() + (d * cos(theta + angle))
-        delta_y = self.get_y() + (d * sin(theta + angle))
+        delta_x = self.x + (d * cos(theta + angle))
+        delta_y = self.y + (d * sin(theta + angle))
         return delta_x, delta_y
 
 
@@ -173,7 +169,7 @@ class Pitch_Object(object):
 
     def __repr__(self):
         return ('x: %s\ny: %s\nangle: %s\nvelocity: %s\ndimensions: %s\n' %
-                (self.get_x(), self.get_y(),
+                (self.x, self.y,
                  self.get_angle(), self.get_velocity(), self.get_dimensions()))
 
 
@@ -192,8 +188,8 @@ class Robot(Pitch_Object):
 
     def get_ball_proximity(self, ball):
         # Get if the robot is near the ball but may not have possession
-        delta_x = ball.get_x() - self.get_x()
-        delta_y = ball.get_y() - self.get_y()
+        delta_x = ball.x - self.x
+        delta_y = ball.y - self.y
         check_displacement = hypot(delta_x, delta_y) <= BALL_POSS_THRESH
         return check_displacement
 
@@ -203,8 +199,8 @@ class Robot(Pitch_Object):
         robot_poly = self.get_polygon()
         center_x = (robot_poly[0][0] + robot_poly[1][0]) / 2
         center_y = (robot_poly[0][1] + robot_poly[1][1]) / 2
-        delta_x = ball.get_x() - center_x
-        delta_y = ball.get_y() - center_y
+        delta_x = ball.x - center_x
+        delta_y = ball.y - center_y
         ball_diameter = ball.get_dimensions()[1] / 2
         check_displacement = hypot(delta_x, delta_y) <= ball_diameter + BALL_POSS_THRESH
         return check_displacement
@@ -212,28 +208,28 @@ class Robot(Pitch_Object):
 
     def get_stationary_ball(self, ball):
         # Get path to grab stationary ball
-        return self.get_path_to_point(ball.get_x(), ball.get_y())
+        return self.get_path_to_point(ball.x, ball.y)
 
 
     def get_moving_ball(self, ball, velocity):
         # Get path to intercept moving ball
-        delta_x = ball.get_x() - self.get_x()
-        delta_y = ball.get_y() - self.get_y()
+        delta_x = ball.x - self.x
+        delta_y = ball.y - self.y
         ball_v_x = ball.get_velocity() * cos(ball.get_angle())
         ball_v_y = ball.get_velocity() * sin(ball.get_angle())
         a = pow(ball.get_velocity(), 2) - pow(velocity, 2)
         b = 2 * ((ball_v_x * delta_x) + (ball_v_y * delta_y))
         c = pow(delta_x, 2) + pow(delta_y, 2)
         t = max(roots([a, b, c]))
-        x = ball.get_x() + (ball_v_x * t)
-        y = ball.get_y() + (ball_v_y * t)
+        x = ball.x + (ball_v_x * t)
+        y = ball.y + (ball_v_y * t)
         return self.get_path_to_point(x, y)
 
 
     def get_path_to_point(self, x, y):
         # Get path to a given point (x, y)
-        delta_x = x - self.get_x()
-        delta_y = y - self.get_y()
+        delta_x = x - self.x
+        delta_y = y - self.y
         displacement = hypot(delta_x, delta_y)
         print atan2(delta_y, delta_x) % (2 * pi)
         print self.get_angle()
@@ -291,7 +287,7 @@ class Robot(Pitch_Object):
 
     def __repr__(self):
         return ('zone: %s\nx: %s\ny: %s\nangle: %s\nvelocity: %s\ndimensions: %s\n' %
-                (self._zone, self.get_x(), self.get_y(),
+                (self._zone, self.x, self.y,
                  self.get_angle(), self.get_velocity(), self.get_dimensions()))
 
 
@@ -316,7 +312,7 @@ class Goal(Pitch_Object):
 
     def __repr__(self):
         return ('zone: %s\nx: %s\ny: %s\nangle: %s\nvelocity: %s\ndimensions: %s\n' %
-                (self._zone, self.get_x(), self.get_y(),
+                (self._zone, self.x, self.y,
                  self.get_angle(), self.get_velocity(), self.get_dimensions()))
 
 class Pitch:
@@ -342,7 +338,7 @@ class Pitch:
     def is_within_bounds(self, robot, point):
     # Checks whether the position/point planned for the robot is reachable:
         zone = self._zones[robot.get_zone()]
-        return zone.isInside(point.get_x(), point.get_y())
+        return zone.isInside(point.x, point.y)
 
 
     def get_width(self):
