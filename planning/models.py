@@ -238,10 +238,10 @@ class Robot(PitchObject):
         # Get angle by which this robot needs to turn to align with the target.
         align_angle = target.angle + pi
         theta = atan2(sin(align_angle), cos(align_angle)) - atan2(sin(self.angle), cos(self.angle))
-            if theta > pi:
-                theta -= 2*pi
-            elif theta < -pi:
-                theta += 2*pi
+        if theta > pi:
+            theta -= 2*pi
+        elif theta < -pi:
+            theta += 2*pi
         assert -pi <= theta <= pi
         return theta
 
