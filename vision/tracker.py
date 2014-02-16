@@ -9,27 +9,12 @@ from collections import namedtuple
 import warnings
 
 # Turning on KMEANS fitting:
-KMEANS = True
+KMEANS = False
 
 # Turn off warnings for PolynomialFit
 warnings.simplefilter('ignore', np.RankWarning)
 warnings.simplefilter('ignore', RuntimeWarning)
 
-
-# In the code, change COLORS to GUICOLORS if you want to use the values you
-# picked with the findHSV GUI.
-# GUICOLORS = COLORS
-
-# def get_gui_colors():
-#     global GUICOLORS
-#     try:
-#         pickleFile = open("configMask.txt", "rb")
-#         GUICOLORS = cPickle.load(pickleFile)
-#         pickleFile.close()
-#     except:
-#         pass
-
-# get_gui_colors()
 
 BoundingBox = namedtuple('BoundingBox', 'x y width height')
 Center = namedtuple('Center', 'x y')
