@@ -216,35 +216,20 @@ class TestRobot(unittest.TestCase):
         assert_almost_equal(robot.get_displacement_and_angle(40, 50), (10, -3*pi/4))
 
 
-class TestBall(unittest.TestCase):
-    '''
-    '''
-
-    def setUp(self):
-        pass
-
-class TestGoal(unittest.TestCase):
-    '''
-    '''
-
-    def setUp(self):
-        pass
-
-
 class TestPitch(unittest.TestCase):
     '''
+    Tests the Pitch class
     '''
 
-    def setUp(self):
-        pass
-
-
-class TestWorld(unittest.TestCase):
-    '''
-    '''
-
-    def setUp(self):
-        pass
+    def test_Pitch_initialisation(self):
+        '''
+        Tests if the zones don't overlap
+        '''
+        pitch = Pitch()
+        for zone1 in pitch.zones:
+            for zone2 in pitch.zones:
+                if not zone1 == zone2:
+                    self.assertFalse(zone1.overlaps(zone2))
 
 
 if __name__ == '__main__':

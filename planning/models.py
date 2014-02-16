@@ -203,7 +203,7 @@ class Robot(PitchObject):
         return self.get_displacement_and_angle(ball.x, ball.y)
 
     def get_moving_ball(self, ball, velocity):
-        # NOT REFACTORED YET!!!
+        # TODO: NOT REFACTORED YET!!!
         # Get path to intercept moving ball
         delta_x = ball.x - self.x
         delta_y = ball.y - self.y
@@ -231,21 +231,25 @@ class Robot(PitchObject):
                 theta -= 2*pi
             elif theta < -pi:
                 theta += 2*pi
+        assert -pi <= theta <= pi
         return displacement, theta
 
     def get_robot_alignment(self, target):
+        # TODO: Not sure how this should work.
         # Get angle necessary to align the robot with a target
         alignment_angle = target.angle + pi
         delta_angle = alignment_angle - self.angle
         return delta_angle
 
     def get_pass_path(self, target):
+        # TODO: Not sure how this should work. Why is it a "path" if it's a Polygon?
         # Get path for passing ball between two robots
         robot_poly = self.get_polygon()
         target_poly = target.get_polygon()
         return Polygon(robot_poly[0], robot_poly[1], target_poly[0], target_poly[1])
 
     def get_shoot_path(self, goal):
+        # TODO: Not sure how this works. Why is it a "path" if it's a Polygon?
         # Get closest possible shooting path between the robot and the goal
         robot_poly = self.get_generic_polygon(BALL_WIDTH, self.length)
         goal_poly = goal.get_polygon()
@@ -268,6 +272,7 @@ class Robot(PitchObject):
         return Polygon((robot_left, robot_right, path_left, path_right))
 
     def get_path_alignment(self, path):
+        # TODO: Not sure how this works.
         # Get the angle alignment necessary for a clear kick
         robot_midpoint = ((path[0][0] + path[1][0]) * 0.5, (path[0][1] + path[1][1]) * 0.5)
         target_midpoint = ((path[2][0] + path[3][0]) * 0.5, (path[2][3] + path[1][1]) * 0.5)
@@ -333,6 +338,10 @@ class Pitch(object):
     @property
     def height(self):
         return self._height
+
+    @property
+    def zones(self):
+        return self._zones
 
     def __repr__(self):
         return str(self._zones)
