@@ -235,11 +235,15 @@ class Robot(PitchObject):
         return displacement, theta
 
     def get_robot_alignment(self, target):
-        # TODO: Not sure how this should work.
-        # Get angle necessary to align the robot with a target
-        alignment_angle = target.angle + pi
-        delta_angle = alignment_angle - self.angle
-        return delta_angle
+        # Get angle by which this robot needs to turn to align with the target.
+        align_angle = target.angle + pi
+        theta = atan2(sin(align_angle), cos(align_angle)) - atan2(sin(self.angle), cos(self.angle))
+            if theta > pi:
+                theta -= 2*pi
+            elif theta < -pi:
+                theta += 2*pi
+        assert -pi <= theta <= pi
+        return theta
 
     def get_pass_path(self, target):
         # TODO: Not sure how this should work. Why is it a "path" if it's a Polygon?
