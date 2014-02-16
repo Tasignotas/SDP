@@ -62,8 +62,8 @@ class Vector(Coordinate):
 
     def __init__(self, x, y, angle, velocity):
         super(Vector, self).__init__(x, y)
-        if angle == None or velocity == None:
-            raise ValueError('Can not set initialise attributes of Vector to None')
+        if angle == None or velocity == None or angle < 0 or angle >= 2*pi or velocity < 0:
+            raise ValueError('Can not initialise attributes of Vector to None')
         else:
             self._angle = angle
             self._velocity = velocity
@@ -78,14 +78,14 @@ class Vector(Coordinate):
 
     @angle.setter
     def angle(self, new_angle):
-        if new_angle == None or new_angle < 0 or new_angle > 2*pi:
+        if new_angle == None or new_angle < 0 or new_angle >= 2*pi:
             raise ValueError('Angle can not be None, also must be between 0 and 2pi')
         self._angle = new_angle
 
     @velocity.setter
     def velocity(self, new_velocity):
-        if new_velocity == None:
-            raise ValueError('Velocity can not be None')
+        if new_velocity == None or new_velocity < 0:
+            raise ValueError('Velocity can not be None or negative')
         self._velocity = new_velocity
 
     def __repr__(self):
@@ -284,8 +284,7 @@ class Goal(Pitch_Object):
 
     def __repr__(self):
         return ('zone: %s\nx: %s\ny: %s\nangle: %s\nvelocity: %s\ndimensions: %s\n' %
-                (self._zone, self.x, self.y,
-                 self.angle, self.velocity, self.dimensions))
+                (self._zone, self.x, self.y, self.angle, self.velocity, self.dimensions))
 
 class Pitch(object):
     '''
@@ -293,7 +292,7 @@ class Pitch(object):
     '''
 
     def __init__(self):
-        config_file = open('../vision/calibrate.json', 'r')
+        config_file = open('vision/calibrate.json', 'r')
         config_json = load(config_file)
         config_file.close()
         self._width = max([point[0] for point in config_json['outline']]) - min([point[0] for point in config_json['outline']])
