@@ -160,7 +160,6 @@ class PitchObject(object):
         poly.rotate(self.angle, self.x, self.y)
         return poly[0]
 
-
     def get_polygon(self):
         # Returns 4 edges of a rectangle bounding the current object in the
         # following order: front left, front right, bottom left and bottom right.
@@ -196,15 +195,15 @@ class Robot(PitchObject):
         center_y = (robot_poly[0][1] + robot_poly[1][1]) / 2
         delta_x = ball.x - center_x
         delta_y = ball.y - center_y
-        ball_diameter = ball.dimensions[1] / 2
-        check_displacement = hypot(delta_x, delta_y) <= ball_diameter + BALL_POSS_THRESH
+        check_displacement = hypot(delta_x, delta_y) <= ball.width + BALL_POSS_THRESH
         return check_displacement
 
     def get_stationary_ball(self, ball):
         # Get path to grab stationary ball
-        return self.get_path_to_point(ball.x, ball.y)
+        return self.get_displacement_and_angle(ball.x, ball.y)
 
     def get_moving_ball(self, ball, velocity):
+        # NOT REFACTORED YET!!!
         # Get path to intercept moving ball
         delta_x = ball.x - self.x
         delta_y = ball.y - self.y
@@ -216,15 +215,23 @@ class Robot(PitchObject):
         t = max(roots([a, b, c]))
         x = ball.x + (ball_v_x * t)
         y = ball.y + (ball_v_y * t)
-        return self.get_path_to_point(x, y)
+        return self.get_displacement_and_angle(x, y)
 
-    def get_path_to_point(self, x, y):
-        # Get path to a given point (x, y)
+    def get_displacement_and_angle(self, x, y):
+        # Gets the displacement and the angle by which you need to turn
+        # to get to the (x, y). Returns an angle between -pi and pi.
         delta_x = x - self.x
         delta_y = y - self.y
         displacement = hypot(delta_x, delta_y)
-        theta = atan2(delta_y, delta_x) % (2 * pi) - self.angle
-        return x, y, displacement, theta
+        if displacement == 0:
+            theta = 0
+        else:
+            theta = atan2(delta_y, delta_x) - atan2(sin(self.angle), cos(self.angle))
+            if theta > pi:
+                theta -= 2*pi
+            elif theta < -pi:
+                theta += 2*pi
+        return displacement, theta
 
     def get_robot_alignment(self, target):
         # Get angle necessary to align the robot with a target
