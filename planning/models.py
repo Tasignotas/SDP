@@ -94,18 +94,33 @@ class Vector(Coordinate):
                  self._angle, self._velocity))
 
 
-class Pitch_Object(object):
+class PitchObject(object):
     '''
     A class that describes an abstract pitch object
+    Width measures the front and back of an object
+    Length measures along the sides of an object
     '''
 
     def __init__(self, x, y, angle, velocity, width, length, height):
         self._vector = Vector(x, y, angle, velocity)
-        self._dimensions = (width, length, height)
+        if width < 0 or length < 0 or height < 0:
+            raise ValueError('Object dimensions must be positive')
+        else:
+            self._width = width
+            self._length = length
+            self._height = height
 
     @property
-    def dimensions(self):
-        return self._dimensions
+    def width(self):
+        return self._width
+
+    @property
+    def length(self):
+        return self._length
+
+    @property
+    def height(self):
+        return self._height
 
     @property
     def angle(self):
@@ -134,35 +149,30 @@ class Pitch_Object(object):
         else:
             self._vector = new_vector
 
-    def get_polygon_point(self, d, theta):
-        # Get point for drawing polygon around object
-        angle = self.angle
-        delta_x = self.x + (d * cos(theta + angle))
-        delta_y = self.y + (d * sin(theta + angle))
-        return delta_x, delta_y
-
     def get_generic_polygon(self, width, length):
-        # Get polygon drawn around a generic object
-        dist = hypot(length * 0.5, width * 0.5)
-        theta = atan2(length * 0.5, width * 0.5) % (2 * pi)
-        front_left = (self.get_polygon_point(dist, theta))
-        front_right = (self.get_polygon_point(dist, -theta))
-        back_left = (self.get_polygon_point(dist, -(theta + pi)))
-        back_right = (self.get_polygon_point(dist, theta + pi))
-        return Polygon((front_left, front_right, back_left, back_right))[0]
+        # Get polygon drawn around the current object, but with some
+        # custom width and length:
+        front_left = (self.x + length/2, self.y + width/2)
+        front_right = (self.x + length/2, self.y - width/2)
+        back_left = (self.x - length/2, self.y + width/2)
+        back_right = (self.x - length/2, self.y - width/2)
+        poly = Polygon((front_left, front_right, back_left, back_right))
+        poly.rotate(self.angle, self.x, self.y)
+        return poly[0]
+
 
     def get_polygon(self):
-        # Get polygon drawn around this object
-        (width, length, height) = self._dimensions
-        return self.get_generic_polygon(width, length)
+        # Returns 4 edges of a rectangle bounding the current object in the
+        # following order: front left, front right, bottom left and bottom right.
+        return self.get_generic_polygon(self.width, self.length)
 
     def __repr__(self):
         return ('x: %s\ny: %s\nangle: %s\nvelocity: %s\ndimensions: %s\n' %
                 (self.x, self.y,
-                 self.angle, self.velocity, self._dimensions))
+                 self.angle, self.velocity, (self.width, self.length, self.height)))
 
 
-class Robot(Pitch_Object):
+class Robot(PitchObject):
 
     def __init__(self, zone, x, y, angle, velocity, width=ROBOT_WIDTH, length=ROBOT_LENGTH, height=ROBOT_HEIGHT):
         super(Robot, self).__init__(x, y, angle, velocity, width, length, height)
@@ -230,7 +240,7 @@ class Robot(Pitch_Object):
 
     def get_shoot_path(self, goal):
         # Get closest possible shooting path between the robot and the goal
-        robot_poly = self.get_generic_polygon(BALL_WIDTH, self.dimensions[1])
+        robot_poly = self.get_generic_polygon(BALL_WIDTH, self.length)
         goal_poly = goal.get_polygon()
         goal_top = goal_poly[0] if goal_poly[0][0] == 0 else goal_poly[1]
         goal_bottom = goal_poly[1] if goal_poly[0][0] == 0 else goal_poly[0]
@@ -263,16 +273,16 @@ class Robot(Pitch_Object):
     def __repr__(self):
         return ('zone: %s\nx: %s\ny: %s\nangle: %s\nvelocity: %s\ndimensions: %s\n' %
                 (self._zone, self.x, self.y,
-                 self.angle, self.velocity, self.dimensions))
+                 self.angle, self.velocity, (self.width, self.length, self.height)))
 
 
-class Ball(Pitch_Object):
+class Ball(PitchObject):
 
     def __init__(self, x, y, angle, velocity):
         super(Ball, self).__init__(x, y, angle, velocity, BALL_WIDTH, BALL_LENGTH, BALL_HEIGHT)
 
 
-class Goal(Pitch_Object):
+class Goal(PitchObject):
 
     def __init__(self, zone, x, y, angle):
         super(Goal, self).__init__(x, y, angle, 0, GOAL_WIDTH, GOAL_LENGTH, GOAL_HEIGHT)
@@ -284,7 +294,7 @@ class Goal(Pitch_Object):
 
     def __repr__(self):
         return ('zone: %s\nx: %s\ny: %s\nangle: %s\nvelocity: %s\ndimensions: %s\n' %
-                (self._zone, self.x, self.y, self.angle, self.velocity, self.dimensions))
+                (self._zone, self.x, self.y, self.angle, self.velocity, (self.width, self.length, self.height)))
 
 class Pitch(object):
     '''
