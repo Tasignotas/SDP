@@ -115,7 +115,7 @@ class TestPitchObject(unittest.TestCase):
         Checks if vector can't be set to None
         '''
         p = PitchObject(2, 2, 0, 0, 20, 20, 20)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             p.vector = None
         try:
             p.vector = Vector(2, 2, 1, 10)
