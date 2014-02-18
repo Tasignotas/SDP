@@ -13,15 +13,13 @@ class Controller:
     Primary source of robot control. Ties vision and planning together.
     """
 
-    def __init__(self, pitch, color, our_side, port=0, connect=True, debug=False):
+    def __init__(self, pitch, color, our_side, port=0, attacker=None, defender=None):
         """
         Entry point for the SDP system.
 
         Params:
             [int] port      port number for the camera
-            [bool] connect  connect to the nxt?
             [int] pitch     0 - main pitch, 1 - secondary pitch
-            [bool] debug    print debug messages?
         """
         if pitch not in [0, 1]:
             raise Exception('Incorrect pitch number.')
@@ -49,9 +47,14 @@ class Controller:
         # Set up GUI
         self.GUI = GUI()
 
-        # Debug flag for print statements
-        self.debug = debug
         self.color = color
+
+        # Set a flag to know whether to execute or not.
+        self.executable = True if attacker and defender else False
+
+        if self.executable:
+            self.attacker = attacker
+            self.defender = defender
 
         #self.attacker = Attacker_Controller(connectionName='GRP7A', leftMotorPort=PORT_C, rightMotorPort=PORT_B, kickerMotorPort=PORT_A)
         # self.defender = Defender_Controller('GRP7D', PORT_C, PORT_A, PORT_B)
@@ -76,8 +79,9 @@ class Controller:
                 # print 'Actions:', actions
                 actions = []
                 # Execute action
-                #self.attacker.execute(actions)
-                # self.defender.execute(actions)
+                if self.executable:
+                    self.attacker.execute(actions)
+                    self.defender.execute(actions)
 
                 # Draw vision content and actions
                 self.GUI.draw(frame, positions, actions, extras, our_color=self.color)
@@ -184,4 +188,4 @@ if __name__ == '__main__':
     parser.add_argument("color", help="The color of our team - ['yellow', 'blue'] allowed.")
     args = parser.parse_args()
     # print args
-    c = Controller(debug=True, pitch=int(args.pitch), color=args.color, our_side=args.side).wow()  # Such controller
+    c = Controller(pitch=int(args.pitch), color=args.color, our_side=args.side).wow()  # Such controller
