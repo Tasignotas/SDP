@@ -26,10 +26,8 @@ class TestCoordinate(unittest.TestCase):
         This test checks if the Coordinate object can be assigned a wrong value
         '''
         coord = Coordinate(10, 10)
-        with self.assertRaises(ValueError):
-            coord.x = None
-        with self.assertRaises(ValueError):
-            coord.y = None
+        self.assertRaises(ValueError, setattr, coord, 'x', None)
+        self.assertRaises(ValueError, setattr, coord, 'y', None)
 
 
 class TestVector(unittest.TestCase):
@@ -60,13 +58,10 @@ class TestVector(unittest.TestCase):
         '''
         vec = Vector(2, 5, pi, 10)
         #Incorrect angle:
-        with self.assertRaises(ValueError):
-            vec.angle = -0.5
-        with self.assertRaises(ValueError):
-            vec.angle = 10
+        self.assertRaises(ValueError, setattr, vec, 'angle', -0.5)
+        self.assertRaises(ValueError, setattr, vec, 'angle', 10)
         #Incorrect velocity:
-        with self.assertRaises(ValueError):
-            vec.velocity = -1
+        self.assertRaises(ValueError, setattr, vec, 'velocity', -1)
 
     def test_correct_assignment(self):
         '''
@@ -98,12 +93,9 @@ class TestPitchObject(unittest.TestCase):
         Checks if width, length and height can't be set as negative.
         Also checks if valid values are accepted.
         '''
-        with self.assertRaises(ValueError):
-            p = PitchObject(2, 2, 0, 0, -1, 1, 1)
-        with self.assertRaises(ValueError):
-            p = PitchObject(2, 2, 0, 0, 1, -1, 1)
-        with self.assertRaises(ValueError):
-            p = PitchObject(2, 2, 0, 0, 1, 1, -1)
+        self.assertRaises(ValueError, PitchObject, *(2, 2, 0, 0, -1, 1, 1))
+        self.assertRaises(ValueError, PitchObject, *(2, 2, 0, 0, 1, -1, 1))
+        self.assertRaises(ValueError, PitchObject, *(2, 2, 0, 0, 1, 1, -1))
         try:
             p = PitchObject(2, 2, 1, 10, 20, 30, 10)
         except ValueError:
@@ -115,8 +107,7 @@ class TestPitchObject(unittest.TestCase):
         Checks if vector can't be set to None
         '''
         p = PitchObject(2, 2, 0, 0, 20, 20, 20)
-        with self.assertRaises(ValueError):
-            p.vector = None
+        self.assertRaises(ValueError, setattr, p, 'vector', None)
         try:
             p.vector = Vector(2, 2, 1, 10)
         except ValueError:
@@ -156,64 +147,64 @@ class TestRobot(unittest.TestCase):
         # When robot is at angle 0:
         robot = Robot(0, 50, 50, 0, 0)
         # When there is no displacement and angle:
-        assert_almost_equal(robot.get_displacement_and_angle(50, 50), (0, 0))
+        assert_almost_equal(robot.get_direction(50, 50), (0, 0))
         # Only displacement:
-        assert_almost_equal(robot.get_displacement_and_angle(60, 50), (10, 0))
+        assert_almost_equal(robot.get_direction(60, 50), (10, 0))
         # Various kinds displacement and positive/negative angles:
-        assert_almost_equal(robot.get_displacement_and_angle(60, 60), (sqrt(200), pi/4))
-        assert_almost_equal(robot.get_displacement_and_angle(60, 40), (sqrt(200), -pi/4))
-        assert_almost_equal(robot.get_displacement_and_angle(50, 60), (10, pi/2))
-        assert_almost_equal(robot.get_displacement_and_angle(50, 40), (10, -pi/2))
-        assert_almost_equal(robot.get_displacement_and_angle(40, 60), (sqrt(200), 3*pi/4))
-        assert_almost_equal(robot.get_displacement_and_angle(40, 40), (sqrt(200), -3*pi/4))
+        assert_almost_equal(robot.get_direction(60, 60), (sqrt(200), pi/4))
+        assert_almost_equal(robot.get_direction(60, 40), (sqrt(200), -pi/4))
+        assert_almost_equal(robot.get_direction(50, 60), (10, pi/2))
+        assert_almost_equal(robot.get_direction(50, 40), (10, -pi/2))
+        assert_almost_equal(robot.get_direction(40, 60), (sqrt(200), 3*pi/4))
+        assert_almost_equal(robot.get_direction(40, 40), (sqrt(200), -3*pi/4))
         # When robot is at angle pi/4:
         robot = Robot(0, 50, 50, pi/4, 0)
-        assert_almost_equal(robot.get_displacement_and_angle(50, 50), (0, 0))
+        assert_almost_equal(robot.get_direction(50, 50), (0, 0))
         # Only displacement:
-        assert_almost_equal(robot.get_displacement_and_angle(60, 60), (sqrt(200), 0))
+        assert_almost_equal(robot.get_direction(60, 60), (sqrt(200), 0))
         # Various kinds displacement and positive/negative angles:
-        assert_almost_equal(robot.get_displacement_and_angle(50, 60), (10, pi/4))
-        assert_almost_equal(robot.get_displacement_and_angle(60, 50), (10, -pi/4))
-        assert_almost_equal(robot.get_displacement_and_angle(40, 60), (sqrt(200), pi/2))
-        assert_almost_equal(robot.get_displacement_and_angle(60, 40), (sqrt(200), -pi/2))
-        assert_almost_equal(robot.get_displacement_and_angle(40, 50), (10, 3*pi/4))
-        assert_almost_equal(robot.get_displacement_and_angle(50, 40), (10, -3*pi/4))
+        assert_almost_equal(robot.get_direction(50, 60), (10, pi/4))
+        assert_almost_equal(robot.get_direction(60, 50), (10, -pi/4))
+        assert_almost_equal(robot.get_direction(40, 60), (sqrt(200), pi/2))
+        assert_almost_equal(robot.get_direction(60, 40), (sqrt(200), -pi/2))
+        assert_almost_equal(robot.get_direction(40, 50), (10, 3*pi/4))
+        assert_almost_equal(robot.get_direction(50, 40), (10, -3*pi/4))
         # When robot is at angle 3*pi/4:
         robot = Robot(0, 50, 50, 3*pi/4, 0)
-        assert_almost_equal(robot.get_displacement_and_angle(50, 50), (0, 0))
+        assert_almost_equal(robot.get_direction(50, 50), (0, 0))
         # Only displacement:
-        assert_almost_equal(robot.get_displacement_and_angle(40, 60), (sqrt(200), 0))
+        assert_almost_equal(robot.get_direction(40, 60), (sqrt(200), 0))
         # Various kinds displacement and positive/negative angles:
-        assert_almost_equal(robot.get_displacement_and_angle(40, 50), (10, pi/4))
-        assert_almost_equal(robot.get_displacement_and_angle(50, 60), (10, -pi/4))
-        assert_almost_equal(robot.get_displacement_and_angle(40, 40), (sqrt(200), pi/2))
-        assert_almost_equal(robot.get_displacement_and_angle(60, 60), (sqrt(200), -pi/2))
-        assert_almost_equal(robot.get_displacement_and_angle(50, 40), (10, 3*pi/4))
-        assert_almost_equal(robot.get_displacement_and_angle(60, 50), (10, -3*pi/4))
+        assert_almost_equal(robot.get_direction(40, 50), (10, pi/4))
+        assert_almost_equal(robot.get_direction(50, 60), (10, -pi/4))
+        assert_almost_equal(robot.get_direction(40, 40), (sqrt(200), pi/2))
+        assert_almost_equal(robot.get_direction(60, 60), (sqrt(200), -pi/2))
+        assert_almost_equal(robot.get_direction(50, 40), (10, 3*pi/4))
+        assert_almost_equal(robot.get_direction(60, 50), (10, -3*pi/4))
         # When robot is at angle 5*pi/4:
         robot = Robot(0, 50, 50, 5*pi/4, 0)
-        assert_almost_equal(robot.get_displacement_and_angle(50, 50), (0, 0))
+        assert_almost_equal(robot.get_direction(50, 50), (0, 0))
         # Only displacement:
-        assert_almost_equal(robot.get_displacement_and_angle(40, 40), (sqrt(200), 0))
+        assert_almost_equal(robot.get_direction(40, 40), (sqrt(200), 0))
         # Various kinds displacement and positive/negative angles:
-        assert_almost_equal(robot.get_displacement_and_angle(50, 40), (10, pi/4))
-        assert_almost_equal(robot.get_displacement_and_angle(40, 50), (10, -pi/4))
-        assert_almost_equal(robot.get_displacement_and_angle(60, 40), (sqrt(200), pi/2))
-        assert_almost_equal(robot.get_displacement_and_angle(40, 60), (sqrt(200), -pi/2))
-        assert_almost_equal(robot.get_displacement_and_angle(60, 50), (10, 3*pi/4))
-        assert_almost_equal(robot.get_displacement_and_angle(50, 60), (10, -3*pi/4))
+        assert_almost_equal(robot.get_direction(50, 40), (10, pi/4))
+        assert_almost_equal(robot.get_direction(40, 50), (10, -pi/4))
+        assert_almost_equal(robot.get_direction(60, 40), (sqrt(200), pi/2))
+        assert_almost_equal(robot.get_direction(40, 60), (sqrt(200), -pi/2))
+        assert_almost_equal(robot.get_direction(60, 50), (10, 3*pi/4))
+        assert_almost_equal(robot.get_direction(50, 60), (10, -3*pi/4))
         # When robot is at angle 7*pi/4:
         robot = Robot(0, 50, 50, 7*pi/4, 0)
-        assert_almost_equal(robot.get_displacement_and_angle(50, 50), (0, 0))
+        assert_almost_equal(robot.get_direction(50, 50), (0, 0))
         # Only displacement:
-        assert_almost_equal(robot.get_displacement_and_angle(60, 40), (sqrt(200), 0))
+        assert_almost_equal(robot.get_direction(60, 40), (sqrt(200), 0))
         # Various kinds displacement and positive/negative angles:
-        assert_almost_equal(robot.get_displacement_and_angle(60, 50), (10, pi/4))
-        assert_almost_equal(robot.get_displacement_and_angle(50, 40), (10, -pi/4))
-        assert_almost_equal(robot.get_displacement_and_angle(60, 60), (sqrt(200), pi/2))
-        assert_almost_equal(robot.get_displacement_and_angle(40, 40), (sqrt(200), -pi/2))
-        assert_almost_equal(robot.get_displacement_and_angle(50, 60), (10, 3*pi/4))
-        assert_almost_equal(robot.get_displacement_and_angle(40, 50), (10, -3*pi/4))
+        assert_almost_equal(robot.get_direction(60, 50), (10, pi/4))
+        assert_almost_equal(robot.get_direction(50, 40), (10, -pi/4))
+        assert_almost_equal(robot.get_direction(60, 60), (sqrt(200), pi/2))
+        assert_almost_equal(robot.get_direction(40, 40), (sqrt(200), -pi/2))
+        assert_almost_equal(robot.get_direction(50, 60), (10, 3*pi/4))
+        assert_almost_equal(robot.get_direction(40, 50), (10, -3*pi/4))
 
 
 class TestPitch(unittest.TestCase):
