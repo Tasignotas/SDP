@@ -1,5 +1,6 @@
 import sys
 from planning.models import Vector
+from copy import deepcopy
 from math import atan2, pi, hypot
 
 
@@ -40,10 +41,7 @@ class Postprocessing(object):
 			self._vectors['ball']['time'] =  self._time
 			return Vector(info['x'], info['y'], angle, velocity)
 		else:
-			return Vector(self._vectors['ball']['vec'].x,
-						  self._vectors['ball']['vec'].y,
-						  self._vectors['ball']['vec'].angle,
-						  self._vectors['ball']['vec'].velocity)
+			return deepcopy(self._vectors['ball']['vec'])
 
 	def analyze_robot(self, key, info):
 		'''
@@ -57,7 +55,4 @@ class Postprocessing(object):
 			self._vectors[key]['time'] = self._time
 			return Vector(info['x'], info['y'], info['angle'], velocity)
 		else:
-			return Vector(self._vectors[key]['vec'].x,
-						  self._vectors[key]['vec'].y,
-						  self._vectors[key]['vec'].angle,
-						  self._vectors[key]['vec'].velocity)		
+			return deepcopy(self._vectors[key]['vec'])		
