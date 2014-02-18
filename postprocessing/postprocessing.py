@@ -1,60 +1,53 @@
 import sys
 from planning.models import Vector
-from math import atan, pi, sqrt, radians
-
+from math import atan2, pi, hypot
 
 
 class Postprocessing(object):
 
-
 	def __init__(self):
 		self._vectors = {}
-		self._vectors['ball']= []
-		self._vectors['our_attacker'] = []
-		self._vectors['their_attacker'] = []
-		self._vectors['our_defender'] = []
-		self._vectors['their_defender'] = []
-
+		self._vectors['ball']= Vector(0, 0, 0, 0)
+		self._vectors['our_attacker'] = Vector(0, 0, 0, 0)
+		self._vectors['their_attacker'] = Vector(0, 0, 0, 0)
+		self._vectors['our_defender'] = Vector(0, 0, 0, 0)
+		self._vectors['their_defender'] = Vector(0, 0, 0, 0)
 
 	def analyze(self, vector_dict):
-		"""
-		Method that analyzes current and previous object vectors.
-		It adjusts the angle, finds the velocity and predicts the
-		value of the vector taking lag into account.
-		"""
+		'''
+		This method analyzes current positions and previous object vector.
+		'''
 		new_vector_dict = {}
-		for name, vec in vector_dict.iteritems():
-			self._vectors[name] = [vec] + self._vectors[name]
-			if len(self._vectors[name]) > 5:
-				self._vectors[name].pop()
-			new_vector_dict[name] = self.analyze_ball(name, vec) if name == 'ball' else self.analyze_robot(name, vec)
+		for name, info in vector_dict.iteritems():
+			if name == 'ball':
+			new_vector_dict[name] = self.analyze_ball(info)
+			else:
+				new_vector_dict[name] = self.analyze_robot(name, info)
 		return new_vector_dict
 
-
-	def analyze_ball(self, key, current_vec):
-		# This method calculates the angle and the velocity of the ball.
-		# TODO: make it able to PREDICT angle, speed and the location by specified lag.
-		# Getting the last two successful ball captures:
-		velocity = None
-		angle = None
-		prev_pos = [(idx, val.get_x(), val.get_y()) for (idx, val) in enumerate(self._vectors[key]) if val]
-		if len(prev_pos) > 1:
-			delta_x = None if (prev_pos[0][1] == None) or (prev_pos[1][1] == None) else prev_pos[0][1] - prev_pos[1][1]
-			delta_y = None if (prev_pos[0][2] == None) or (prev_pos[1][2] == None) else prev_pos[0][2] - prev_pos[1][2]
-			ratio = delta_y/delta_x if delta_x and delta_y else (float('inf') if delta_y > 0 else float('-inf'))
-			angle = atan(ratio) if not(ratio == None) else None
-			velocity = None if (delta_x == None) or (delta_y == None) else sqrt(delta_x**2 + delta_y**2)/(prev_pos[1][0] - prev_pos[0][0])
-		return Vector(current_vec.get_x(), current_vec.get_y(), angle, velocity)
-
+	def analyze_ball(self, info):
+		'''
+		This method calculates the angle and the velocity of the ball.
+		'''
+		if info['x'] and info['y']:
+			delta_x = info['x'] - self._vectors['ball'].x
+			delta_y = info['y'] - self._vectors['ball'].y
+			velocity = hypot(delta_y, delta_x)
+			angle = atan2(delta_y, delta_x) % 2*pi
+			self_vectors['ball'] = Vector(info['x'], info['y'], angle, velocity)
+			return Vector(info['x'], info['y'], angle, velocity)
+		else:
+			return Vector(self._vectors['ball'].x, self._vectors['ball'].y, self._vectors['ball'].angle, self._vectors['ball'].velocity)
 
 	def analyze_robot(self, key, current_vec):
-		# This method calculates the angle and the velocity of the robot.
-		# TODO: make it able to PREDICT angle, speed and the location by specified lag.
-		velocity = None
-		angle = current_vec.get_angle() if not(current_vec.get_angle() == None) else None
-		prev_pos = [(idx, val.get_x(), val.get_y()) for (idx, val) in enumerate(self._vectors[key]) if val]
-		if len(prev_pos) > 1:
-			delta_x = None if (prev_pos[0][1] == None) or (prev_pos[1][1] == None) else prev_pos[0][1] - prev_pos[1][1]
-			delta_y = None if (prev_pos[0][2] == None) or (prev_pos[1][2] == None) else prev_pos[0][2] - prev_pos[1][2]
-			velocity = None if (delta_x == None) or (delta_y == None) else sqrt(delta_x**2 + delta_y**2)/(prev_pos[1][0] - prev_pos[0][0])
-		return Vector(current_vec.get_x(), current_vec.get_y(), angle, velocity)
+		'''
+		This method calculates the angle and the velocity of the robot.
+		'''
+		if info['x'] and info['y'] and info['angle']:
+			delta_x = info['x'] - self._vectors[key].x
+			delta_y = info['y'] - self._vectors[key].y
+			velocity = hypot(delta_y, delta_x)
+			self_vectors[key] = Vector(info['x'], info['y'], info['angle'], velocity)
+			return Vector(info['x'], info['y'], info['angle'], velocity)
+		else:
+			return Vector(self._vectors[key].x, self._vectors[key].y, self._vectors[key].angle, self._vectors[key].velocity)		
