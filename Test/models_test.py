@@ -17,7 +17,7 @@ class TestCoordinate(unittest.TestCase):
         '''
         This test checks if the Coordinate object can be initialised incorrectly
         '''
-        self.assertRaises(ValueError, Coordinate, None, 5)
+        self.assertRaises(TypeError, Coordinate, None, 5)
         self.assertRaises(ValueError, Coordinate, 5, None)
         self.assertRaises(ValueError, Coordinate, None, None)
 
