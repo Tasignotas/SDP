@@ -1,7 +1,6 @@
 import unittest
-from math import pi, sin, cos, tan, atan, hypot, sqrt
+from math import pi, sqrt
 from postprocessing.postprocessing import *
-from numpy.testing import assert_almost_equal
 from planning.models import *
 
 
