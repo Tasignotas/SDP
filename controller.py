@@ -6,6 +6,7 @@ import vision.tools as tools
 from nxt import *
 from time import sleep
 from cv2 import waitKey
+#import vision.colorNormalisation #Uncomment to enable color normalisation
 
 
 class Controller:
