@@ -13,11 +13,11 @@ while True:
     if t:
         frame = frame[crop[2]:crop[3],crop[0]:crop[1]]
         f = frame.copy()
-        frame = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
+        frame = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV) #Convert to HSV
         #frame[:,:,0] = cv2.equalizeHist(frame[:,:,0])
-        frame[:,:,1] = cv2.equalizeHist(frame[:,:,1])
+        frame[:,:,1] = cv2.equalizeHist(frame[:,:,1]) #Equalize the saturation channel
         #frame[:,:,2] = cv2.equalizeHist(frame[:,:,2])
-        frame = cv2.cvtColor(frame,cv2.COLOR_HSV2BGR)
+        frame = cv2.cvtColor(frame,cv2.COLOR_HSV2BGR) # Convert back for display
        # frame = cv2.blur(frame,(2,2))
         cv2.imshow("Normalized",frame)
         cv2.imshow("Original",f)
