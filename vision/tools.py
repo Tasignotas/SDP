@@ -3,8 +3,10 @@ import cv2
 import json
 import thread
 import socket
+import os
 
-
+PATH = os.path.dirname(os.path.realpath(__file__))
+# print PATH
 # BGR Colors
 BLACK = (0,0,0)
 
@@ -35,17 +37,17 @@ def get_zones(width, height):
     return [(mids[i], mids[i+1], 0, height) for i in range(4)]
 
 
-def get_calibration(filename='calibrate.json'):
+def get_calibration(filename=PATH+'calibrate.json'):
     _file = open(filename, 'r')
     return get_json(filename)
 
-def get_json(filename='calibrate.json'):
+def get_json(filename=PATH+'calibrate.json'):
     _file = open(filename, 'r')
     content = json.loads(_file.read())
     _file.close()
     return content
 
-def get_colors(pitch=0, filename='calibrations/calibrations.json'):
+def get_colors(pitch=0, filename=PATH+'/calibrations/calibrations.json'):
     json_content = get_json(filename)
     machine_name = socket.gethostname().split('.')[0]
     pitch_name = 'PITCH0' if pitch == 0 else 'PITCH1'
@@ -63,9 +65,6 @@ def get_colors(pitch=0, filename='calibrations/calibrations.json'):
             key_dict['max'] = np.array(tuple(key_dict['max']))
 
     return current
-
-
-
 
 def write_json(filename='calibrate.json', data={}):
     _file = open(filename, 'w')
