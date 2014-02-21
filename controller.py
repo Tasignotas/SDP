@@ -45,7 +45,8 @@ class Controller:
         self.planner = Planner(our_side=our_side)
 
         # Set up GUI
-        self.GUI = GUI(calibration=tools.get_colors(pitch))
+        self.calibration = tools.get_colors(pitch)
+        self.GUI = GUI(calibration=self.calibration)
 
         self.color = color
 
@@ -88,6 +89,7 @@ class Controller:
 
                 # Draw vision content and actions
                 self.GUI.draw(frame, positions, actions, extras, our_color=self.color, key=c)
+                print self.calibration['yellow']['min']
 
         except:
             if hasattr(self, 'defender'):
