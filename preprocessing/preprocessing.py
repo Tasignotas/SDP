@@ -24,8 +24,7 @@ class Preprocessing(object):
         # Apply normalization
         if self.options['normalize']:
             # Normalize only the saturation channel
-            self.normalize(frame)
-            results['frame'] = frame
+            results['frame'] = self.normalize(frame)
 
         # Apply background subtraction
         if self.options['background_sub']:
