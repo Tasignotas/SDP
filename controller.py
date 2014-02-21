@@ -112,7 +112,7 @@ class Controller:
         self.planner = Planner(our_side=our_side)
 
         # Set up GUI
-        self.GUI = GUI(COLORS['PITCH0'])
+        self.GUI = GUI(tools.get_colors(pitch))
 
         self.color = color
 
@@ -150,15 +150,15 @@ class Controller:
                     self.attacker.execute(actions)
                     self.defender.execute(actions)
 
-                # Draw vision content and actions
-                self.GUI.draw(frame, positions, actions, extras, our_color=self.color)
-
                 # Key listener for chaning color in calibration GUI and saving calibration to file
                 # For some reason, it noly responds when you hold the key down.
                 # Use 'y', 'b', 'r' to change color and 's' to save.
                 c = waitKey(1) & 0xFF
 
-                self.GUI.calibration_gui.key_handler.processKey(chr(c % 0x100))
+                # Draw vision content and actions
+                self.GUI.draw(frame, positions, actions, extras, our_color=self.color, key=c)
+                
+                # self.GUI.calibration_gui.key_handler.processKey(chr(c % 0x100))
 
         except:
             if hasattr(self, 'defender'):

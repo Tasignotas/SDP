@@ -51,23 +51,16 @@ class CalibrationGUI(object):
         createTrackbar('CT', self.calibration[self.color]['contrast'])
         createTrackbar('BL', self.calibration[self.color]['blur'])
 
-        # for setting in CONTROLS:
-        #     cv2.createTrackbar(setting, self.maskWindowName, int(self.config_file.get_value(self.color, setting)), \
-        #         MAXBAR[setting], nothing)
-
-        def yellow(): self.change_color('yellow')
         def blue(): self.change_color('blue')
         def red(): self.change_color('red')
 
-        self.key_handler.addListener('y', yellow)
-        self.key_handler.addListener('b', blue)
-        self.key_handler.addListener('r', red)
+        # self.key_handler.addListener('y', yellow)
+        # self.key_handler.addListener('b', blue)
+        # self.key_handler.addListener('r', red)
 
     def change_color(self, color):
 
         self.color = color
-        # for setting in CONTROLS:
-        #     cv2.setTrackbarPos(setting, self.maskWindowName, int(self.config_file.get_value(self.color, setting)))
 
         setTrackbarPos = lambda setting, value: cv2.setTrackbarPos(setting, self.maskWindowName, int(value))
 
@@ -80,8 +73,15 @@ class CalibrationGUI(object):
         setTrackbarPos('CT', self.calibration[color]['contrast'])
         setTrackbarPos('BL', self.calibration[color]['blur'])
 
-    def show(self, frame):
+    def show(self, frame, key=None):
         
+        if key == ord('y'):
+            self.change_color('yellow')
+        elif key == ord('b'):
+            self.change_color('blue')
+        elif key == ord('r'):
+            self.change_color('red')        
+
         getTrackbarPos = lambda setting: cv2.getTrackbarPos(setting, self.maskWindowName)
 
         values = {}
