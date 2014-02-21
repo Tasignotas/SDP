@@ -2,6 +2,8 @@ import numpy as np
 import cv2
 import json
 import thread
+import socket
+
 
 # BGR Colors
 BLACK = (0,0,0)
@@ -39,7 +41,31 @@ def get_calibration(filename='calibrate.json'):
 
 def get_json(filename='calibrate.json'):
     _file = open(filename, 'r')
-    return json.loads(_file.read())
+    content = json.loads(_file.read())
+    _file.close()
+    return content
+
+def get_colors(pitch=0, filename='calibrations/calibrations.json'):
+    json_content = get_json(filename)
+    machine_name = socket.gethostname().split('.')[0]
+    pitch_name = 'PITCH0' if pitch == 0 else 'PITCH1'
+    if machine_name in json_content:
+        current =  json_content[machine_name][pitch_name]
+    else:
+        current =  json_content['default'][pitch_name]
+
+    # convert mins and maxes into np.array
+    for key in current:
+        key_dict = current[key]
+        if 'min' in key_dict:
+            key_dict['min'] = np.array(tuple(key_dict['min']))
+        if 'max' in key_dict:
+            key_dict['max'] = np.array(tuple(key_dict['max']))
+
+    return current
+
+
+
 
 def write_json(filename='calibrate.json', data={}):
     _file = open(filename, 'w')
@@ -164,3 +190,5 @@ def mask(frame, lower, higher):
     """
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     return cv2.inRange(hsv, lower, higher)
+
+print get_colors()
