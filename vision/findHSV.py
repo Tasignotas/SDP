@@ -30,7 +30,6 @@ class CalibrationGUI(object):
         # self.pre_options = pre_options
         self.calibration = calibration
         self.maskWindowName = "Mask"
-        self.key_handler = EventHandler()
        
         self.setWindow()
 
@@ -76,7 +75,8 @@ class CalibrationGUI(object):
 
         values = {}
         for setting in CONTROLS:
-            values[setting] = getTrackbarPos(setting)
+            values[setting] = float(getTrackbarPos(setting))
+        values['BL'] = int(values['BL'])
 
         self.calibration[self.color]['min'] = np.array([values['LH'], values['LS'], values['LV']])
         self.calibration[self.color]['max'] = np.array([values['UH'], values['US'], values['UV']])
