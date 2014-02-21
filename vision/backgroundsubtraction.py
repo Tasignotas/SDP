@@ -21,7 +21,6 @@ while(1):
     fgmask = fgbg.apply(frame)
     #frame = cv2.bitwise_and(frame,frame,mask=fgmask)
 
-    #img = cv2.cvtColor(fgmask,cv2.COLOR_BGR2GRAY)
     ret,thresh = cv2.threshold(fgmask,127,255,0)
 
     contours, hierarchy = cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
@@ -35,12 +34,18 @@ while(1):
             radius = int(radius)
             cv2.circle(frame,center,radius,(0,255,0),2)
             #print "Area:", area
-        elif area > 700:
+        elif area > 600 and area < 1400:    #bounds for worst (on green field) and best (on white boundary) case.
             x,y,w,h = cv2.boundingRect(x)
             cv2.rectangle(frame,(x,y),(x+w,y+h),(0,0,255),2)
+    #try:
+    #    area = cv2.contourArea(contours[0])
+    #    print area
+    #except:
+    #    pass
 
     cv2.imshow('frame',frame)
-    k = cv2.waitKey(30) & 0xff
+    cv2.imshow('fgmask',fgmask)
+    k = cv2.waitKey(5) & 0xff
     if k == 27:
         break
 
