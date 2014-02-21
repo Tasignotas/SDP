@@ -27,9 +27,9 @@ def nothing(x):
 
 class CalibrationGUI(object):
 
-    def __init__(self, pitch):
+    def __init__(self, calibration):
         self.color = 'yellow'
-        self.pitch = pitch
+        self.calibration = calibration
         self.maskWindowName = "Mask"
         self.key_handler = EventHandler()
        
@@ -58,6 +58,14 @@ class CalibrationGUI(object):
         self.color = color
         for setting in CONTROLS:
             cv2.setTrackbarPos(setting, self.maskWindowName, int(self.config_file.get_value(self.color, setting)))
+
+        # cv2.setTrackBarPos("LH", self.maskWindowName, int(self.calibration[color]['min'][0]))
+        # cv2.setTrackBarPos("UH", self.maskWindowName, int(self.calibration[color]['max'][0]))
+        # cv2.setTrackBarPos("LS", self.maskWindowName, int(self.calibration[color]['min'][1]))
+        # cv2.setTrackBarPos("US", self.maskWindowName, int(self.calibration[color]['max'][1]))
+        # cv2.setTrackBarPos("LV", self.maskWindowName, int(self.calibration[color]['min'][2]))
+        # cv2.setTrackBarPos("UV", self.maskWindowName, int(self.calibration[color]['max'][2]))
+        # cv2.setTrackbarPos("BR", self.maskWindowName, 1)
 
     def save_to_file(self):
 

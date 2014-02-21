@@ -8,6 +8,72 @@ from time import sleep
 from cv2 import waitKey
 #import vision.colorNormalisation #Uncomment to enable color normalisation
 
+import numpy as np
+COLORS = {'PITCH0' : {
+    'plate': {
+        'min': np.array((60.0, 72.0, 38.0)),
+        'max': np.array((86.0, 136.0, 255.0)),
+        'contrast': 100.0,
+        'blur': 1
+    },
+    'dot': {
+            'min': np.array((6.0, 23.0, 154.0)),
+            'max': np.array((94.0, 63.0, 170.0)),
+            'contrast': 100.0,
+            'blur': 1
+        },
+    'red':  {
+            'min': np.array((0.0, 114.0, 132.0)),
+            'max': np.array((5.0, 255.0, 255.0)),
+            'contrast': 30.0,
+            'blur': 5
+        },
+    'yellow': {
+            'min': np.array((16.0, 165.0, 136.0)), #LH,LS,LV
+            'max': np.array((19.0, 255.0, 255.0)), #UH,US,UV
+            'contrast': 1.0,
+            'blur': 0
+        },
+    'blue': {
+            'min': np.array((88.0, 147.0, 82.0)),    #LH,LS,LV
+            'max': np.array((104.0, 255.0, 255.0)), #UH,US,UV
+            'contrast': 0.0,
+            'blur': 0
+        }
+    },
+'PITCH1' : {
+    'plate': {
+        'min': np.array((60.0, 72.0, 38.0)),
+        'max': np.array((86.0, 136.0, 255.0)),
+        'contrast': 100.0,
+        'blur': 1
+    },
+    'dot': {
+            'min': np.array((6.0, 23.0, 154.0)),
+            'max': np.array((94.0, 63.0, 170.0)),
+            'contrast': 100.0,
+            'blur': 1
+        },
+    'red':  {
+            'min': np.array((0.0, 114.0, 132.0)),
+            'max': np.array((5.0, 255.0, 255.0)),
+            'contrast': 30.0,
+            'blur': 5
+        },
+    'yellow': {
+            'min': np.array((16.0, 165.0, 136.0)), #LH,LS,LV
+            'max': np.array((19.0, 255.0, 255.0)), #UH,US,UV
+            'contrast': 1.0,
+            'blur': 0
+        },
+    'blue': {
+            'min': np.array((88.0, 147.0, 82.0)),    #LH,LS,LV
+            'max': np.array((104.0, 255.0, 255.0)), #UH,US,UV
+            'contrast': 0.0,
+            'blur': 0
+        }
+    }
+}
 
 class Controller:
     """
@@ -46,7 +112,7 @@ class Controller:
         self.planner = Planner(our_side=our_side)
 
         # Set up GUI
-        self.GUI = GUI()
+        self.GUI = GUI(COLORS['PITCH0'])
 
         self.color = color
 
@@ -91,7 +157,8 @@ class Controller:
                 # For some reason, it noly responds when you hold the key down.
                 # Use 'y', 'b', 'r' to change color and 's' to save.
                 c = waitKey(1) & 0xFF
-                self.GUI.calibration_gui.key_handler.processKey(chr(c % 0x100))
+
+                # self.GUI.calibration_gui.key_handler.processKey(chr(c % 0x100))
 
         except:
             if hasattr(self, 'defender'):
