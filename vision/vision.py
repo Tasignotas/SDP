@@ -208,6 +208,8 @@ class GUI(object):
 
     def draw(self, frame, positions, actions, extras, our_color, key=None):
 
+        self.calibration_gui.show(frame, key)
+        
         height, width, channels = frame.shape
         if self.zones is None:
             self.zones = tools.get_zones(width, height)
@@ -215,7 +217,6 @@ class GUI(object):
         for zone in self.zones:
             cv2.line(frame, (zone[1], 0), (zone[1], height), BGR_COMMON['red'], 1)
 
-        self.calibration_gui.show(frame, key)
 
         positions = {
             'our_attacker': self.to_vector(extras[1]),
