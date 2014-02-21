@@ -153,8 +153,10 @@ class PitchObject(object):
             self._vector = new_vector
 
     def get_generic_polygon(self, width, length):
-        # Get polygon drawn around the current object, but with some
-        # custom width and length:
+        '''
+        Get polygon drawn around the current object, but with some
+        custom width and length:
+        '''
         front_left = (self.x + length/2, self.y + width/2)
         front_right = (self.x + length/2, self.y - width/2)
         back_left = (self.x - length/2, self.y + width/2)
@@ -164,8 +166,10 @@ class PitchObject(object):
         return poly[0]
 
     def get_polygon(self):
-        # Returns 4 edges of a rectangle bounding the current object in the
-        # following order: front left, front right, bottom left and bottom right.
+        '''
+        Returns 4 edges of a rectangle bounding the current object in the
+        following order: front left, front right, bottom left and bottom right.
+        '''
         return self.get_generic_polygon(self.width, self.length)
 
     def __repr__(self):
@@ -185,14 +189,18 @@ class Robot(PitchObject):
         return self._zone
 
     def is_near_ball(self, ball):
-        # Get if the robot is near the ball but may not have possession
+        '''
+        Get if the robot is near the ball but may not have possession
+        '''
         delta_x = ball.x - self.x
         delta_y = ball.y - self.y
         check_displacement = hypot(delta_x, delta_y) <= BALL_POSS_THRESH
         return check_displacement
 
     def has_ball(self, ball):
-        # Get if the robot has possession of the ball
+        '''
+        Gets if the robot has possession of the ball
+        '''
         robot_poly = self.get_polygon()
         center_x = (robot_poly[0][0] + robot_poly[1][0]) / 2
         center_y = (robot_poly[0][1] + robot_poly[1][1]) / 2
@@ -201,29 +209,11 @@ class Robot(PitchObject):
         check_displacement = hypot(delta_x, delta_y) <= ball.width + BALL_POSS_THRESH
         return check_displacement
 
-    def get_direction_to_stationary_ball(self, ball):
-        # Gets path to grab stationary ball
-        # Returns (displacement, angle) tuple
-        return self.get_direction(ball.x, ball.y)
-
-    def get_direction_to_moving_ball(self, ball, velocity):
-        # TODO: NOT REFACTORED YET!!!
-        # Get path to intercept moving ball
-        delta_x = ball.x - self.x
-        delta_y = ball.y - self.y
-        ball_v_x = ball.velocity * cos(ball.angle)
-        ball_v_y = ball.velocity * sin(ball.angle)
-        a = pow(ball.velocity, 2) - pow(velocity, 2)
-        b = 2 * ((ball_v_x * delta_x) + (ball_v_y * delta_y))
-        c = pow(delta_x, 2) + pow(delta_y, 2)
-        t = max(roots([a, b, c]))
-        x = ball.x + (ball_v_x * t)
-        y = ball.y + (ball_v_y * t)
-        return self.get_direction(x, y)
-
-    def get_direction(self, x, y):
-        # Gets the displacement and the angle by which you need to turn
-        # to get to the (x, y). Returns an angle between -pi and pi.
+    def get_rotation_to_point(self, x, y):
+        '''
+        This method returns an angle by which the robot needs to rotate to achieve alignment.
+        It takes either an x, y coordinate of the object that we want to rotate to
+        '''
         delta_x = x - self.x
         delta_y = y - self.y
         displacement = hypot(delta_x, delta_y)
@@ -236,58 +226,30 @@ class Robot(PitchObject):
             elif theta < -pi:
                 theta += 2*pi
         assert -pi <= theta <= pi
-        return displacement, theta
-
-    def get_robot_alignment(self, target):
-        # Get angle by which this robot needs to turn to align with the target.
-        align_angle = target.angle + pi
-        theta = atan2(sin(align_angle), cos(align_angle)) - atan2(sin(self.angle), cos(self.angle))
-        if theta > pi:
-            theta -= 2*pi
-        elif theta < -pi:
-            theta += 2*pi
-        assert -pi <= theta <= pi
         return theta
 
+    def get_displacement_to_point(self, x, y):
+        '''
+        This method returns the displacement between the robot and the (x, y) coordinate.
+        '''
+        delta_x = x - self.x
+        delta_y = y - self.y
+        displacement = hypot(delta_x, delta_y)
+        return displacement
+
+    def get_direction_to_point(self, x, y):
+        '''
+        This method returns the displacement and angle to coordinate x, y.
+        '''
+        return self.get_displacement_to_point(x, y), self.get_rotation_to_point(x, y)
+
     def get_pass_path(self, target):
-        # Gets a path represented by a Polygon for the area for passing ball between two robots
+        '''
+        Gets a path represented by a Polygon for the area for passing ball between two robots
+        '''
         robot_poly = self.get_polygon()
         target_poly = target.get_polygon()
         return Polygon(robot_poly[0], robot_poly[1], target_poly[0], target_poly[1])
-
-    def get_shoot_path(self, goal):
-        # TODO: Needs to be refactored!
-        # Get closest possible shooting path between the robot and the goal
-        robot_poly = self.get_generic_polygon(BALL_WIDTH, self.length)
-        goal_poly = goal.get_polygon()
-        goal_top = goal_poly[0] if goal_poly[0][0] == 0 else goal_poly[1]
-        goal_bottom = goal_poly[1] if goal_poly[0][0] == 0 else goal_poly[0]
-        robot_top = robot_poly[1] if (pi / 2) < self.angle < ((3*pi) / 2) else robot_poly[0]
-        robot_bottom = robot_poly[0] if (pi / 2) < self.angle < ((3*pi) / 2) else robot_poly[1]
-        path_top = (goal_top[0], robot_top[1])
-        path_bottom = (goal_bottom[0], robot_bottom[1])
-        if robot_top[1] > goal_top[1]:
-            path_top = (goal_top[0], goal_top[1])
-            path_bottom = (goal_bottom[0], goal_top[1] - BALL_WIDTH)
-        if robot_bottom[1] < goal_bottom[1]:
-            path_top = (goal_top[0], goal_bottom[1] + BALL_WIDTH)
-            path_bottom = (goal_bottom[0], goal_bottom[1])
-        path_left = path_top if path_top[0] == 0 else path_bottom
-        path_right = path_bottom if path_top[0] == 0 else path_top
-        robot_left = robot_bottom if (pi / 2) < self.angle < ((3*pi) / 2) else robot_top
-        robot_right = robot_top if (pi / 2) < self.angle < ((3*pi) / 2) else robot_bottom
-        return Polygon((robot_left, robot_right, path_left, path_right))
-
-    def get_path_alignment(self, path):
-        # TODO: Not sure how this works.
-        # Get the angle alignment necessary for a clear kick
-        robot_midpoint = ((path[0][0] + path[1][0]) * 0.5, (path[0][1] + path[1][1]) * 0.5)
-        target_midpoint = ((path[2][0] + path[3][0]) * 0.5, (path[2][3] + path[1][1]) * 0.5)
-        delta_x = target_midpoint[0] - robot_midpoint[0]
-        delta_y = target_midpoint[1] - robot_midpoint[1]
-        theta = atan2(delta_y, delta_x) % (2 * pi)
-        delta_angle = theta - self.angle
-        return delta_angle
 
     def __repr__(self):
         return ('zone: %s\nx: %s\ny: %s\nangle: %s\nvelocity: %s\ndimensions: %s\n' %
@@ -334,7 +296,9 @@ class Pitch(object):
         self._zones.append(Polygon([(x, self._height - y) for (x, y) in config_json['Zone_3']]))
 
     def is_within_bounds(self, robot, point):
-    # Checks whether the position/point planned for the robot is reachable:
+        '''
+        Checks whether the position/point planned for the robot is reachable
+        '''
         zone = self._zones[robot.zone]
         return zone.isInside(point.x, point.y)
 
