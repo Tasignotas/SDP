@@ -158,7 +158,7 @@ class Controller:
                 # Use 'y', 'b', 'r' to change color and 's' to save.
                 c = waitKey(1) & 0xFF
 
-                # self.GUI.calibration_gui.key_handler.processKey(chr(c % 0x100))
+                self.GUI.calibration_gui.key_handler.processKey(chr(c % 0x100))
 
         except:
             if hasattr(self, 'defender'):
