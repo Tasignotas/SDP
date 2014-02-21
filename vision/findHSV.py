@@ -41,7 +41,6 @@ class CalibrationGUI(object):
 
         createTrackbar = lambda setting, value: cv2.createTrackbar(setting, self.maskWindowName, int(value), \
                 MAXBAR[setting], nothing)
-
         createTrackbar('LH', self.calibration[self.color]['min'][0])
         createTrackbar('UH', self.calibration[self.color]['max'][0])
         createTrackbar('LS', self.calibration[self.color]['min'][1])
@@ -51,19 +50,11 @@ class CalibrationGUI(object):
         createTrackbar('CT', self.calibration[self.color]['contrast'])
         createTrackbar('BL', self.calibration[self.color]['blur'])
 
-        def blue(): self.change_color('blue')
-        def red(): self.change_color('red')
-
-        # self.key_handler.addListener('y', yellow)
-        # self.key_handler.addListener('b', blue)
-        # self.key_handler.addListener('r', red)
-
     def change_color(self, color):
 
         self.color = color
 
         setTrackbarPos = lambda setting, value: cv2.setTrackbarPos(setting, self.maskWindowName, int(value))
-
         setTrackbarPos('LH', self.calibration[color]['min'][0])
         setTrackbarPos('UH', self.calibration[color]['max'][0])
         setTrackbarPos('LS', self.calibration[color]['min'][1])
