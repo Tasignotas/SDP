@@ -83,5 +83,23 @@ class CalibrationGUI(object):
         self.calibration[self.color]['contrast'] = values['CT']
         self.calibration[self.color]['blur'] = values['BL']
 
-        mask = cv2.inRange(frame, self.calibration[self.color]['min'], self.calibration[self.color]['max'])
+        mask = self.get_mask(frame)
         cv2.imshow(self.maskWindowName, mask)
+
+    # Duplicated from tracker.py
+    def get_mask(self, frame):
+        blur = self.calibration[self.color]['blur']
+        if blur > 1:
+            frame = cv2.blur(frame, (blur,blur))
+
+        contrast = self.calibration[self.color]['contrast']
+        if contrast > 1.0:
+            frame = cv2.add(frame, np.array([contrast]))     
+
+        frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+
+        min_color = self.calibration[self.color]['min']
+        max_color = self.calibration[self.color]['max']
+        frame_mask = cv2.inRange(frame_hsv, min_color, max_color)
+
+        return frame_mask
