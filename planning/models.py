@@ -62,7 +62,7 @@ class Vector(Coordinate):
 
     def __init__(self, x, y, angle, velocity):
         super(Vector, self).__init__(x, y)
-        if angle == None or velocity == None or angle < 0 or angle >= 2*pi or velocity < 0:
+        if angle == None or velocity == None or angle < 0 or angle >= (2*pi) or velocity < 0:
             raise ValueError('Can not initialise attributes of Vector to None')
         else:
             self._angle = angle
@@ -78,7 +78,7 @@ class Vector(Coordinate):
 
     @angle.setter
     def angle(self, new_angle):
-        if new_angle == None or new_angle < 0 or new_angle >= 2*pi:
+        if new_angle == None or new_angle < 0 or new_angle >= (2*pi):
             raise ValueError('Angle can not be None, also must be between 0 and 2pi')
         self._angle = new_angle
 
@@ -87,6 +87,9 @@ class Vector(Coordinate):
         if new_velocity == None or new_velocity < 0:
             raise ValueError('Velocity can not be None or negative')
         self._velocity = new_velocity
+
+    def __eq__(self, other):
+        return (isinstance(other, self.__class__) and (self.__dict__ == other.__dict__))
 
     def __repr__(self):
         return ('x: %s, y: %s, angle: %s, velocity: %s\n' %
@@ -181,14 +184,14 @@ class Robot(PitchObject):
     def zone(self):
         return self._zone
 
-    def get_ball_proximity(self, ball):
+    def is_near_ball(self, ball):
         # Get if the robot is near the ball but may not have possession
         delta_x = ball.x - self.x
         delta_y = ball.y - self.y
         check_displacement = hypot(delta_x, delta_y) <= BALL_POSS_THRESH
         return check_displacement
 
-    def get_ball_possession(self, ball):
+    def has_ball(self, ball):
         # Get if the robot has possession of the ball
         robot_poly = self.get_polygon()
         center_x = (robot_poly[0][0] + robot_poly[1][0]) / 2
@@ -198,11 +201,12 @@ class Robot(PitchObject):
         check_displacement = hypot(delta_x, delta_y) <= ball.width + BALL_POSS_THRESH
         return check_displacement
 
-    def get_stationary_ball(self, ball):
-        # Get path to grab stationary ball
-        return self.get_displacement_and_angle(ball.x, ball.y)
+    def get_direction_to_stationary_ball(self, ball):
+        # Gets path to grab stationary ball
+        # Returns (displacement, angle) tuple
+        return self.get_direction(ball.x, ball.y)
 
-    def get_moving_ball(self, ball, velocity):
+    def get_direction_to_moving_ball(self, ball, velocity):
         # TODO: NOT REFACTORED YET!!!
         # Get path to intercept moving ball
         delta_x = ball.x - self.x
@@ -215,9 +219,9 @@ class Robot(PitchObject):
         t = max(roots([a, b, c]))
         x = ball.x + (ball_v_x * t)
         y = ball.y + (ball_v_y * t)
-        return self.get_displacement_and_angle(x, y)
+        return self.get_direction(x, y)
 
-    def get_displacement_and_angle(self, x, y):
+    def get_direction(self, x, y):
         # Gets the displacement and the angle by which you need to turn
         # to get to the (x, y). Returns an angle between -pi and pi.
         delta_x = x - self.x
@@ -246,14 +250,13 @@ class Robot(PitchObject):
         return theta
 
     def get_pass_path(self, target):
-        # TODO: Not sure how this should work. Why is it a "path" if it's a Polygon?
-        # Get path for passing ball between two robots
+        # Gets a path represented by a Polygon for the area for passing ball between two robots
         robot_poly = self.get_polygon()
         target_poly = target.get_polygon()
         return Polygon(robot_poly[0], robot_poly[1], target_poly[0], target_poly[1])
 
     def get_shoot_path(self, goal):
-        # TODO: Not sure how this works. Why is it a "path" if it's a Polygon?
+        # TODO: Needs to be refactored!
         # Get closest possible shooting path between the robot and the goal
         robot_poly = self.get_generic_polygon(BALL_WIDTH, self.length)
         goal_poly = goal.get_polygon()
