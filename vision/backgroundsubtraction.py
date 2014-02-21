@@ -7,14 +7,14 @@ cap = cv2.VideoCapture(0)
 for i in range(5):
 	status, frame = cap.read()
 
-fgbg = cv2.BackgroundSubtractorMOG2(0,30,False)
+fgbg = cv2.BackgroundSubtractorMOG2(0, 30, False)
 
 '''cropping'''
 pitch_outline = tools.get_calibration('calibrate.json')['outline']
 crop = tools.find_crop_coordinates(frame, pitch_outline)
 
 while(1):
-    ret,frame = cap.read()
+    ret, frame = cap.read()
 
     frame = frame[crop[2]:crop[3], crop[0]:crop[1]]
     frame = cv2.blur(frame, (2, 2))
