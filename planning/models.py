@@ -59,7 +59,6 @@ class Coordinate(object):
 
 class Vector(Coordinate):
 
-
     def __init__(self, x, y, angle, velocity):
         super(Vector, self).__init__(x, y)
         if angle == None or velocity == None or angle < 0 or angle >= (2*pi) or velocity < 0:
@@ -104,14 +103,15 @@ class PitchObject(object):
     Length measures along the sides of an object
     '''
 
-    def __init__(self, x, y, angle, velocity, width, length, height):
-        self._vector = Vector(x, y, angle, velocity)
+    def __init__(self, x, y, angle, velocity, width, length, height, angle_offset=0):
         if width < 0 or length < 0 or height < 0:
             raise ValueError('Object dimensions must be positive')
         else:
             self._width = width
             self._length = length
             self._height = height
+            self._angle_offset = angle_offset
+            self._vector = Vector(x, y, angle, velocity)
 
     @property
     def width(self):
@@ -124,6 +124,10 @@ class PitchObject(object):
     @property
     def height(self):
         return self._height
+
+    @property
+    def angle_offset(self):
+        return self._angle_offset
 
     @property
     def angle(self):
@@ -150,7 +154,7 @@ class PitchObject(object):
         if new_vector == None or not isinstance(new_vector, Vector):
             raise ValueError('The new vector can not be None and must be an instance of a Vector')
         else:
-            self._vector = new_vector
+            self._vector = Vector(new_vector.x, new_vector.y, new_vector.angle - self._angle_offset, new_vector.velocity)
 
     def get_generic_polygon(self, width, length):
         '''
@@ -180,8 +184,8 @@ class PitchObject(object):
 
 class Robot(PitchObject):
 
-    def __init__(self, zone, x, y, angle, velocity, width=ROBOT_WIDTH, length=ROBOT_LENGTH, height=ROBOT_HEIGHT):
-        super(Robot, self).__init__(x, y, angle, velocity, width, length, height)
+    def __init__(self, zone, x, y, angle, velocity, width=ROBOT_WIDTH, length=ROBOT_LENGTH, height=ROBOT_HEIGHT, angle_offset=0):
+        super(Robot, self).__init__(x, y, angle, velocity, width, length, height, angle_offset)
         self._zone = zone
 
     @property
