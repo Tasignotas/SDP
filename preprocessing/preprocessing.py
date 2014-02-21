@@ -8,8 +8,8 @@ class Preprocessing(object):
         if not options:
             # Which methods to run
             self.options = {
-                'normalize': False
-                'background_sub': False,
+                'normalize': False,
+                'background_sub': False
             }
 
         # Default setting for background subtractor

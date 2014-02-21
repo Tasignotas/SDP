@@ -79,7 +79,7 @@ class Controller:
                 frame = self.camera.get_frame()
 
                 # Apply preprocessing methods toggled in the UI
-                preprocessed = self.preprocessing.run()
+                preprocessed = self.preprocessing.run(frame)
                 frame = preprocessed['frame']
 
                 # Find object positions
