@@ -96,7 +96,7 @@ class Controller:
                     self.defender.execute(actions)
 
                 # Use 'y', 'b', 'r' to change color.
-                c = waitKey(1) & 0xFF
+                c = waitKey(5) & 0xFF
 
                 # Draw vision content and actions
                 self.GUI.draw(frame, positions, actions, extras, our_color=self.color, key=c)
