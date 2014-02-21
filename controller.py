@@ -89,7 +89,6 @@ class Controller:
 
                 # Draw vision content and actions
                 self.GUI.draw(frame, positions, actions, extras, our_color=self.color, key=c)
-                print self.calibration['yellow']['min']
 
         except:
             if hasattr(self, 'defender'):

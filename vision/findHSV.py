@@ -30,7 +30,6 @@ class CalibrationGUI(object):
         # self.pre_options = pre_options
         self.calibration = calibration
         self.maskWindowName = "Mask"
-        self.key_handler = EventHandler()
        
         self.setWindow()
 
