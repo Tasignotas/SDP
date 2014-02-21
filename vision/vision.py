@@ -156,6 +156,7 @@ class Vision:
 
         return Vector(x, y, angle, velocity)
 
+
 class Camera(object):
     """
     Camera access wrapper.
