@@ -118,7 +118,7 @@ class Tracker(object):
 
 class RobotTracker(Tracker):
 
-    def __init__(self, color, crop, offset, pitch, name):
+    def __init__(self, color, crop, offset, pitch, name, calibration):
         """
         Initialize tracker.
 
@@ -130,14 +130,13 @@ class RobotTracker(Tracker):
         """
         self.name = name
         self.crop = crop
-        if pitch == 0:
-            self.color = PITCH0[color] #KMEANS0[color]
-        else:
-            self.color = PITCH1[color]
+
+        self.color = [calibration[color]]
 
         self.color_name = color
         self.offset = offset
         self.pitch = pitch
+        self.calibration = calibration
 
     def get_plate(self, frame):
         """
@@ -146,7 +145,7 @@ class RobotTracker(Tracker):
         Returns:
             (x, y, width, height) top left corner x,y
         """
-        adjustments = PITCH0['plate'] if self.pitch == 0 else PITCH1['plate']
+        adjustments = self.calibration['plate']
         contours = self.get_contours(frame.copy(), adjustments)
         return self.get_bounding_box(contours)   # (x, y, width, height)
 
@@ -184,8 +183,7 @@ class RobotTracker(Tracker):
         # cv2.imshow('frame', frame)
         # cv2.waitKey(0)
 
-
-        adjustments = PITCH0['dot'] if self.pitch == 0 else PITCH1['dot']
+        adjustments = [self.calibration['dot']]
 	for adjustment in adjustments:
         	contours = self.get_contours(frame.copy(), adjustment)
         	if contours and len(contours) > 0:
@@ -356,7 +354,7 @@ class BallTracker(Tracker):
     Track red ball on the pitch.
     """
 
-    def __init__(self, crop, offset, pitch, name='ball'):
+    def __init__(self, crop, offset, pitch, calibration, name='ball'):
         """
         Initialize tracker.
 
@@ -367,12 +365,15 @@ class BallTracker(Tracker):
             [int] offset        how much to offset the coordinates
         """
         self.crop = crop
-        if pitch == 0:
-            self.color = PITCH0['red']
-        else:
-            self.color = PITCH1['red']
+        # if pitch == 0:
+        #     self.color = PITCH0['red']
+        # else:
+        #     self.color = PITCH1['red']
+        self.color = [calibration['red']]
+        print self.color
         self.offset = offset
         self.name = name
+        self.calibration = calibration
 
     def find(self, frame, queue):
         for color in self.color:

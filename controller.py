@@ -35,8 +35,10 @@ class Controller:
         frame = self.camera.get_frame()
 
         # Set up vision
-        self.vision = Vision(
-            pitch=pitch, color=color, our_side=our_side, frame_shape=frame.shape)
+        calibration = tools.get_colors(pitch)
+        print calibration
+        self.vision = Vision(pitch=pitch, color=color, our_side=our_side, \
+                             frame_shape=frame.shape, calibration=calibration)
 
         # Set up postprocessing for vision
         self.postprocessing = Postprocessing()
@@ -45,8 +47,7 @@ class Controller:
         self.planner = Planner(our_side=our_side)
 
         # Set up GUI
-        self.calibration = tools.get_colors(pitch)
-        self.GUI = GUI(calibration=self.calibration)
+        self.GUI = GUI(calibration=calibration)
 
         self.color = color
 
