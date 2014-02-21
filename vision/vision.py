@@ -182,9 +182,9 @@ class Camera(object):
 
 class GUI(object):
 
-    def __init__(self):
+    def __init__(self, calibration):
         self.zones = None
-        self.calibration_gui = CalibrationGUI(pitch=0)
+        self.calibration_gui = CalibrationGUI(calibration)
 
     def to_vector(self, args):
         """
