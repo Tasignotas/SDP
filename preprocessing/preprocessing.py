@@ -15,7 +15,7 @@ class Preprocessing(object):
         # Default setting for background subtractor
         self.background_sub = None
 
-    def process(self, frame):
+    def run(self, frame):
 
         results = {
             'frame': frame
