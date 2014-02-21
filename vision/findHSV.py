@@ -64,7 +64,10 @@ class CalibrationGUI(object):
     def show(self, frame, key=None):
         
         if key != 255:
-            self.change_color(KEYS[key])
+            try:
+                self.change_color(KEYS[key])
+            except:
+                pass
 
         getTrackbarPos = lambda setting: cv2.getTrackbarPos(setting, self.maskWindowName)
 
