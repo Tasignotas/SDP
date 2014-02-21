@@ -20,6 +20,12 @@ INDEX = {"LH":0,
          "UV":2
         }
 
+KEYS = {ord('y'):'yellow',
+        ord('r'):'red',
+        ord('b'):'blue',
+        ord('d'):'dot',
+        ord('p'):'plate'}
+
 def nothing(x):
     pass
 
@@ -29,7 +35,7 @@ class CalibrationGUI(object):
         self.color = 'yellow'
         # self.pre_options = pre_options
         self.calibration = calibration
-        self.maskWindowName = "Mask"
+        self.maskWindowName = "Mask " + self.color
        
         self.setWindow()
 
@@ -50,26 +56,15 @@ class CalibrationGUI(object):
 
     def change_color(self, color):
 
+        cv2.destroyWindow(self.maskWindowName)
         self.color = color
-
-        setTrackbarPos = lambda setting, value: cv2.setTrackbarPos(setting, self.maskWindowName, int(value))
-        setTrackbarPos('LH', self.calibration[color]['min'][0])
-        setTrackbarPos('UH', self.calibration[color]['max'][0])
-        setTrackbarPos('LS', self.calibration[color]['min'][1])
-        setTrackbarPos('US', self.calibration[color]['max'][1])
-        setTrackbarPos('LV', self.calibration[color]['min'][2])
-        setTrackbarPos('UV', self.calibration[color]['max'][2])
-        setTrackbarPos('CT', self.calibration[color]['contrast'])
-        setTrackbarPos('BL', self.calibration[color]['blur'])
+        self.maskWindowName = "Mask " + self.color
+        self.setWindow()
 
     def show(self, frame, key=None):
         
-        if key == ord('y'):
-            self.change_color('yellow')
-        elif key == ord('b'):
-            self.change_color('blue')
-        elif key == ord('r'):
-            self.change_color('red')        
+        if key != 255:
+            self.change_color(KEYS[key])
 
         getTrackbarPos = lambda setting: cv2.getTrackbarPos(setting, self.maskWindowName)
 
