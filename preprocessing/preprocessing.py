@@ -17,13 +17,15 @@ class Preprocessing(object):
 
     def process(self, frame):
 
-        results = dict()
+        results = {
+            'frame': frame
+        }
 
         # Apply normalization
         if self.options['normalize']:
             # Normalize only the saturation channel
             self.normalize(frame)
-            results['normalize'] = frame
+            results['frame'] = frame
 
         # Apply background subtraction
         if self.options['background_sub']:
