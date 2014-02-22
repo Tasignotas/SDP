@@ -2,10 +2,12 @@ from vision.vision import Vision, Camera, GUI
 from planning.planner import Planner
 from vision.tracker import Tracker
 from postprocessing.postprocessing import Postprocessing
+from preprocessing.preprocessing import Preprocessing
 import vision.tools as tools
 from nxt import *
 from time import sleep
 from cv2 import waitKey
+#import vision.colorNormalisation #Uncomment to enable color normalisation
 
 
 class Controller:
@@ -13,15 +15,13 @@ class Controller:
     Primary source of robot control. Ties vision and planning together.
     """
 
-    def __init__(self, pitch, color, our_side, port=0, connect=True, debug=False):
+    def __init__(self, pitch, color, our_side, port=0, attacker=None, defender=None):
         """
         Entry point for the SDP system.
 
         Params:
             [int] port      port number for the camera
-            [bool] connect  connect to the nxt?
             [int] pitch     0 - main pitch, 1 - secondary pitch
-            [bool] debug    print debug messages?
         """
         if pitch not in [0, 1]:
             raise Exception('Incorrect pitch number.')
@@ -37,8 +37,11 @@ class Controller:
         frame = self.camera.get_frame()
 
         # Set up vision
+        calibration = tools.get_colors(pitch)
+        # print calibration
         self.vision = Vision(
-            pitch=pitch, color=color, our_side=our_side, frame_shape=frame.shape)
+            pitch=pitch, color=color, our_side=our_side,
+            frame_shape=frame.shape, calibration=calibration)
 
         # Set up postprocessing for vision
         self.postprocessing = Postprocessing()
@@ -47,11 +50,18 @@ class Controller:
         self.planner = Planner(our_side=our_side)
 
         # Set up GUI
-        self.GUI = GUI()
+        self.GUI = GUI(calibration=calibration)
 
-        # Debug flag for print statements
-        self.debug = debug
         self.color = color
+
+        # Set a flag to know whether to execute or not.
+        self.executable = True if attacker and defender else False
+
+        if self.executable:
+            self.attacker = attacker
+            self.defender = defender
+
+        self.preprocessing = Preprocessing()
 
         #self.attacker = Attacker_Controller(connectionName='GRP7A', leftMotorPort=PORT_C, rightMotorPort=PORT_B, kickerMotorPort=PORT_A)
         # self.defender = Defender_Controller('GRP7D', PORT_C, PORT_A, PORT_B)
@@ -67,6 +77,11 @@ class Controller:
         try:
             while True:
                 frame = self.camera.get_frame()
+
+                # Apply preprocessing methods toggled in the UI
+                preprocessed = self.preprocessing.run(frame)
+                frame = preprocessed['frame']
+
                 # Find object positions
                 positions, extras = self.vision.locate(frame)
                 positions = self.postprocessing.analyze(positions)
@@ -76,22 +91,21 @@ class Controller:
                 # print 'Actions:', actions
                 actions = []
                 # Execute action
-                #self.attacker.execute(actions)
-                # self.defender.execute(actions)
+                if self.executable:
+                    self.attacker.execute(actions)
+                    self.defender.execute(actions)
+
+                # Use 'y', 'b', 'r' to change color.
+                c = waitKey(5) & 0xFF
 
                 # Draw vision content and actions
-                self.GUI.draw(frame, positions, actions, extras, our_color=self.color)
-
-                # Key listener for chaning color in calibration GUI and saving calibration to file
-                # For some reason, it noly responds when you hold the key down.
-                # Use 'y', 'b', 'r' to change color and 's' to save.
-                c = waitKey(1) & 0xFF
-                self.GUI.calibration_gui.key_handler.processKey(chr(c % 0x100))
+                self.GUI.draw(frame, positions, actions, extras, our_color=self.color, key=c)
 
         except:
             if hasattr(self, 'defender'):
-                  self.defender.shutdown()
+                self.defender.shutdown()
             raise
+
 
 class Connection:
 
@@ -121,14 +135,13 @@ class Robot_Controller(object):
         """
         connection = Connection(name=connectionName)
         self.BRICK = connection.brick
-        self.MOTOR_L = Motor(self.BRICK,leftMotorPort)
-        self.MOTOR_R = Motor(self.BRICK,rightMotorPort)
-        self.MOTOR_K = Motor(self.BRICK,kickerMotorPort)
+        self.MOTOR_L = Motor(self.BRICK, leftMotorPort)
+        self.MOTOR_R = Motor(self.BRICK, rightMotorPort)
+        self.MOTOR_K = Motor(self.BRICK, kickerMotorPort)
 
     def shutdown(self):
         self.MOTOR_L.idle()
         self.MOTOR_R.idle()
-
 
 
 class Attacker_Controller(Robot_Controller):
@@ -136,11 +149,12 @@ class Attacker_Controller(Robot_Controller):
     Attacker implementation.
     """
 
-    def __init__ (self, connectionName, leftMotorPort, rightMotorPort, kickerMotorPort):
+    def __init__(self, connectionName, leftMotorPort, rightMotorPort, kickerMotorPort):
         """
         Do the same setup as the Robot class, as well as anything specific to the Attacker.
         """
-        super(Attacker_Controller, self).__init__(connectionName, leftMotorPort, rightMotorPort, kickerMotorPort)
+        super(Attacker_Controller, self).__init__(
+            connectionName, leftMotorPort, rightMotorPort, kickerMotorPort)
 
     def execute(self, action):
         """
@@ -162,11 +176,12 @@ class Defender_Controller(Robot_Controller):
     Defender implementation.
     """
 
-    def __init__ (self, connectionName, leftMotorPort, rightMotorPort, kickerMotorPort):
+    def __init__(self, connectionName, leftMotorPort, rightMotorPort, kickerMotorPort):
         """
         Do the same setup as the Robot class, as well as anything specific to the Defender.
         """
-        super(Defender_Controller, self).__init__(connectionName, leftMotorPort, rightMotorPort, kickerMotorPort)
+        super(Defender_Controller, self).__init__(
+            connectionName, leftMotorPort, rightMotorPort, kickerMotorPort)
 
     def execute(self, action):
         """
@@ -184,4 +199,5 @@ if __name__ == '__main__':
     parser.add_argument("color", help="The color of our team - ['yellow', 'blue'] allowed.")
     args = parser.parse_args()
     # print args
-    c = Controller(debug=True, pitch=int(args.pitch), color=args.color, our_side=args.side).wow()  # Such controller
+    c = Controller(
+        pitch=int(args.pitch), color=args.color, our_side=args.side).wow()  # Such controller

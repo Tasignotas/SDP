@@ -2,7 +2,11 @@ import numpy as np
 import cv2
 import json
 import thread
+import socket
+import os
 
+PATH = os.path.dirname(os.path.realpath(__file__))
+# print PATH
 # BGR Colors
 BLACK = (0,0,0)
 
@@ -33,13 +37,62 @@ def get_zones(width, height):
     return [(mids[i], mids[i+1], 0, height) for i in range(4)]
 
 
-def get_calibration(filename='calibrate.json'):
+def get_calibration(filename=PATH+'calibrate.json'):
     _file = open(filename, 'r')
     return get_json(filename)
 
-def get_json(filename='calibrate.json'):
+def get_json(filename=PATH+'calibrate.json'):
     _file = open(filename, 'r')
-    return json.loads(_file.read())
+    content = json.loads(_file.read())
+    _file.close()
+    return content
+
+def get_colors(pitch=0, filename=PATH+'/calibrations/calibrations.json'):
+    """
+    Get colros from the JSON calibration file.
+    Converts all
+    """
+    json_content = get_json(filename)
+    machine_name = socket.gethostname().split('.')[0]
+    pitch_name = 'PITCH0' if pitch == 0 else 'PITCH1'
+
+    if machine_name in json_content:
+        current =  json_content[machine_name][pitch_name]
+    else:
+        current =  json_content['default'][pitch_name]
+
+    # convert mins and maxes into np.array
+    for key in current:
+        key_dict = current[key]
+        if 'min' in key_dict:
+            key_dict['min'] = np.array(tuple(key_dict['min']))
+        if 'max' in key_dict:
+            key_dict['max'] = np.array(tuple(key_dict['max']))
+
+    return current
+
+def save_colors(pitch, colors, filename=PATH+'/calibrations/calibrations.json'):
+    json_content = get_json(filename)
+    machine_name = socket.gethostname().split('.')[0]
+    pitch_name = 'PITCH0' if pitch == 0 else 'PITCH1'
+
+    # convert np.arrays into lists
+    for key in colors:
+        key_dict = colors[key]
+        if 'min' in key_dict:
+            key_dict['min'] = list(key_dict['min'])
+        if 'max' in key_dict:
+            key_dict['max'] = list(key_dict['max'])
+
+    if machine_name in json_content:
+        json_content[machine_name][pitch_name].update(colors)
+    else:
+        json_content[machine_name] = json_content['default']
+        json_content[machine_name][pitch_name].update(colors)
+
+    _file = open(filename, 'w')
+    _file.write(json.dumps(json_content))
+    _file.close()
 
 def write_json(filename='calibrate.json', data={}):
     _file = open(filename, 'w')
@@ -123,44 +176,3 @@ def crop(frame, size=None):
     # print 'SIZE:', size
     x_min, x_max, y_min, y_max = size
     return frame[y_min:y_max, x_min:x_max]
-
-# LEGACY
-def adjust_light(frame, brightness=2.0, contrast=50.0):
-    """
-    Increase image brightness and/or contrast.
-
-    Params:
-        [float] brightness      brightness increase factor (1.0 - 3.0)
-        [float] contrast        contrast increase factor (1.0 - 100.0)
-
-    Returns:
-        updated frame
-    """
-    # brightness = max(3.0, float(brightness))
-    # contrast = max(100.0, float(contrast))
-    return cv2.add(
-        cv2.multiply(frame, np.array[brightness]),
-        np.array([contrast]))
-
-def view(frame, label='Frame'):
-    """
-    Display an image using OpenCV
-    """
-    cv2.imshow(label, frame)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-def mask(frame, lower, higher):
-    """
-    Create an image mask.
-
-    Params:
-        [OpenCV frame] frame    frame to mask
-        [HSV color] lower       lower boundary for color matching
-        [HSV color] higher      higher boundary for color matching
-
-    Returns:
-        masked frame
-    """
-    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    return cv2.inRange(hsv, lower, higher)

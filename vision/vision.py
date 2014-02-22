@@ -23,7 +23,7 @@ class Vision:
     Locate objects on the pitch.
     """
 
-    def __init__(self, pitch, color, our_side, frame_shape):
+    def __init__(self, pitch, color, our_side, frame_shape, calibration):
         """
         Initialize the vision system.
 
@@ -51,29 +51,29 @@ class Vision:
 
         if our_side == 'left':
             self.us = [
-                RobotTracker(color=color, crop=zones[0], offset=zones[0][0], pitch=pitch, name='Our Defender'),   # defender
-                RobotTracker(color=color, crop=zones[2], offset=zones[2][0], pitch=pitch, name='Our Attacker') # attacker
+                RobotTracker(color=color, crop=zones[0], offset=zones[0][0], pitch=pitch, name='Our Defender', calibration=calibration),   # defender
+                RobotTracker(color=color, crop=zones[2], offset=zones[2][0], pitch=pitch, name='Our Attacker', calibration=calibration) # attacker
             ]
 
             self.opponents = [
-                RobotTracker(opponent_color, zones[3], zones[3][0], pitch, 'Their Defender'),
-                RobotTracker(opponent_color, zones[1], zones[1][0], pitch, 'Their Attacker')
+                RobotTracker(opponent_color, zones[3], zones[3][0], pitch, 'Their Defender', calibration),
+                RobotTracker(opponent_color, zones[1], zones[1][0], pitch, 'Their Attacker', calibration)
 
             ]
         else:
             self.us = [
-                RobotTracker(color, zones[3], zones[3][0], pitch, 'Our Defender'),
-                RobotTracker(color, zones[1], zones[1][0], pitch, 'Our Attacker')
+                RobotTracker(color, zones[3], zones[3][0], pitch, 'Our Defender', calibration),
+                RobotTracker(color, zones[1], zones[1][0], pitch, 'Our Attacker', calibration)
             ]
 
             self.opponents = [
-                RobotTracker(opponent_color, zones[0], zones[0][0], pitch, 'Their Defender'),   # defender
-                RobotTracker(opponent_color, zones[2], zones[2][0], pitch, 'Their Attacker')
+                RobotTracker(opponent_color, zones[0], zones[0][0], pitch, 'Their Defender', calibration),   # defender
+                RobotTracker(opponent_color, zones[2], zones[2][0], pitch, 'Their Attacker', calibration)
             ]
 
         # Set up trackers
         self.ball_tracker = BallTracker(
-            (0, width, 0, height), 0, pitch)
+            (0, width, 0, height), 0, pitch, calibration)
 
     def locate(self, frame):
         """
@@ -156,6 +156,7 @@ class Vision:
 
         return Vector(x, y, angle, velocity)
 
+
 class Camera(object):
     """
     Camera access wrapper.
@@ -182,9 +183,9 @@ class Camera(object):
 
 class GUI(object):
 
-    def __init__(self):
+    def __init__(self, calibration):
         self.zones = None
-        self.calibration_gui = CalibrationGUI(pitch=0)
+        self.calibration_gui = CalibrationGUI(calibration)
 
     def to_vector(self, args):
         """
@@ -206,8 +207,10 @@ class GUI(object):
 
         return Vector(x, y, angle, velocity)
 
-    def draw(self, frame, positions, actions, extras, our_color):
+    def draw(self, frame, positions, actions, extras, our_color, key=None):
 
+        self.calibration_gui.show(frame, key)
+        
         height, width, channels = frame.shape
         if self.zones is None:
             self.zones = tools.get_zones(width, height)
@@ -215,7 +218,6 @@ class GUI(object):
         for zone in self.zones:
             cv2.line(frame, (zone[1], 0), (zone[1], height), BGR_COMMON['red'], 1)
 
-        self.calibration_gui.show(frame)
 
         positions = {
             'our_attacker': self.to_vector(extras[1]),
@@ -270,7 +272,7 @@ class GUI(object):
 
 
         cv2.imshow('SUCH VISION', frame)
-        cv2.waitKey(3)
+        # cv2.waitKey(3)
 
     def draw_robot(self, frame, x, y, color, thickness=1):
         if x is not None and y is not None:
