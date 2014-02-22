@@ -1,19 +1,7 @@
 from models import *
 from collisions import *
-from math import tan, log10
+from math import tan, pi
 import time
-
-
-DEFENDER_THRESHOLD = 25
-UNALIGNED = True
-SPEED_CONST = 10
-
-HAS_BALL = False
-NO_ACTION = False
-
-WAIT = False
-
-KICKER_SPEED_CAGE_IN = -63
 
 
 class Planner:
@@ -22,137 +10,106 @@ class Planner:
     def __init__(self, our_side):
         self._world = World(our_side)
 
-        self.ball_aligned = False
-
-
-    def plan(self, position_dictionary, part='attacker'):
-        global UNALIGNED
-        global HAS_BALL
-        global NO_ACTION
-        global WAIT
-
-        SPEED = 8
-
-        """
-        {'their_attacker': x: 31, y: 159, angle: 0.0, velocity: 1.0
-            , 'our_defender': x: 172, y: 63, angle: 4.81205763288, velocity: 1.0
-            , 'our_attacker': x: 453, y: 217, angle: 2.0344439358, velocity: 0.0
-            , 'ball': x: None, y: None, angle: -1.57079632679, velocity: None
-            , 'their_defender': x: None, y: None, angle: None, velocity: None
-            }
-        """
-
+    def update_world(self, position_dictionary):
         self._world.update_positions(position_dictionary)
-        our_defender = self._world.get_our_defender()
-        our_attacker = self._world.get_our_attacker()
-        ball = self._world.get_ball()
-        top_goal_y = (self._world._pitch._height - GOAL_WIDTH) / 2
-        bottom_goal_y = top_goal_y + GOAL_WIDTH
-        distance = abs(ball.get_y() - our_defender.get_y())
-        if part == 'defence':
-            # print 'Angle difference:', abs(our_defender.get_angle() - pi/2)
-            if UNALIGNED:
-                if abs(our_defender.get_angle() - pi/2) < 0.2:
-                    UNALIGNED = False
-                    return {'defender' : {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0}}
-                return {'defender' : {'left_motor' : 5, 'right_motor' : -5, 'kicker' : 0}}
-            if (ROBOT_LENGTH/2 + top_goal_y) < ball.get_y() < (ROBOT_LENGTH/2 + bottom_goal_y) :
-                if abs(ball.get_y() - our_defender.get_y()) > DEFENDER_THRESHOLD:
-                    speed = log10(distance) * SPEED_CONST
-                    if ball.get_y() < our_defender.get_y():
-                        return {'defender' : {'left_motor' : -speed, 'right_motor' : -speed, 'kicker' : 0}}
-                    else:
-                        return {'defender' : {'left_motor' : speed, 'right_motor' : speed, 'kicker' : 0}}
-            return {'defender' : {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0}}
-            """
 
-            return {'defender' : {'left_motor' : 10, 'right_motor' : -10, 'kicker' : 0}}
-            """
+    def plan(self, position_dictionary, robot='attacker'):
+        assert robot in ['attacker', 'defender']
+        our_defender = self._world.our_defender
+        our_attacker = self._world.our_attacker
+        their_defender = self._world.their_defender
+        their_attacker = self._world.their_attacker
+        ball = self._world.ball
+        our_goal = self._world.our_goal
+        if robot == 'defender':
+            if 'ball is not in the defender zone':
+                # If we need to defend the goal:
+                return self.defend_goal(our_defender, their_attacker, ball, our_goal)
+
+
+
         else:
+            pass
 
-            if HAS_BALL:
 
-                their_goal = self._world.get_their_goal()
-                goal_top_y = their_goal.get_y()
-                goal_middle_y = goal_top_y + their_goal.get_dimensions()[0] / 2
-                print 'Goal middle', goal_middle_y
+    def defend_goal(our_defender, their_attacker, ball, our_goal):
+        # 1. Go to the goal line
+        # 2. Align with y axis
+        # 3. Predict the intersection point of the ball if the attacker shot and move to that y coordinate
+        # If the robot is not on the goal line:
+        if not (((our_defender.x - our_goal.x) < THRESH) and
+                (our_defender.y < (our_goal.y + our_goal.width/2.0)) and
+                (our_defender.y > (our_goal.y - our_goal.width/2.0))):
+            displacement, angle = our_defender.get_direction_to_point(our_goal.x, our_goal.y)
+            return calculate_motor_speed(displacement, angle, 'reach')
+        # If we need to adjust the orientation:
+        angle = our_defender.get_rotation_to_point(our_defender.x, 10000)
+        if not (abs(angle) < Y_ALIGNMENT_THRESHOLD):
+            return angle
+        # If we need to go to the predicted point:
+        y = self.predict_y_intersection(goal, robot)
+        if y == None:
+            return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0}
+        else:
+            # If the predicted point is above the goal line, we still want to defend the top of the goal line:
+            if y > our_goal.y + (our_goal.width / 2):
+                y = our_goal.y + (our_goal.width / 2)
+            elif y < our_goal.y - (our_goal.width / 2):
+                y = our_goal.y - (our_goal.width / 2)
 
-                x, y, displacement, theta = our_attacker.get_path_to_point(their_goal.get_x(), goal_middle_y)
-                print 'Align with angle:', theta
 
-                theta = theta % (2*pi)
 
-                if theta < 0.2 or theta > 2 * pi - 0.2:
-                    return {'attacker' : {'left_motor' : 0, 'right_motor' : 0, 'kicker' : -125}}
-                elif theta> 0.2 and theta < (2 * pi - 0.2) / 2.0:
-                    left, right = SPEED, -SPEED
+
+
+
+
+    def predict_y_intersection(self, goal, robot):
+        '''
+        Predicts the (x, y) coordinates of the ball shot by the robot
+        '''
+        x = robot.x
+        y = robot.y
+        angle = robot.angle
+        if robot.zone == 2 and (-pi/2 < angle < pi/2):
+            while x < goal.x:
+                if not (0 < (y + tan(angle) * (goal.x - x)) < self._world._pitch.height):
+                    print 'Bounce!'
+                    x += (self._world._pitch.height - y) / tan(angle) if tan(angle) > 0 else (0 - y) / tan(angle)
+                    y = self._world._pitch.height if tan(angle) > 0 else 0
+                    angle = (-angle) % (2*pi)
                 else:
-                    left, right = -SPEED, SPEED
-                return {'attacker' : {'left_motor' : left, 'right_motor' : right, 'kicker' : 0}}
-
-            else:
-
-                x, y, displacement, theta = our_attacker.get_path_to_point(
-                    ball.get_x(), ball.get_y())
-                # print 'DISPLACEMENT', displacement
-                # print 'NO_ACTION', NO_ACTION
-                print 'HAS_BALL', HAS_BALL
-                if HAS_BALL and WAIT:
-                    time.sleep(0.1)
-                    WAIT = False
-                if NO_ACTION:
-                    return {'attacker' : {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0}}
-
-
-                alignment = our_attacker.get_robot_alignment(ball)
-
-                ALIGN_THRESH = 0.3 * log10(displacement)
-                SPEED = 8
-                kicker = 0
-
-                ANGLE_HACK = -pi / 14
-
-                if theta < ALIGN_THRESH or theta > 2 * pi - ALIGN_THRESH:
-                    self.ball_aligned = True
-                    left, right = -SPEED, -SPEED
-                elif theta - ANGLE_HACK> ALIGN_THRESH and theta - ANGLE_HACK < (2 * pi - ALIGN_THRESH) / 2.0:
-                    left, right = SPEED, -SPEED
+                    return (y + tan(angle) * (goal.x - x))
+        elif robot.zone == 1 and (pi/2 < angle < 3*pi/2):
+            while x > goal.x:
+                if not (0 < (y + tan(angle) * (goal.x - x)) < self._world._pitch.height):
+                    print 'Bounce!'
+                    x += (self._world._pitch.height - y) / tan(angle) if tan(angle) < 0 else (0 - y) / tan(angle)
+                    y = self._world._pitch.height if tan(angle) < 0 else 0
+                    angle = (-angle) % (2*pi)
                 else:
-                    left, right = -SPEED, SPEED
+                    return (y + tan(angle) * (goal.x - x))
+        return None
 
-                if displacement < 24:
-                    return {'attacker' : {'left_motor' : -SPEED, 'right_motor' : -SPEED, 'kicker' : kicker}}
-
-
-                print theta
-
-                if displacement < 25 and (theta - ANGLE_HACK < 0.2 or theta - ANGLE_HACK > 2 * pi - 0.2) and not HAS_BALL:
-                    left, right = 0, 0
-                    kicker = KICKER_SPEED_CAGE_IN
-                    HAS_BALL = True
-                    NO_ACTION = True
-                    WAIT = True
-
-                return {'attacker' : {'left_motor' : left, 'right_motor' : right, 'kicker' : kicker}}
-
-    def has_ball(self, ball, robot):
-        x, y, displacement, theta = robot.get_path_to_point(ball.get_x(), ball.get_y())
-        return displacement < 26 and displacement > 24 and (theta + 0.1) < robot.get_angle() and (theta -0.1) > robot.get_angle()
+    def calculate_motor_speed(self, robot, displacement, angle, mode, careful=False):
+        '''
+        This method calculates the speed by which robot motors should be turned.
+        There are two modes: "reach" and "match".
+        Sometimes you want to make the robot's center coordinates to *match* your
+        desired coordinates. In this case, use the "match" mode.
+        In other cases you are ok with the robot just *reaching* some point - making
+        some point of your robot very close to some other point. In this case use "reach".
+        '''
+        assert mode in ['match', 'reach']
 
 
+
+    def has_matched(self, robot, x=None, y=None, angle=None):
+        pass
+
+    def has_reached(self, robot, x=None, y=None, angle=None):
+        pass
 
     '''
-    def predict_y_intersection(self):
-        our_zone = self._world._pitch._zones[self._world.get_our_defender().get_zone()]
-        our_x = min([x for (x, y) in our_zone[0]]) if self._world.get_our_defender().get_zone() == 3 else max([x for (x, y) in our_zone[0]])
-        their_angle = self._world.get_our_attacker().get_angle()
-        their_x = self._world.get_our_attacker().get_x()
-        their_y = self._world.get_our_attacker().get_y()
-        return our_x, their_y + tan(their_angle) * (our_x - their_x)
-
-
-
-
         if our_defender.get_possession(ball):
             pass_path = our_defender.get_pass_path(our_attacker)
             avoid_plan = get_avoidance(pass_path, our_defender, their_attacker)
