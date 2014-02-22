@@ -266,7 +266,6 @@ class Ball(PitchObject):
     def __init__(self, x, y, angle, velocity):
         super(Ball, self).__init__(x, y, angle, velocity, BALL_WIDTH, BALL_LENGTH, BALL_HEIGHT)
 
-
 class Goal(PitchObject):
 
     def __init__(self, zone, x, y, angle):
@@ -339,8 +338,8 @@ class World(object):
         self._robots.append(Robot(2, 0, 0, 0, 0))
         self._robots.append(Robot(3, 0, 0, 0, 0))
         self._goals = []
-        self._goals.append(Goal(0, 0, (self._pitch.height - GOAL_WIDTH) * 0.5, 0))
-        self._goals.append(Goal(3, self._pitch.width, (self._pitch.height - GOAL_WIDTH) * 0.5, pi))
+        self._goals.append(Goal(0, 0, self._pitch.height/2.0, 0))
+        self._goals.append(Goal(3, self._pitch.width, self._pitch.height/2.0, pi))
 
     @property
     def our_attacker(self):
@@ -367,7 +366,7 @@ class World(object):
         return self._goals[0] if self._our_side == 'left' else self._goals[1]
 
     @property
-    def get_their_goal(self):
+    def their_goal(self):
         return self._goals[1] if self._our_side == 'left' else self._goals[0]
 
     @property
