@@ -6,6 +6,7 @@ from preprocessing.preprocessing import Preprocessing
 import vision.tools as tools
 from nxt import *
 from cv2 import waitKey
+import cv2
 
 
 class Controller:
@@ -69,9 +70,14 @@ class Controller:
             while c != 27:  # the ESC key
                 frame = self.camera.get_frame()
 
+                pre_options = self.preprocessing.options
+
                 # Apply preprocessing methods toggled in the UI
-                preprocessed = self.preprocessing.run(frame)
+                preprocessed = self.preprocessing.run(frame, pre_options)
                 frame = preprocessed['frame']
+
+                if 'background_sub' in preprocessed:
+                    cv2.imshow('bg sub', preprocessed['background_sub'])
 
                 # Find object positions
                 positions, extras = self.vision.locate(frame)
@@ -91,7 +97,7 @@ class Controller:
 
                 actions = []
                 # Draw vision content and actions
-                self.GUI.draw(frame, positions, actions, extras, our_color=self.color, key=c)
+                self.GUI.draw(frame, positions, actions, extras, our_color=self.color, key=c, preprocess=pre_options)
 
         except:
             if self.defender is not None:
@@ -101,6 +107,7 @@ class Controller:
             raise
 
         finally:
+            # Write the new calibrations to a file.
             tools.save_colors(self.pitch, self.calibration)
 
 

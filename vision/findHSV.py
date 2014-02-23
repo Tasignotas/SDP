@@ -34,7 +34,6 @@ class CalibrationGUI(object):
     def __init__(self, calibration):
         self.color = 'yellow'
         # self.pre_options = pre_options
-        print 'CALIBRATION', calibration
         self.calibration = calibration
         self.maskWindowName = "Mask " + self.color
 

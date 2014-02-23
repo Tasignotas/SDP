@@ -184,6 +184,8 @@ class Camera(object):
 class GUI(object):
 
     VISION = 'SUCH VISION'
+    BG_SUB = 'BG Subtract'
+    NORMALIZE = 'Normalize  '
 
     def nothing(self, x):
         pass
@@ -194,7 +196,8 @@ class GUI(object):
 
         cv2.namedWindow(self.VISION)
 
-        cv2.createTrackbar('BG Sub', self.VISION, 0, 1, self.nothing)
+        cv2.createTrackbar(self.BG_SUB, self.VISION, 0, 1, self.nothing)
+        cv2.createTrackbar(self.NORMALIZE, self.VISION, 0, 1, self.nothing)
 
     def to_vector(self, args):
         """
@@ -216,8 +219,19 @@ class GUI(object):
 
         return Vector(x, y, angle, velocity)
 
+    def cast_binary(self, x):
+        return x == 1
+
     def draw(
-        self, frame, positions, actions, extras, our_color, key=None, preprocess={}):
+        self, frame, positions, actions, extras, our_color, key=None, preprocess=None):
+
+        if preprocess is not None:
+            preprocess['normalize'] = self.cast_binary(
+                cv2.getTrackbarPos(self.NORMALIZE, self.VISION))
+            preprocess['background_sub'] = self.cast_binary(
+                cv2.getTrackbarPos(self.BG_SUB, self.VISION))
+
+        # Set values for trackbars
 
         self.calibration_gui.show(frame, key)
 

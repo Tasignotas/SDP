@@ -1,13 +1,13 @@
 import cv2
 import numpy as np
 import tools
-import vision
+# import vision
 
 if __name__ == "__main__":
     cap = cv2.VideoCapture(0)
     for i in range(10):
         _,frame = cap.read()
-        
+
     calibration = tools.get_calibration('calibrate.json')
     crop = tools.find_extremes(calibration['outline'])
     while True:
@@ -27,11 +27,11 @@ if __name__ == "__main__":
         else:
             print "No frame"
 
- 
+
 def get_frame(self):
     """
     Retrieve a frame from the camera.
-    
+
     Returns the frame if available, otherwise returns None.
     """
     status, frame = self.capture.read()
