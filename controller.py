@@ -101,6 +101,8 @@ class Controller:
         except:
             if hasattr(self, 'defender'):
                 self.defender.shutdown()
+            if hasattr(self, 'attacker'):
+                self.attacker.shutdown()
             raise
 
 
