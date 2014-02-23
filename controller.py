@@ -50,12 +50,8 @@ class Controller:
 
         self.color = color
 
-        # Set a flag to know whether to execute or not.
-        self.executable = True if attacker and defender else False
-
-        if self.executable:
-            self.attacker = attacker
-            self.defender = defender
+        self.attacker = attacker
+        self.defender = defender
 
         self.preprocessing = Preprocessing()
 
@@ -63,11 +59,8 @@ class Controller:
         # self.defender = Defender_Controller('GRP7D', PORT_C, PORT_A, PORT_B)
 
     def wow(self):
-        #
         """
         Ready your sword, here be dragons.
-
-        Main flow of the program. Run the controller with vision and planning combined.
         """
         try:
             while True:
@@ -80,14 +73,14 @@ class Controller:
                 # Find object positions
                 positions, extras = self.vision.locate(frame)
                 positions = self.postprocessing.analyze(positions)
-                # print 'Positions: ', positions
+
                 # Find appropriate action
                 #actions = self.planner.plan(positions, part='attacker')
-                # print 'Actions:', actions
-                actions = []
-                # Execute action
-                if self.executable:
+
+                if self.attacker:
                     self.attacker.execute(actions)
+
+                if self.defender:
                     self.defender.execute(actions)
 
                 # Use 'y', 'b', 'r' to change color.
