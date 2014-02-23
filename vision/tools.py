@@ -6,22 +6,6 @@ import socket
 import os
 
 PATH = os.path.dirname(os.path.realpath(__file__))
-# print PATH
-# BGR Colors
-BLACK = (0,0,0)
-
-# HSV Colors
-WHITE_LOWER = np.array([1,0,100])
-WHITE_HIGHER = np.array([36, 255, 255])
-
-BLUE_LOWER = np.array([95., 50.,50.])
-BLUE_HIGHER = np.array([110.,255.,255.])
-
-RED_LOWER = np.array([0, 240, 140])
-RED_HIGHER = np.array([9, 255, 255])
-
-YELLOW_LOWER = np.array([9, 50, 50])
-YELLOW_HIGHER = np.array([11, 255, 255])
 
 
 def get_zones(width, height):
