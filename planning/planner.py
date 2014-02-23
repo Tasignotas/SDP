@@ -60,34 +60,29 @@ class Planner:
         '''
         x = robot.x
         y = robot.y
+        max_iter = 10
         angle = robot.angle
-        if robot.zone == 2 and (-pi/2 < angle < pi/2):
-            while x < goal.x:
-                if not (0 < (y + tan(angle) * (goal.x - x)) < self._world._pitch.height):
-                    print 'Bounce!'
-                    x += (self.world.pitch.height - y) / tan(angle) if tan(angle) > 0 else (0 - y) / tan(angle)
-                    y = self.world.pitch.height if tan(angle) > 0 else 0
+        if (robot.zone == 2 and not (pi/2 < angle < 3*pi/2)) or (robot.zone == 1 and (pi/2 < angle < 3*pi/2)):
+            while True and max_iter > 0:
+                if not (0 <= (y + tan(angle) * (goal.x - x)) <= self._world._pitch.height):
+                    bounce_pos = 'top' if (y + tan(angle) * (goal.x - x)) > self._world._pitch.height else 'bottom'
+                    x += (self._world._pitch.height - y) / tan(angle) if bounce_pos == 'top' else (0 - y) / tan(angle)
+                    y = self._world._pitch.height if bounce_pos == 'top' else 0
                     angle = (-angle) % (2*pi)
+                    max_iter -= 1
                 else:
                     predicted_y = (y + tan(angle) * (goal.x - x))
                     break
-        elif robot.zone == 1 and (pi/2 < angle < 3*pi/2):
-            while x > goal.x:
-                if not (0 < (y + tan(angle) * (goal.x - x)) < self.world.pitch.height):
-                    print 'Bounce!'
-                    x += (self.world.pitch.height - y) / tan(angle) if tan(angle) < 0 else (0 - y) / tan(angle)
-                    y = self.world.pitch.height if tan(angle) < 0 else 0
-                    angle = (-angle) % (2*pi)
-                else:
-                    predicted_y = (y + tan(angle) * (goal.x - x))
-                    break
+            if max_iter == 0:
+                return None
+            # Correcting the y coordinate to the closest y coordinate on the goal line:
+            if predicted_y > goal.y + (goal.width/2):
+                return goal.y + (goal.width/2)
+            elif predicted_y < goal.y - (goal.width/2):
+                return goal.y - (goal.width/2)
+            return predicted_y
         else:
             return None
-        if predicted_y > goal.y + (goal.width/2):
-            return goal.y + (goal.width/2)
-        elif predicted_y < goal.y - (goal.width/2):
-            return goal.y - (goal.width/2)
-        return predicted_y
 
     def calculate_motor_speed(self, robot, displacement, angle):
         '''
