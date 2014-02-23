@@ -1,6 +1,6 @@
 from models import *
 from collisions import *
-from math import tan, pi
+from math import tan, pi, hypot
 
 DISTANCE_REACH_THRESHOLD = 0
 ANGLE_REACH_THRESHOLD = 0
@@ -28,9 +28,6 @@ class Planner:
             # If the ball is in not in our defender zone:
             if not (self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y)):
                 return self.defend_goal()
-
-
-
         else:
             pass
 
@@ -47,19 +44,13 @@ class Planner:
                 our_defender.state = 'defence_goal_line'
             else:
                 displacement, angle = our_defender.get_direction_to_point(goal_front_x, our_goal.y)
-                return self.calculate_motor_speed(our_defender, displacement, angle, 'reach')
+                return self.calculate_motor_speed(our_defender, displacement, angle)
         if our_defender.state == 'defence_goal_line':
-            if self.has_reached(our_defender, angle=pi/2):
-                our_defender.state = 'defence_aligned'
-            else:
-                angle = our_defender.get_rotation_to_point(our_defender.x, self._world._pitch.height)
-                return self.calculate_motor_speed(our_defender, 0, angle, 'reach')
-        if our_defender.state == 'defence_aligned':
             predicted_y = self.predict_y_intersection(our_goal, their_attacker)
             if not (predicted_y == None):
                 displacement, angle = our_defender.get_direction_to_point(our_defender.x, predicted_y)
-                return self.calculate_motor_speed(our_defender, displacement, 0, 'reach')
-            return self.calculate_motor_speed(our_defender, 0, 0, 'reach')
+                return self.calculate_motor_speed(our_defender, displacement, angle)
+            return self.calculate_motor_speed(our_defender, 0, 0)
         raise
 
     def predict_y_intersection(self, goal, robot):
@@ -98,45 +89,18 @@ class Planner:
             return goal.y - (goal.width/2)
         return predicted_y
 
-    def calculate_motor_speed(self, robot, displacement, angle, mode, careful=False):
+    def calculate_motor_speed(self, robot, displacement, angle):
         '''
-        This method calculates the speed by which robot motors should be turned.
-        There are two modes: "reach" and "match".
-        Sometimes you want to make the robot's center coordinates to *match* your
-        desired coordinates. In this case, use the "match" mode.
-        In other cases you are ok with the robot just *reaching* some point - making
-        some point of your robot very close to some other point. In this case use "reach".
+        Simplistic view of calculating the speed: no modes or trying to be careful
         '''
-        assert mode in ['match', 'reach']
-        if careful:
-            pass
+        if displacement < DISTANCE_MATCH_THRESHOLD:
+            return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0}
+        elif abs(angle) > ANGLE_MATCH_THRESHOLD:
+            speed = (angle/pi) * MAX_ANGLE_SPEED
+            return {'left_motor' : -speed, 'right_motor' : speed, 'kicker' : 0}
         else:
-            if angle > ANGLE_MATCH_THRESHOLD:
-                speed = (angle/pi) * MAX_ANGLE_SPEED
-                return {'left_motor' : -speed, 'right_motor' : speed, 'kicker' : 0}
+            speed = log(displacement, 10) * MAX_DISPLACEMENT_SPEED
+            return {'left_motor' : speed, 'right_motor' : speed, 'kicker' : 0}
 
-
-
-    def has_matched(self, robot, x=None, y=None, angle=None):
-        if not (x == None):
-            if abs(robot.x - x) > DISTANCE_MATCH_THRESHOLD:
-                return False
-        if not (y == None):
-            if abs(robot.y - y) > DISTANCE_MATCH_THRESHOLD:
-                return False
-        if not (angle == None):
-            if abs(robot.angle - angle) > ANGLE_MATCH_THRESHOLD:
-                return False
-        return True
-
-    def has_reached(self, robot, x=None, y=None, angle=None):
-        if not (x == None):
-            if abs(robot.x - x) > DISTANCE_REACH_THRESHOLD:
-                return False
-        if not (y == None):
-            if abs(robot.y - y) > DISTANCE_REACH_THRESHOLD:
-                return False
-        if not (angle == None):
-            if abs(robot.angle - angle) > ANGLE_REACH_THRESHOLD:
-                return False
-        return True
+    def has_matched(self, robot, x, y):
+        return hypot(robot.x - x, robot.y - y) < DISTANCE_MATCH_THRESHOLD
