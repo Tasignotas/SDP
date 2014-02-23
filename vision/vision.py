@@ -94,11 +94,11 @@ class Vision:
         height, width, channels = frame.shape if frame is not None else (None, None, None)
 
         result = {
-            'our_attacker': self.to_vector(positions[1], height),
-            'their_attacker': self.to_vector(positions[2], height),
-            'our_defender': self.to_vector(positions[0], height),
-            'their_defender': self.to_vector(positions[3], height),
-            'ball': self.to_vector(positions[4], height)
+            'our_attacker': self.to_info(positions[1], height),
+            'their_attacker': self.to_info(positions[2], height),
+            'our_defender': self.to_info(positions[0], height),
+            'their_defender': self.to_info(positions[3], height),
+            'ball': self.to_info(positions[4], height)
         }
 
         return result, positions
@@ -133,11 +133,9 @@ class Vision:
 
         return positions
 
-    def to_vector(self, args, height):
+    def to_info(self, args, height):
         """
-        Convert a tuple into a vector
-
-        Return a Vector
+        Returns a dictionary with object position information
         """
         x, y, angle, velocity = None, None, None, None
         if args is not None:
@@ -154,7 +152,7 @@ class Vision:
             if 'velocity' in args:
                 velocity = args['velocity']
 
-        return Vector(x, y, angle, velocity)
+        return {'x' : x, 'y' : y, 'angle' : angle, 'velocity' : velocity}
 
 
 class Camera(object):
@@ -199,7 +197,7 @@ class GUI(object):
         cv2.createTrackbar(self.BG_SUB, self.VISION, 0, 1, self.nothing)
         cv2.createTrackbar(self.NORMALIZE, self.VISION, 0, 1, self.nothing)
 
-    def to_vector(self, args):
+    def to_info(self, args):
         """
         Convert a tuple into a vector
 
@@ -217,7 +215,7 @@ class GUI(object):
             if 'velocity' in args:
                 velocity = args['velocity']
 
-        return Vector(x, y, angle, velocity)
+        return {'x' : x, 'y' : y, 'angle' : angle, 'velocity' : velocity}
 
     def cast_binary(self, x):
         return x == 1
@@ -244,11 +242,11 @@ class GUI(object):
 
 
         positions = {
-            'our_attacker': self.to_vector(extras[1]),
-            'their_attacker': self.to_vector(extras[3]),
-            'our_defender': self.to_vector(extras[0]),
-            'their_defender': self.to_vector(extras[2]),
-            'ball': self.to_vector(extras[4])
+            'our_attacker': self.to_info(extras[1]),
+            'their_attacker': self.to_info(extras[3]),
+            'our_defender': self.to_info(extras[0]),
+            'their_defender': self.to_info(extras[2]),
+            'ball': self.to_info(extras[4])
         }
 
         # if extras not None:
@@ -260,19 +258,11 @@ class GUI(object):
         #         'ball': extras[4]
         #     }
         their_color = list(TEAM_COLORS - set([our_color]))[0]
-
-        if positions['ball'] is not None:
-            self.draw_ball(frame, positions['ball'].get_x(), positions['ball'].get_y())
-
+        self.draw_ball(frame, positions['ball']['x'], positions['ball']['y'])
         for key in ['our_defender', 'our_attacker']:
-            if positions[key] is not None:
-                self.draw_robot(
-                    frame, positions[key].get_x(), positions[key].get_y(), our_color)
-
+            self.draw_robot(frame, positions[key]['x'], positions[key]['y'], our_color)
         for key in ['their_defender', 'their_attacker']:
-            if positions[key] is not None:
-                self.draw_robot(
-                    frame, positions[key].get_x(), positions[key].get_y(), their_color)
+            self.draw_robot(frame, positions[key]['x'], positions[key]['y'], their_color)
 
         # print extras
 
