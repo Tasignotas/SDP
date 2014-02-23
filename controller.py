@@ -6,7 +6,6 @@ from preprocessing.preprocessing import Preprocessing
 import vision.tools as tools
 from nxt import *
 from cv2 import waitKey
-#import vision.colorNormalisation #Uncomment to enable color normalisation
 
 
 class Controller:
