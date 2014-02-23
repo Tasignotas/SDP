@@ -20,17 +20,16 @@ class Controller:
         Entry point for the SDP system.
 
         Params:
-            [int] port      port number for the camera
-            [int] pitch     0 - main pitch, 1 - secondary pitch
+            [int] port                      port number for the camera
+            [int] pitch                     0 - main pitch, 1 - secondary pitch
+            [string] our_side               the side we're on - 'left' or 'right'
+            *[int] port                     The camera port to take the feed from
+            *[Robot_Controller] attacker    Robot controller object
+            *[Robot_Controller] defender    Robot controller object
         """
-        if pitch not in [0, 1]:
-            raise Exception('Incorrect pitch number.')
-
-        if color not in ['yellow', 'blue']:
-            raise Exception('Incorrect color.')
-
-        if our_side not in ['left', 'right']:
-            raise Exception('Icorrect side. Valid options are "left" and "right"')
+        assert pitch in [0, 1]
+        assert color in ['yellow', 'blue']
+        assert our_side in ['left', 'right']
 
         # Set up camera for frames
         self.camera = Camera(port=port)
@@ -38,7 +37,6 @@ class Controller:
 
         # Set up vision
         calibration = tools.get_colors(pitch)
-        # print calibration
         self.vision = Vision(
             pitch=pitch, color=color, our_side=our_side,
             frame_shape=frame.shape, calibration=calibration)
@@ -73,7 +71,6 @@ class Controller:
 
         Main flow of the program. Run the controller with vision and planning combined.
         """
-        # positions = (None,None,None,None,((0,0),0,0))
         try:
             while True:
                 frame = self.camera.get_frame()
