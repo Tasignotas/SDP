@@ -63,7 +63,8 @@ class Controller:
         Ready your sword, here be dragons.
         """
         try:
-            while True:
+            c = True
+            while c != 27:  # the ESC key
                 frame = self.camera.get_frame()
 
                 # Apply preprocessing methods toggled in the UI
@@ -77,22 +78,23 @@ class Controller:
                 # Find appropriate action
                 #actions = self.planner.plan(positions, part='attacker')
 
-                if self.attacker:
+                if self.attacker is not None:
                     self.attacker.execute(actions)
 
-                if self.defender:
+                if self.defender is not None:
                     self.defender.execute(actions)
 
                 # Use 'y', 'b', 'r' to change color.
                 c = waitKey(5) & 0xFF
 
+                actions = []
                 # Draw vision content and actions
                 self.GUI.draw(frame, positions, actions, extras, our_color=self.color, key=c)
 
         except:
-            if hasattr(self, 'defender'):
+            if self.defender is not None:
                 self.defender.shutdown()
-            if hasattr(self, 'attacker'):
+            if self.attacker is not None:
                 self.attacker.shutdown()
             raise
 
