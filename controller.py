@@ -34,10 +34,10 @@ class Controller:
         frame = self.camera.get_frame()
 
         # Set up vision
-        calibration = tools.get_colors(pitch)
+        self.calibration = tools.get_colors(pitch)
         self.vision = Vision(
             pitch=pitch, color=color, our_side=our_side,
-            frame_shape=frame.shape, calibration=calibration)
+            frame_shape=frame.shape, calibration=self.calibration)
 
         # Set up postprocessing for vision
         self.postprocessing = Postprocessing()
@@ -46,7 +46,7 @@ class Controller:
         self.planner = Planner(our_side=our_side)
 
         # Set up GUI
-        self.GUI = GUI(calibration=calibration)
+        self.GUI = GUI(calibration=self.calibration)
 
         self.color = color
 
@@ -54,6 +54,8 @@ class Controller:
         self.defender = defender
 
         self.preprocessing = Preprocessing()
+
+        self.pitch = pitch
 
         #self.attacker = Attacker_Controller(connectionName='GRP7A', leftMotorPort=PORT_C, rightMotorPort=PORT_B, kickerMotorPort=PORT_A)
         # self.defender = Defender_Controller('GRP7D', PORT_C, PORT_A, PORT_B)
@@ -97,6 +99,9 @@ class Controller:
             if self.attacker is not None:
                 self.attacker.shutdown()
             raise
+
+        finally:
+            tools.save_colors(self.pitch, self.calibration)
 
 
 class Connection:

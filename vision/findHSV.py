@@ -2,8 +2,8 @@ import cv2
 import numpy as np
 
 CONTROLS = ["LH", "UH", "LS", "US", "LV", "UV", "CT", "BL"]
-MAXBAR = {"LH":360, 
-          "UH":360, 
+MAXBAR = {"LH":360,
+          "UH":360,
           "LS":255,
           "US":255,
           "LV":255,
@@ -12,8 +12,8 @@ MAXBAR = {"LH":360,
           "BL":100
         }
 
-INDEX = {"LH":0, 
-         "UH":0, 
+INDEX = {"LH":0,
+         "UH":0,
          "LS":1,
          "US":1,
          "LV":2,
@@ -34,9 +34,10 @@ class CalibrationGUI(object):
     def __init__(self, calibration):
         self.color = 'yellow'
         # self.pre_options = pre_options
+        print 'CALIBRATION', calibration
         self.calibration = calibration
         self.maskWindowName = "Mask " + self.color
-       
+
         self.setWindow()
 
     def setWindow(self):
@@ -62,7 +63,7 @@ class CalibrationGUI(object):
         self.setWindow()
 
     def show(self, frame, key=None):
-        
+
         if key != 255:
             try:
                 self.change_color(KEYS[key])
@@ -92,7 +93,7 @@ class CalibrationGUI(object):
 
         contrast = self.calibration[self.color]['contrast']
         if contrast > 1.0:
-            frame = cv2.add(frame, np.array([contrast]))     
+            frame = cv2.add(frame, np.array([contrast]))
 
         frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 

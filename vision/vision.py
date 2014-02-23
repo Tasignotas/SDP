@@ -183,9 +183,18 @@ class Camera(object):
 
 class GUI(object):
 
+    VISION = 'SUCH VISION'
+
+    def nothing(self, x):
+        pass
+
     def __init__(self, calibration):
         self.zones = None
         self.calibration_gui = CalibrationGUI(calibration)
+
+        cv2.namedWindow(self.VISION)
+
+        cv2.createTrackbar('BG Sub', self.VISION, 0, 1, self.nothing)
 
     def to_vector(self, args):
         """
@@ -207,10 +216,11 @@ class GUI(object):
 
         return Vector(x, y, angle, velocity)
 
-    def draw(self, frame, positions, actions, extras, our_color, key=None):
+    def draw(
+        self, frame, positions, actions, extras, our_color, key=None, preprocess={}):
 
         self.calibration_gui.show(frame, key)
-        
+
         height, width, channels = frame.shape
         if self.zones is None:
             self.zones = tools.get_zones(width, height)
@@ -271,8 +281,7 @@ class GUI(object):
                     self.draw_line(frame, x['line'])
 
 
-        cv2.imshow('SUCH VISION', frame)
-        # cv2.waitKey(3)
+        cv2.imshow(self.VISION, frame)
 
     def draw_robot(self, frame, x, y, color, thickness=1):
         if x is not None and y is not None:
