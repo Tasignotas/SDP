@@ -40,7 +40,7 @@ class Preprocessing(object):
             else:
                 self.background_sub = cv2.BackgroundSubtractorMOG2(0, 30, False)
                 bg_mask = self.background_sub.apply(frame)
-            results['background_sub'] = bg_mask
+            results['background_sub'] = cv2.blur(bg_mask, (2,2))
 
         return results
 
