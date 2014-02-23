@@ -34,13 +34,14 @@ class Preprocessing(object):
 
         # Apply background subtraction
         if self.options['background_sub']:
+            frame = cv2.blur(frame, (2,2))
             # print 'running sub'
             if self.background_sub is not None:
                 bg_mask = self.background_sub.apply(frame)
             else:
                 self.background_sub = cv2.BackgroundSubtractorMOG2(0, 30, False)
                 bg_mask = self.background_sub.apply(frame)
-            results['background_sub'] = cv2.blur(bg_mask, (2,2))
+            results['background_sub'] = bg_mask
 
         return results
 
@@ -50,5 +51,5 @@ class Preprocessing(object):
         of the image.
         """
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        frame[:, :, 1] = cv2.equalizeHist(frame[:, :, :1])
+        frame[:, :, 1] = cv2.equalizeHist(frame[:, :, 1])
         return cv2.cvtColor(frame, cv2.COLOR_HSV2BGR)

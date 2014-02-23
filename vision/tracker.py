@@ -172,8 +172,8 @@ class RobotTracker(Tracker):
 
         mask_frame = frame.copy()
 
-        # cv2.rectangle(mask_frame, (0, 0), (width, height), (0,0,0), -1)
-        # cv2.circle(mask_frame, (width / 2, height / 2), 9, (255, 255, 255), -1)
+        cv2.rectangle(mask_frame, (0, 0), (width, height), (0,0,0), -1)
+        cv2.circle(mask_frame, (width / 2, height / 2), 9, (255, 255, 255), -1)
 
 
 
@@ -269,13 +269,13 @@ class RobotTracker(Tracker):
             distance = lambda x, y: np.sqrt((x[0]-y[0])**2 + (x[1]-y[1])**2)
 
             if self.color_name == 'yellow':
-                if inf_i and dot:
-                    points = (dot, inf_i)
-                    angle = self.get_angle(dot, inf_i)
-                elif inf_i:
-                    points = (plate_center, inf_i)
-                    angle = self.get_angle(plate_center, inf_i)
-                elif dot:
+                # if inf_i and dot:
+                #     points = (dot, inf_i)
+                #     angle = self.get_angle(dot, inf_i)
+                # # elif inf_i:
+                # #     points = (plate_center, inf_i)
+                # #     angle = self.get_angle(plate_center, inf_i)
+                if dot:
                     points = (dot, plate_center)
                     angle = self.get_angle(dot, plate_center)
                 else:
