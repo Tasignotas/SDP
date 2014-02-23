@@ -187,10 +187,19 @@ class Robot(PitchObject):
     def __init__(self, zone, x, y, angle, velocity, width=ROBOT_WIDTH, length=ROBOT_LENGTH, height=ROBOT_HEIGHT, angle_offset=0):
         super(Robot, self).__init__(x, y, angle, velocity, width, length, height, angle_offset)
         self._zone = zone
+        self._state = 'defence_somewhere'
 
     @property
     def zone(self):
         return self._zone
+
+    @property
+    def state(self):
+        return self._state
+
+    @state.setter
+    def state(self, new_state):
+        self._state = new_state
 
     def is_near_ball(self, ball):
         '''
@@ -265,6 +274,7 @@ class Ball(PitchObject):
 
     def __init__(self, x, y, angle, velocity):
         super(Ball, self).__init__(x, y, angle, velocity, BALL_WIDTH, BALL_LENGTH, BALL_HEIGHT)
+
 
 class Goal(PitchObject):
 
