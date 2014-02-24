@@ -170,24 +170,6 @@ class RobotTracker(Tracker):
         contours = self.get_contours(frame.copy(), adjustments)
         return self.get_bounding_box(contours)   # (x, y, width, height)
 
-    def get_i(self, frame, x_offset, y_offset):
-        adjustments = self.color
-        for adjustment in adjustments:
-            contours = self.get_contours(frame.copy(), adjustment)
-
-            if contours and len(contours) > 0:
-
-                cnt = contours[0]
-
-                rows,cols = frame.shape[:2]
-                [vx,vy,x,y] = cv2.fitLine(cnt, cv2.DIST_LABEL_PIXEL, 0,0.01,0.01)
-                lefty = int((-x*vy/vx) + y)
-                righty = int(((cols-x)*vy/vx)+y)
-
-                (x,y),radius = cv2.minEnclosingCircle(cnt)
-                # Return relative position to the frame given the offset
-                return Center(int(x + x_offset), int(y + y_offset))
-
     def get_dot(self, frame, x_offset, y_offset):
         height, width, channel = frame.shape
 
@@ -300,19 +282,13 @@ class RobotTracker(Tracker):
                 plate_frame = self.kmeans(plate_frame)
 
             plate_center = Center(plate.x + self.offset + plate.width / 2, plate.y + plate.height / 2)
-            inf_i = self.get_i(plate_frame.copy(), plate.x + self.offset, plate.y)
             dot = self.get_dot(plate_frame.copy(), plate.x + self.offset, plate.y)
 
             # Euclidean distance
             distance = lambda x, y: np.sqrt((x[0]-y[0])**2 + (x[1]-y[1])**2)
 
             if self.color_name == 'yellow' or self.color_name == 'blue':
-                # if inf_i and dot:
-                #     points = (dot, inf_i)
-                #     angle = self.get_angle(dot, inf_i)
-                # # elif inf_i:
-                # #     points = (plate_center, inf_i)
-                # #     angle = self.get_angle(plate_center, inf_i)
+
                 if dot:
                     points = (dot, plate_center)
                     angle = self.get_angle(dot, plate_center)
@@ -323,10 +299,7 @@ class RobotTracker(Tracker):
                 # Only use the center of the detected blue zone if it is within a reasonable distance of the
                 # plate center (in order to avoid extremes) and if the distance between the dot and inf_i is greater
                 # than the distance between the dot and the plate center.
-                if inf_i and dot and distance(inf_i, dot) < 11 and distance(dot, plate_center) < distance(inf_i, dot):
-                    points = (dot, inf_i)
-                    angle = self.get_angle(dot, inf_i)
-                elif dot:
+                if dot:
                     points = (dot, plate_center)
                     angle = self.get_angle(dot, plate_center)
                 else:
@@ -345,7 +318,7 @@ class RobotTracker(Tracker):
                 'angle': angle,
                 'velocity': speed,
                 'dot': dot,
-                'i': inf_i,
+                #'i': inf_i,
                 'box': BoundingBox(plate.x + self.offset, plate.y, plate.width, plate.height),
                 'line': points,
                 'plate_points': plate_points
@@ -358,7 +331,7 @@ class RobotTracker(Tracker):
             'angle': None,
             'velocity': None,
             'dot': None,
-            'i': None,
+            #'i': None,
             'box': None,
             'line': None
         })
