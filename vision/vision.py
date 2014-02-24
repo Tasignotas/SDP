@@ -43,9 +43,6 @@ class Vision:
         zones = [(val[0], val[1], 0, height) for val in tools.get_zones(width, height)]
         self.zones = zones
 
-        # zones = [(zone_size * i, zone_size * (i + 1), 0, height) for i in range(4)]
-        # print zones
-
         # Do set difference to find the other color - if is too long :)
         opponent_color = (TEAM_COLORS - set([color])).pop()
 
