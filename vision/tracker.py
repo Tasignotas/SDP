@@ -93,26 +93,36 @@ class Tracker(object):
         if not contours:
             return None
 
-        left, top, right, bot = [], [], [], []
+        cnts = []
 
-        for cnt in contours:
-            area = cv2.contourArea(cnt)
+        for i, cnt in enumerate(contours):
+                cnts.append(cnt)
 
-            if area > 100:
-                # Contours obtained are fragmented, find extreme values
-                leftmost, topmost, rightmost, bottommost = self.get_contour_extremes(cnt)
+        newcnt = reduce(lambda x, y: np.concatenate((x, y)), cnts)
 
-                left.append(leftmost)
-                top.append(topmost)
-                right.append(rightmost)
-                bot.append(bottommost)
+        # x, y, w, h = cv2.
+        print newcnt
 
-        if left and top and right and bot:
+        # left, top, right, bot = [], [], [], []
 
-            left, top, right, bot = min(left, key=lambda x: x[0])[0], min(top, key=lambda x: x[1])[1], max(right, key=lambda x: x[0])[0], max(bot, key=lambda x: x[1])[1]
+        # for cnt in contours:
+        #     area = cv2.contourArea(cnt)
 
-            # x, y of top left corner, widht, height
-            return BoundingBox(left+1, top+1, right - left-1, bot - top-1)
+        #     if area > 100:
+        #         # Contours obtained are fragmented, find extreme values
+        #         leftmost, topmost, rightmost, bottommost = self.get_contour_extremes(cnt)
+
+        #         left.append(leftmost)
+        #         top.append(topmost)
+        #         right.append(rightmost)
+        #         bot.append(bottommost)
+
+        # if left and top and right and bot:
+
+        #     left, top, right, bot = min(left, key=lambda x: x[0])[0], min(top, key=lambda x: x[1])[1], max(right, key=lambda x: x[0])[0], max(bot, key=lambda x: x[1])[1]
+
+        #     # x, y of top left corner, widht, height
+        #     return BoundingBox(left, top, right - left, bot - top)
         return None
 
 
@@ -184,13 +194,15 @@ class RobotTracker(Tracker):
         # cv2.waitKey(0)
 
         adjustments = [self.calibration['dot']]
-	for adjustment in adjustments:
-        	contours = self.get_contours(frame.copy(), adjustment)
-        	if contours and len(contours) > 0:
-           	    cnt = contours[0]
-                    (x,y),radius = cv2.minEnclosingCircle(cnt)
-                    # Return relative position to the frame given the offset
-                    return Center(int(x + x_offset), int(y + y_offset))
+        for adjustment in adjustments:
+            contours = self.get_contours(frame.copy(), adjustment)
+            if contours and len(contours) > 0:
+                areas = [cv2.contourArea(c) for c in contours]
+                max_index = np.argmax(areas)
+                cnt=contours[max_index]
+                (x,y),radius = cv2.minEnclosingCircle(cnt)
+                # Return relative position to the frame given the offset
+                return Center(int(x + x_offset), int(y + y_offset))
         #else:
             #print 'No dot found for %s' % self.name
 
@@ -268,7 +280,7 @@ class RobotTracker(Tracker):
             # Euclidean distance
             distance = lambda x, y: np.sqrt((x[0]-y[0])**2 + (x[1]-y[1])**2)
 
-            if self.color_name == 'yellow':
+            if self.color_name == 'yellow' or self.color_name == 'blue':
                 # if inf_i and dot:
                 #     points = (dot, inf_i)
                 #     angle = self.get_angle(dot, inf_i)
