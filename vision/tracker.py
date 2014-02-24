@@ -71,6 +71,9 @@ class Tracker(object):
         # Create a mask
         frame_mask = cv2.inRange(frame_hsv, min_color, max_color)
 
+        kernel = np.ones((5,5), np.uint8)
+        erosion = cv2.erode(frame_mask, kernel, iterations=1)
+
         # Apply threshold to the masked image, no idea what the values mean
         return_val, threshold = cv2.threshold(frame_mask, 127, 255, 0)
 
@@ -100,29 +103,37 @@ class Tracker(object):
 
         newcnt = reduce(lambda x, y: np.concatenate((x, y)), cnts)
 
+        # x,y,w,h = cv2.boundingRect(cnt)
+        # cv2.rectangle(frame,(x,y),(x+w,y+h),(0,0,255),2)
+        rect = cv2.minAreaRect(newcnt)
+        box = cv2.cv.BoxPoints(rect)
+        box = np.int0(box)
+        # cv2.drawContours(frame,[box],0,(0,255,0),2)
+
         # x, y, w, h = cv2.
-        print newcnt
+        # print box
+        # return
 
-        # left, top, right, bot = [], [], [], []
+        left, top, right, bot = [], [], [], []
 
-        # for cnt in contours:
-        #     area = cv2.contourArea(cnt)
+        for cnt in contours:
+            area = cv2.contourArea(cnt)
 
-        #     if area > 100:
-        #         # Contours obtained are fragmented, find extreme values
-        #         leftmost, topmost, rightmost, bottommost = self.get_contour_extremes(cnt)
+            if area > 100:
+                # Contours obtained are fragmented, find extreme values
+                leftmost, topmost, rightmost, bottommost = self.get_contour_extremes(cnt)
 
-        #         left.append(leftmost)
-        #         top.append(topmost)
-        #         right.append(rightmost)
-        #         bot.append(bottommost)
+                left.append(leftmost)
+                top.append(topmost)
+                right.append(rightmost)
+                bot.append(bottommost)
 
-        # if left and top and right and bot:
+        if left and top and right and bot:
 
-        #     left, top, right, bot = min(left, key=lambda x: x[0])[0], min(top, key=lambda x: x[1])[1], max(right, key=lambda x: x[0])[0], max(bot, key=lambda x: x[1])[1]
+            left, top, right, bot = min(left, key=lambda x: x[0])[0], min(top, key=lambda x: x[1])[1], max(right, key=lambda x: x[0])[0], max(bot, key=lambda x: x[1])[1]
 
-        #     # x, y of top left corner, widht, height
-        #     return BoundingBox(left, top, right - left, bot - top)
+            # x, y of top left corner, widht, height
+            return (BoundingBox(left, top, right - left, bot - top), box)
         return None
 
 
@@ -263,7 +274,22 @@ class RobotTracker(Tracker):
         # Trim and adjust the image
         frame = frame[self.crop[2]:self.crop[3], self.crop[0]:self.crop[1]]
 
-        plate = self.get_plate(frame)
+
+        plate_tup = self.get_plate(frame)
+        if plate_tup is not None:
+            plate = plate_tup[0]
+
+            plate_points = plate_tup[1]
+
+            for p in plate_points:
+                p[0] = p[0] + self.offset
+
+            # print plate_points
+        else:
+            plate = None
+            plate_points = None
+
+
 
         if plate and plate.width > 0 and plate.height > 0:
 
@@ -321,7 +347,8 @@ class RobotTracker(Tracker):
                 'dot': dot,
                 'i': inf_i,
                 'box': BoundingBox(plate.x + self.offset, plate.y, plate.width, plate.height),
-                'line': points
+                'line': points,
+                'plate_points': plate_points
             })
             return
 

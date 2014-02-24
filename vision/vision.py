@@ -269,20 +269,23 @@ class GUI(object):
         if extras is not None:
             for x in extras[:4]:
                 if x is not None:
-                    if x['i'] and 'i' in x.keys():
-                        self.draw_dot(frame, x['i'])
+                    # if x['i'] and 'i' in x.keys():
+                    #     self.draw_dot(frame, x['i'])
 
                     if  x['dot'] and 'dot' in x.keys():
                         self.draw_dot(frame, x['dot'])
 
-                    if  x['box'] and 'box' in x.keys():
-                        self.draw_box(frame, x['box'])
+                    # if  x['box'] and 'box' in x.keys():
+                        # self.draw_box(frame, x['box'])
 
                     if x['location'] and 'location' in x.keys():
                         self.draw_dot(frame, x['location'])
 
                 if x['line'] and 'line' in x.keys():
                     self.draw_line(frame, x['line'])
+
+                if 'plate_points' in x:
+                    cv2.polylines(frame, [x['plate_points']], True, BGR_COMMON['bright_green'], 1)
 
 
         cv2.imshow(self.VISION, frame)
