@@ -191,19 +191,17 @@ class RobotTracker(Tracker):
 
     def get_dot(self, frame, x_offset, y_offset):
         height, width, channel = frame.shape
+        """
+        Find coordinates of the dot
+        """
 
         mask_frame = frame.copy()
 
         cv2.rectangle(mask_frame, (0, 0), (width, height), (0,0,0), -1)
         cv2.circle(mask_frame, (width / 2, height / 2), 9, (255, 255, 255), -1)
 
-
-
         mask_frame = cv2.cvtColor(mask_frame, cv2.COLOR_BGR2GRAY)
         frame = cv2.bitwise_and(frame, frame, mask=mask_frame)
-
-        # cv2.imshow('frame', frame)
-        # cv2.waitKey(0)
 
         adjustments = [self.calibration['dot']]
         for adjustment in adjustments:
@@ -275,7 +273,6 @@ class RobotTracker(Tracker):
         # Trim and adjust the image
         frame = frame[self.crop[2]:self.crop[3], self.crop[0]:self.crop[1]]
 
-
         plate_tup = self.get_plate(frame)
         if plate_tup is not None:
             plate = plate_tup[0]
@@ -290,14 +287,12 @@ class RobotTracker(Tracker):
             plate = None
             plate_points = None
 
-
-
         if plate and plate.width > 0 and plate.height > 0:
 
             plate_frame = frame.copy()[plate.y:plate.y + plate.height, plate.x:plate.x + plate.width]
 
             # Use k-means for detecting the robots if the KMEANS colors are used.
-            if KMEANS == True:
+            if KMEANS:
                 plate_frame = self.kmeans(plate_frame)
 
             plate_center = Center(plate.x + self.offset + plate.width / 2, plate.y + plate.height / 2)
@@ -306,28 +301,45 @@ class RobotTracker(Tracker):
             # Euclidean distance
             distance = lambda x, y: np.sqrt((x[0]-y[0])**2 + (x[1]-y[1])**2)
 
-            if self.color_name == 'yellow' or self.color_name == 'blue':
+            sides = None
+            direction = None
 
-                if dot:
-                    points = (dot, plate_center)
-                    angle = self.get_angle(dot, plate_center)
-                else:
-                    points = None
-                    angle = None
+            if dot:
+                points = (dot, plate_center)
+                angle = self.get_angle(dot, plate_center)
+
+                if plate_points is not None:
+                    # Find two points closest to the dot
+                    distances = [((dot.x - p[0])**2 + (dot.y - p[1])**2, p[0], p[1]) for p in plate_points]
+                    distances.sort(key=lambda x: x[0])
+                    front = (distances[0], distances[1])
+                    first = front[0]
+                    print 'front', front
+                    rear = (distances[2], distances[3])
+                    # Take the first front and calculate the distances to the rear
+                    front_rear_distances = [((first[1] - p[0])**2 + (first[2] - p[1])**2, p[1], p[2]) for p in rear]
+                    front_rear_distances.sort(key=lambda x: x[0])
+                    print 'front_rear_distances', front_rear_distances
+
+                    sides = [
+                        (
+                            Center(first[1], first[2]),
+                            Center(front_rear_distances[0][1], front_rear_distances[0][2])
+                        ),
+                        (
+                            Center(front[1][1], front[1][2]),
+                            Center(front_rear_distances[1][1], front_rear_distances[1][2])
+                        )
+                    ]
+
+                    direction = (
+                        Center((first[1] + front[1][1]) / 2, (front[1][2] + first[2]) / 2),
+                        Center((front_rear_distances[1][1] + front_rear_distances[0][1]) / 2, (front_rear_distances[1][2] +  front_rear_distances[0][2]) / 2)
+                    )
+
             else:
-                # Only use the center of the detected blue zone if it is within a reasonable distance of the
-                # plate center (in order to avoid extremes) and if the distance between the dot and inf_i is greater
-                # than the distance between the dot and the plate center.
-                if dot:
-                    points = (dot, plate_center)
-                    angle = self.get_angle(dot, plate_center)
-                else:
-                    points = None
-                    angle = None
-
-            # if self.name == 'Their Attacker' and angle:
-                # print "angle", angle
-                # print '>>>>>', angle * 360 / (2.0 * np.pi)
+                points = None
+                angle = None
 
             speed = None
 
@@ -340,7 +352,9 @@ class RobotTracker(Tracker):
                 #'i': inf_i,
                 'box': BoundingBox(plate.x + self.offset, plate.y, plate.width, plate.height),
                 'line': points,
-                'plate_points': plate_points
+                'plate_points': plate_points,
+                'sides': sides,
+                'direction': direction
             })
             return
 

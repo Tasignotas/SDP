@@ -168,6 +168,7 @@ class Camera(object):
 
         Returns the frame if available, otherwise returns None.
         """
+        # status, frame = True, cv2.imread('vision/00000003.jpg')
         status, frame = self.capture.read()
         if status:
             return frame[
@@ -284,6 +285,14 @@ class GUI(object):
                 if 'plate_points' in x:
                     cv2.polylines(frame, [x['plate_points']], True, BGR_COMMON['bright_green'], 1)
 
+                if 'sides' in x:
+                    if x['sides'] is not None:
+                        cv2.line(frame, x['sides'][0][0], x['sides'][0][1], BGR_COMMON['red'], 2)
+                        cv2.line(frame, x['sides'][1][0], x['sides'][1][1], BGR_COMMON['red'], 2)
+
+                if 'direction' in x:
+                    if x['direction'] is not None:
+                        cv2.line(frame, x['direction'][0], x['direction'][1], BGR_COMMON['yellow'], 2)
 
         cv2.imshow(self.VISION, frame)
 
