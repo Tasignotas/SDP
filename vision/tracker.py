@@ -285,11 +285,11 @@ class RobotTracker(Tracker):
                             p[1]                                    # y coord
                         ) for p in plate_corners]
 
-                    distances.sort(key=lambda x: x[0], reverse=True)s
+                    distances.sort(key=lambda x: x[0], reverse=True)
 
                     # Front of the kicker should be the first two points in distances
                     front = distances[:2]
-                    rear = distances[2:]ar
+                    rear = distances[2:]
 
                     # Calculate which of the rear points belongs to the first of the front
                     first = front[0]
@@ -323,7 +323,8 @@ class RobotTracker(Tracker):
                             (front_rear_distances[1][2] + front_rear_distances[0][2]) / 2)
                     )
 
-                    angle = self.get_angle(direction[1], direction[1])
+                    angle = self.get_angle(direction[1], direction[0])
+                    print 'ANGLE', self.name, angle
 
             # Offset the x coordinates
             plate_corners = [(p[0] + self.offset, p[1]) for p in plate_corners]
