@@ -7,6 +7,7 @@ import sys
 from planning.models import Vector
 from colors import BGR_COMMON
 from collections import namedtuple
+import numpy as np
 
 from findHSV import CalibrationGUI
 
@@ -262,19 +263,26 @@ class GUI(object):
         for key in ['their_defender', 'their_attacker']:
             self.draw_robot(frame, positions[key]['x'], positions[key]['y'], their_color)
 
+        print extras
         if extras is not None:
             for x in extras[:4]:
+                if x['name'].split()[0] == 'Our':
+                    color_c = our_color
+                else:
+                    color_c = their_color
 
                 # Draw direction
                 if x['direction'] is not None:
-                    cv2.line(frame, x['direction'][0], x['direction'][1], BGR_COMMON['yellow'], 2)
+                    cv2.line(frame, x['direction'][0], x['direction'][1], BGR_COMMON['bright_green'], 2)
 
                 if x['box'] is not None:
-                    for point in x['box']:
-                        cv2.circle(frame, (point[0], point[1]), 1, BGR_COMMON['white'], -1)
+                    cv2.polylines(frame, [np.array(x['box'])], True, BGR_COMMON[color_c], 2)
+                    # for point in x['box']:
+                        # cv2.circle(frame, (point[0], point[1]), 1, BGR_COMMON['white'], -1)
 
-                if x['x'] is not None and x['y'] is not None:
-                    cv2.circle(frame, (x['x'], x['y']), 5, BGR_COMMON['green'], -1)
+                if x['dot'] is not None:
+                    print x['dot']
+                    cv2.circle(frame, (int(x['dot'][0]), int(x['dot'][1])), 5, BGR_COMMON['black'], -1)
 
         #         if x is not None:
         #             # if x['i'] and 'i' in x.keys():
