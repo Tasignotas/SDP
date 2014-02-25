@@ -71,7 +71,7 @@ class Tracker(object):
         # Create a mask
         frame_mask = cv2.inRange(frame_hsv, min_color, max_color)
 
-        kernel = np.ones((5,5), np.uint8)
+        kernel = np.ones((5, 5), np.uint8)
         erosion = cv2.erode(frame_mask, kernel, iterations=1)
 
         # Apply threshold to the masked image, no idea what the values mean
@@ -86,11 +86,27 @@ class Tracker(object):
         return (contours, hierarchy, frame_mask)
 
     def get_contour_extremes(self, cnt):
-        leftmost = tuple(cnt[cnt[:,:,0].argmin()][0])
-        rightmost = tuple(cnt[cnt[:,:,0].argmax()][0])
-        topmost = tuple(cnt[cnt[:,:,1].argmin()][0])
-        bottommost = tuple(cnt[cnt[:,:,1].argmax()][0])
+        """
+        Get extremes of a countour.
+        """
+        leftmost = tuple(cnt[cnt[:, :, 0].argmin()][0])
+        rightmost = tuple(cnt[cnt[:, :, 0].argmax()][0])
+        topmost = tuple(cnt[cnt[:, :, 1].argmin()][0])
+        bottommost = tuple(cnt[cnt[:, :, 1].argmax()][0])
         return (leftmost, topmost, rightmost, bottommost)
+
+    def get_corner_points(self, contours):
+        """
+        Get exact corner points for the plate given contours.
+        """
+        cnts = []
+        for i, cnt in enumerate(contours):
+                cnts.append(cnt)
+        newcnt = reduce(lambda x, y: np.concatenate((x, y)), cnts)
+
+        rectangle = cv2.minAreaRect(newcnt)
+        box = cv2.cv.BoxPoints(rectangle)
+        return np.int0(box)
 
     def get_bounding_box(self, contours):
         if not contours:
@@ -147,7 +163,10 @@ class RobotTracker(Tracker):
             [string] color      the name of the color to pass in
             [(left-min, right-max, top-min, bot-max)]
                                 crop  crop coordinates
-            [int] offset        how much to offset the coordinates
+            [int]       offset          how much to offset the coordinates
+            [int]       pitch           the pitch we're tracking - used to find the right colors
+            [string]    name            name for debug purposes
+            [dict]      calibration     dictionary of calibration values
         """
         self.name = name
         self.crop = crop
