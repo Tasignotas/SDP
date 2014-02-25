@@ -95,62 +95,101 @@ class Tracker(object):
         bottommost = tuple(cnt[cnt[:, :, 1].argmax()][0])
         return (leftmost, topmost, rightmost, bottommost)
 
-    def get_corner_points(self, contours):
+    # def get_bounding_box(self, contours):
+    #     if not contours:
+    #         return None
+
+    #     cnts = []
+
+    #     for i, cnt in enumerate(contours):
+    #             cnts.append(cnt)
+
+    #     newcnt = reduce(lambda x, y: np.concatenate((x, y)), cnts)
+
+    #     # x,y,w,h = cv2.boundingRect(cnt)
+    #     # cv2.rectangle(frame,(x,y),(x+w,y+h),(0,0,255),2)
+    #     rect = cv2.minAreaRect(newcnt)
+    #     box = cv2.cv.BoxPoints(rect)
+    #     box = np.int0(box)
+    #     # cv2.drawContours(frame,[box],0,(0,255,0),2)
+
+    #     # x, y, w, h = cv2.
+    #     # print box
+    #     # return
+
+    #     left, top, right, bot = [], [], [], []
+
+    #     for cnt in contours:
+    #         area = cv2.contourArea(cnt)
+
+    #         if area > 100:
+    #             # Contours obtained are fragmented, find extreme values
+    #             leftmost, topmost, rightmost, bottommost = self.get_contour_extremes(cnt)
+
+    #             left.append(leftmost)
+    #             top.append(topmost)
+    #             right.append(rightmost)
+    #             bot.append(bottommost)
+
+    #     if left and top and right and bot:
+
+    #         left, top, right, bot = min(left, key=lambda x: x[0])[0], min(top, key=lambda x: x[1])[1], max(right, key=lambda x: x[0])[0], max(bot, key=lambda x: x[1])[1]
+
+    #         # x, y of top left corner, widht, height
+    #         return (BoundingBox(left, top, right - left, bot - top), box)
+    #     return None
+
+    def get_bounding_box(self, points):
         """
-        Get exact corner points for the plate given contours.
+        Find the bounding box given points by looking at the extremes of each coordinate.
+        """
+        leftmost = min(points, key=lambda x: x[0])[0]
+        rightmost = max(points, key=lambda x: x[0])[0]
+        topmost = min(points, key=lambda x: x[1])[1]
+        bottommost = max(points, key=lambda x: x[1])[1]
+        return BoundingBox(leftmost, topmost, rightmost - leftmost, bottommost - topmost)
+
+    def get_contour_corners(self, contour):
+        """
+        Get exact corner points for the plate given one contour.
+        """
+        if contour is not None:
+            rectangle = cv2.minAreaRect(contour)
+            box = cv2.cv.BoxPoints(rectangle)
+            return np.int0(box)
+
+    def join_contours(self, contours):
+        """
+        Joins multiple contours together.
         """
         cnts = []
         for i, cnt in enumerate(contours):
                 cnts.append(cnt)
-        newcnt = reduce(lambda x, y: np.concatenate((x, y)), cnts)
+        return reduce(lambda x, y: np.concatenate((x, y)), cnts) if len(cnts) else None
 
-        rectangle = cv2.minAreaRect(newcnt)
-        box = cv2.cv.BoxPoints(rectangle)
-        return np.int0(box)
+    def get_largest_contour(self, contours):
+        """
+        Find the largest of all contours.
+        """
+        areas = [cv2.contourArea(c) for c in contours]
+        return contours[np.argmax(areas)]
 
-    def get_bounding_box(self, contours):
-        if not contours:
-            return None
+    def get_contour_centre(self, contour):
+        """
+        Find the center of a contour by minimum enclousing circle approximation.
 
-        cnts = []
+        Returns: ((x, y), radius)
+        """
+        return cv2.minEnclosingCircle(contour)
 
-        for i, cnt in enumerate(contours):
-                cnts.append(cnt)
-
-        newcnt = reduce(lambda x, y: np.concatenate((x, y)), cnts)
-
-        # x,y,w,h = cv2.boundingRect(cnt)
-        # cv2.rectangle(frame,(x,y),(x+w,y+h),(0,0,255),2)
-        rect = cv2.minAreaRect(newcnt)
-        box = cv2.cv.BoxPoints(rect)
-        box = np.int0(box)
-        # cv2.drawContours(frame,[box],0,(0,255,0),2)
-
-        # x, y, w, h = cv2.
-        # print box
-        # return
-
-        left, top, right, bot = [], [], [], []
-
-        for cnt in contours:
-            area = cv2.contourArea(cnt)
-
-            if area > 100:
-                # Contours obtained are fragmented, find extreme values
-                leftmost, topmost, rightmost, bottommost = self.get_contour_extremes(cnt)
-
-                left.append(leftmost)
-                top.append(topmost)
-                right.append(rightmost)
-                bot.append(bottommost)
-
-        if left and top and right and bot:
-
-            left, top, right, bot = min(left, key=lambda x: x[0])[0], min(top, key=lambda x: x[1])[1], max(right, key=lambda x: x[0])[0], max(bot, key=lambda x: x[1])[1]
-
-            # x, y of top left corner, widht, height
-            return (BoundingBox(left, top, right - left, bot - top), box)
-        return None
+    def get_angle(self, line, dot):
+        """
+        From dot to line
+        """
+        diff_x = dot[0] - line[0]
+        diff_y = line[1] - dot[1]
+        angle = np.arctan2(diff_y, diff_x) % (2 * np.pi)
+        return angle
 
 
 class RobotTracker(Tracker):
@@ -183,68 +222,48 @@ class RobotTracker(Tracker):
         Given the frame to search, find a bounding rectangle for the green plate
 
         Returns:
-            (x, y, width, height) top left corner x,y
+            list of corner points
         """
+        # Adjustments are colors and contrast/blur
         adjustments = self.calibration['plate']
         contours = self.get_contours(frame.copy(), adjustments)
-        return self.get_bounding_box(contours)   # (x, y, width, height)
+        return self.get_contour_corners(self.join_contours(contours))
 
     def get_dot(self, frame, x_offset, y_offset):
-        height, width, channel = frame.shape
         """
-        Find coordinates of the dot
-        """
+        Find center point of the black dot on the plate.
 
+        Method:
+            1. Assume that the dot is within some proximity of the center of the plate.
+            2. Fill a dummy frame with black and draw white cirlce around to create a mask.
+            3. Mask against the frame to eliminate any robot parts looking like dark dots.
+            4. Use contours to detect the dot and return it's center.
+
+        Params:
+            frame       The frame to search
+            x_offset    The offset from the uncropped image - to be added to the final values
+            y_offset    The offset from the uncropped image - to be added to the final values
+        """
+        # Create dummy mask
+        height, width, channel = frame.shape
         mask_frame = frame.copy()
 
-        cv2.rectangle(mask_frame, (0, 0), (width, height), (0,0,0), -1)
+        # Fill the dummy frame
+        cv2.rectangle(mask_frame, (0, 0), (width, height), (0, 0, 0), -1)
         cv2.circle(mask_frame, (width / 2, height / 2), 9, (255, 255, 255), -1)
 
+        # Mask the original image
         mask_frame = cv2.cvtColor(mask_frame, cv2.COLOR_BGR2GRAY)
         frame = cv2.bitwise_and(frame, frame, mask=mask_frame)
 
-        adjustments = [self.calibration['dot']]
-        for adjustment in adjustments:
-            contours = self.get_contours(frame.copy(), adjustment)
-            if contours and len(contours) > 0:
-                areas = [cv2.contourArea(c) for c in contours]
-                max_index = np.argmax(areas)
-                cnt=contours[max_index]
-                (x,y),radius = cv2.minEnclosingCircle(cnt)
-                # Return relative position to the frame given the offset
-                return Center(int(x + x_offset), int(y + y_offset))
-        #else:
-            #print 'No dot found for %s' % self.name
+        adjustment = self.calibration['dot']
+        contours = self.get_contours(frame.copy(), adjustment)
 
-    def get_angle(self, line, dot):
-        """
-        From dot to line
-        """
-        diff_x = dot[0] - line[0]
-        diff_y = line[1] - dot[1]
-        angle = np.arctan2(diff_y, diff_x) % (2 * np.pi)
-
-            # if diff_x < 0 and diff_y > 0:
-            #     angle = -abs(angle)
-
-            # if diff_x > 0 and diff_y < 0:
-            #     angle = 2 * np.pi - angle
-            # if diff_x > 0 and diff_y < 0:
-            #    angle = np.pi / 2.0 - angle
-            # if diff_x > 0 and diff_y > 0:
-            #    angle = np.pi - angle
-            # if diff_x < 0 and diff_y > 0:
-            #    angle = np.pi + angle
-            # if diff_x < 0 and diff_y < 0:
-            #    angle = 2 * np.pi - angle
-        return angle
-
-    def calcLine(self,(a,b),(d,e)):
-        m = (b-e)*1.0/(a-d)
-        c1 = b-m*a
-        c2 = e-m*d
-        c = ((c1+c2)/2)
-        return (m,c)
+        if contours and len(contours) > 0:
+            # Take the largest contour
+            contour = self.get_largest_contour(contours)
+            (x, y), radius = self.get_contour_centre(contour)
+            return Center(x + x_offset, y + y_offset)
 
     def find(self, frame, queue):
         """
@@ -252,16 +271,10 @@ class RobotTracker(Tracker):
         available.
 
         Process:
-            1. Find green plate by masking
-            2. Use result of (1) to crop the image and reduce search space
-            3. Find colored object in the result of (2)
-            4. Using (1) find center of the box and join with result of (3) to
-               produce the orientation
-                                            OR
-            4. Find black colored circle in the result of (2) and join with (3)
-            5. Calculate angle given (4)
-
-            6. Enter result into the queue and return
+            1. Find green plate
+            2. Create a smaller frame with just the plate
+            3. Find dot inside the green plate (the smaller window)
+            4. Use plate corner points from (1) to determine angle
 
         Params:
             [np.array] frame                - the frame to scan
@@ -270,57 +283,60 @@ class RobotTracker(Tracker):
         Returns:
             None. Result is put into the queue.
         """
-        # Trim and adjust the image
+        # Set up variables
+        x = y = angle = None
+        sides = direction = None
+        plate_corners = None
+
+        # Trim the image to only consist of one zone
         frame = frame[self.crop[2]:self.crop[3], self.crop[0]:self.crop[1]]
 
-        plate_tup = self.get_plate(frame)
-        if plate_tup is not None:
-            plate = plate_tup[0]
+        # (1) Find the plates
+        plate_corners = self.get_plate(frame)
 
-            plate_points = plate_tup[1]
+        if plate_corners is not None:
+            # Find the bounding box
+            plate_bound_box = self.get_bounding_box(plate_corners)
 
-            for p in plate_points:
-                p[0] = p[0] + self.offset
+            # set x and y coordinates
+            x = plate_bound_box.x + plate_bound_box.width / 2
+            y = plate_bound_box.y + plate_bound_box.height / 2
 
-            # print plate_points
-        else:
-            plate = None
-            plate_points = None
+            if plate_bound_box.width > 0 and plate_bound_box.height > 0:
+                # (2) Trim to create a smaller frame
+                plate_frame = frame.copy()[
+                    plate_bound_box.y:plate_bound_box.y + plate_bound_box.height,
+                    plate_bound_box.x:plate_bound_box.x + plate_bound_box.width
+                ]
 
-        if plate and plate.width > 0 and plate.height > 0:
+                # (3) Search for the dot
+                dot = self.get_dot(plate_frame, plate_bound_box.x + self.offset, plate_bound_box.y)
 
-            plate_frame = frame.copy()[plate.y:plate.y + plate.height, plate.x:plate.x + plate.width]
+                if dot is not None:
+                    # Find two points from plate_corners that are the furthest from the dot
+                    distances = [
+                        (
+                            (dot.x - p[0])**2 + (dot.y - p[1])**2,  # distance
+                            p[0],                                   # x coord
+                            p[1]                                    # y coord
+                        ) for p in plate_corners]
+                    distances.sort(key=lambda x: x[0], reverse=True)
 
-            # Use k-means for detecting the robots if the KMEANS colors are used.
-            if KMEANS:
-                plate_frame = self.kmeans(plate_frame)
+                    # Front of the kicker should be the first two points in distances
+                    front = distances[:2]
+                    rear = distances[2:]
 
-            plate_center = Center(plate.x + self.offset + plate.width / 2, plate.y + plate.height / 2)
-            dot = self.get_dot(plate_frame.copy(), plate.x + self.offset, plate.y)
-
-            # Euclidean distance
-            distance = lambda x, y: np.sqrt((x[0]-y[0])**2 + (x[1]-y[1])**2)
-
-            sides = None
-            direction = None
-
-            if dot:
-                points = (dot, plate_center)
-                angle = self.get_angle(dot, plate_center)
-
-                if plate_points is not None:
-                    # Find two points closest to the dot
-                    distances = [((dot.x - p[0])**2 + (dot.y - p[1])**2, p[0], p[1]) for p in plate_points]
-                    distances.sort(key=lambda x: x[0])
-                    front = (distances[0], distances[1])
+                    # Calculate which of the rear points belongs to the first of the front
                     first = front[0]
-                    print 'front', front
-                    rear = (distances[2], distances[3])
-                    # Take the first front and calculate the distances to the rear
-                    front_rear_distances = [((first[1] - p[0])**2 + (first[2] - p[1])**2, p[1], p[2]) for p in rear]
+                    front_rear_distances = [
+                        (
+                            (first[1] - p[0])**2 + (first[2] - p[1])**2,
+                            p[1],
+                            p[2]
+                        ) for p in rear]
                     front_rear_distances.sort(key=lambda x: x[0])
-                    print 'front_rear_distances', front_rear_distances
 
+                    # Put the results together
                     sides = [
                         (
                             Center(first[1], first[2]),
@@ -332,41 +348,38 @@ class RobotTracker(Tracker):
                         )
                     ]
 
+                    # Direction is a line between the front points and rear points
                     direction = (
-                        Center((first[1] + front[1][1]) / 2, (front[1][2] + first[2]) / 2),
-                        Center((front_rear_distances[1][1] + front_rear_distances[0][1]) / 2, (front_rear_distances[1][2] +  front_rear_distances[0][2]) / 2)
+                        Center(
+                            (first[1] + front[1][1]) / 2 + self.offset,
+                            (front[1][2] + first[2]) / 2),
+                        Center(
+                            (front_rear_distances[1][1] + front_rear_distances[0][1]) / 2 + self.offset,
+                            (front_rear_distances[1][2] + front_rear_distances[0][2]) / 2)
                     )
 
-            else:
-                points = None
-                angle = None
+                    angle = self.get_angle(direction[1], direction[1])
 
-            speed = None
+            # Offset the x coordinates
+            plate_corners = [(p[0] + self.offset, p[1]) for p in plate_corners]
 
             queue.put({
+                'x': x + self.offset, 'y': y,
                 'name': self.name,
-                'location': plate_center,
                 'angle': angle,
-                'velocity': speed,
                 'dot': dot,
-                #'i': inf_i,
-                'box': BoundingBox(plate.x + self.offset, plate.y, plate.width, plate.height),
-                'line': points,
-                'plate_points': plate_points,
-                'sides': sides,
+                'box': plate_corners,
                 'direction': direction
             })
             return
 
         queue.put({
+            'x': None, 'y': None,
             'name': self.name,
-            'location': None,
             'angle': None,
-            'velocity': None,
             'dot': None,
-            #'i': None,
             'box': None,
-            'line': None
+            'direction': None
         })
         return
 
@@ -415,7 +428,6 @@ class BallTracker(Tracker):
         # else:
         #     self.color = PITCH1['red']
         self.color = [calibration['red']]
-        print self.color
         self.offset = offset
         self.name = name
         self.calibration = calibration

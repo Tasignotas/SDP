@@ -168,8 +168,8 @@ class Camera(object):
 
         Returns the frame if available, otherwise returns None.
         """
-        # status, frame = True, cv2.imread('vision/00000003.jpg')
-        status, frame = self.capture.read()
+        status, frame = True, cv2.imread('vision/00000003.jpg')
+        # status, frame = self.capture.read()
         if status:
             return frame[
                 self.crop_values[2]:self.crop_values[3],
@@ -262,37 +262,47 @@ class GUI(object):
         for key in ['their_defender', 'their_attacker']:
             self.draw_robot(frame, positions[key]['x'], positions[key]['y'], their_color)
 
-        # print extras
-
         if extras is not None:
             for x in extras[:4]:
-                if x is not None:
-                    # if x['i'] and 'i' in x.keys():
-                    #     self.draw_dot(frame, x['i'])
 
-                    if  x['dot'] and 'dot' in x.keys():
-                        self.draw_dot(frame, x['dot'])
+                # Draw direction
+                if x['direction'] is not None:
+                    cv2.line(frame, x['direction'][0], x['direction'][1], BGR_COMMON['yellow'], 2)
 
-                    # if  x['box'] and 'box' in x.keys():
-                        # self.draw_box(frame, x['box'])
+                if x['box'] is not None:
+                    for point in x['box']:
+                        cv2.circle(frame, (point[0], point[1]), 1, BGR_COMMON['white'], -1)
 
-                    if x['location'] and 'location' in x.keys():
-                        self.draw_dot(frame, x['location'])
+                if x['x'] is not None and x['y'] is not None:
+                    cv2.circle(frame, (x['x'], x['y']), 5, BGR_COMMON['green'], -1)
 
-                if x['line'] and 'line' in x.keys():
-                    self.draw_line(frame, x['line'])
+        #         if x is not None:
+        #             # if x['i'] and 'i' in x.keys():
+        #             #     self.draw_dot(frame, x['i'])
 
-                if 'plate_points' in x:
-                    cv2.polylines(frame, [x['plate_points']], True, BGR_COMMON['bright_green'], 1)
+        #             if  x['dot'] and 'dot' in x.keys():
+        #                 self.draw_dot(frame, x['dot'])
 
-                if 'sides' in x:
-                    if x['sides'] is not None:
-                        cv2.line(frame, x['sides'][0][0], x['sides'][0][1], BGR_COMMON['red'], 2)
-                        cv2.line(frame, x['sides'][1][0], x['sides'][1][1], BGR_COMMON['red'], 2)
+        #             # if  x['box'] and 'box' in x.keys():
+        #                 # self.draw_box(frame, x['box'])
 
-                if 'direction' in x:
-                    if x['direction'] is not None:
-                        cv2.line(frame, x['direction'][0], x['direction'][1], BGR_COMMON['yellow'], 2)
+        #             if x['location'] and 'location' in x.keys():
+        #                 self.draw_dot(frame, x['location'])
+
+        #         if x['line'] and 'line' in x.keys():
+        #             self.draw_line(frame, x['line'])
+
+        #         if 'plate_points' in x:
+        #             cv2.polylines(frame, [x['plate_points']], True, BGR_COMMON['bright_green'], 1)
+
+        #         if 'sides' in x:
+        #             if x['sides'] is not None:
+        #                 cv2.line(frame, x['sides'][0][0], x['sides'][0][1], BGR_COMMON['red'], 2)
+        #                 cv2.line(frame, x['sides'][1][0], x['sides'][1][1], BGR_COMMON['red'], 2)
+
+        #         if 'direction' in x:
+        #             if x['direction'] is not None:
+        #                 cv2.line(frame, x['direction'][0], x['direction'][1], BGR_COMMON['yellow'], 2)
 
         cv2.imshow(self.VISION, frame)
 

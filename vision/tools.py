@@ -12,7 +12,7 @@ def get_zones(width, height):
     calibration = get_calibration('vision/calibrate.json')
     zones_poly = [calibration[key] for key in ['Zone_0', 'Zone_1', 'Zone_2', 'Zone_3']]
 
-    print zones_poly
+    # print zones_poly
 
     maxes = [max(zone, key=lambda x: x[0])[0] for zone in zones_poly[:3]]
     mins = [min(zone, key=lambda x: x[0])[0] for zone in zones_poly[1:]]
