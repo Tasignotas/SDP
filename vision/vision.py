@@ -248,14 +248,6 @@ class GUI(object):
             'ball': self.to_info(extras[4])
         }
 
-        # if extras not None:
-        #     extras = {
-        #         'our_attacker': extras[1],
-        #         'their_attacker': extras[3],
-        #         'our_defender': extras[0],
-        #         'their_defender': extras[2],
-        #         'ball': extras[4]
-        #     }
         their_color = list(TEAM_COLORS - set([our_color]))[0]
         self.draw_ball(frame, positions['ball']['x'], positions['ball']['y'])
         for key in ['our_defender', 'our_attacker']:
@@ -263,7 +255,6 @@ class GUI(object):
         for key in ['their_defender', 'their_attacker']:
             self.draw_robot(frame, positions[key]['x'], positions[key]['y'], their_color)
 
-        print extras
         if extras is not None:
             for x in extras[:4]:
                 if x['name'].split()[0] == 'Our':
@@ -281,36 +272,14 @@ class GUI(object):
                         # cv2.circle(frame, (point[0], point[1]), 1, BGR_COMMON['white'], -1)
 
                 if x['dot'] is not None:
-                    print x['dot']
                     cv2.circle(frame, (int(x['dot'][0]), int(x['dot'][1])), 2, BGR_COMMON['black'], -1)
 
-        #         if x is not None:
-        #             # if x['i'] and 'i' in x.keys():
-        #             #     self.draw_dot(frame, x['i'])
-
-        #             if  x['dot'] and 'dot' in x.keys():
-        #                 self.draw_dot(frame, x['dot'])
-
-        #             # if  x['box'] and 'box' in x.keys():
-        #                 # self.draw_box(frame, x['box'])
-
-        #             if x['location'] and 'location' in x.keys():
-        #                 self.draw_dot(frame, x['location'])
-
-        #         if x['line'] and 'line' in x.keys():
-        #             self.draw_line(frame, x['line'])
-
-        #         if 'plate_points' in x:
-        #             cv2.polylines(frame, [x['plate_points']], True, BGR_COMMON['bright_green'], 1)
-
-        #         if 'sides' in x:
-        #             if x['sides'] is not None:
-        #                 cv2.line(frame, x['sides'][0][0], x['sides'][0][1], BGR_COMMON['red'], 2)
-        #                 cv2.line(frame, x['sides'][1][0], x['sides'][1][1], BGR_COMMON['red'], 2)
-
-        #         if 'direction' in x:
-        #             if x['direction'] is not None:
-        #                 cv2.line(frame, x['direction'][0], x['direction'][1], BGR_COMMON['yellow'], 2)
+                if x['front'] is not None:
+                    p1 = (x['front'][0][0], x['front'][0][1])
+                    p2 = (x['front'][1][0], x['front'][1][1])
+                    cv2.circle(frame, p1, 3, BGR_COMMON['white'], -1)
+                    cv2.circle(frame, p2, 3, BGR_COMMON['white'], -1)
+                    cv2.line(frame, p1, p2, BGR_COMMON['red'], 2)
 
         cv2.imshow(self.VISION, frame)
 

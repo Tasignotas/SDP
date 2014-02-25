@@ -28,10 +28,7 @@ class Tracker(object):
         keys in adjustments dictionary.
         """
         if frame is None:
-            print 'FRAME IS NONE in get_contours'
-
-        print 'ADJUSTMENTS', adjustments
-
+            return None
         if adjustments['blur'] > 1:
             frame = cv2.blur(frame, (adjustments['blur'], adjustments['blur']))
 
@@ -249,7 +246,7 @@ class RobotTracker(Tracker):
         x = y = angle = None
         sides = direction = None
         plate_corners = None
-        dot = None
+        dot = front = None
 
         # Trim the image to only consist of one zone
         frame = frame[self.crop[2]:self.crop[3], self.crop[0]:self.crop[1]]
@@ -272,25 +269,27 @@ class RobotTracker(Tracker):
                     plate_bound_box.x:plate_bound_box.x + plate_bound_box.width
                 ]
 
-
-                print '>>> SHAPE:', plate_frame.shape
-
                 # (3) Search for the dot
                 dot = self.get_dot(plate_frame, plate_bound_box.x + self.offset, plate_bound_box.y)
 
                 if dot is not None:
+                    # Since get_dot adds offset, we need to remove it
+                    dot_temp = Center(dot[0] - self.offset, dot[1])
+
                     # Find two points from plate_corners that are the furthest from the dot
+
                     distances = [
                         (
-                            (dot.x - p[0])**2 + (dot.y - p[1])**2,  # distance
+                            (dot_temp.x - p[0])**2 + (dot_temp.y - p[1])**2,  # distance
                             p[0],                                   # x coord
                             p[1]                                    # y coord
                         ) for p in plate_corners]
-                    distances.sort(key=lambda x: x[0], reverse=True)
+
+                    distances.sort(key=lambda x: x[0], reverse=True)s
 
                     # Front of the kicker should be the first two points in distances
                     front = distances[:2]
-                    rear = distances[2:]
+                    rear = distances[2:]ar
 
                     # Calculate which of the rear points belongs to the first of the front
                     first = front[0]
@@ -329,13 +328,17 @@ class RobotTracker(Tracker):
             # Offset the x coordinates
             plate_corners = [(p[0] + self.offset, p[1]) for p in plate_corners]
 
+            if front is not None:
+                front = [(p[1] + self.offset, p[2]) for p in front]
+
             queue.put({
                 'x': x + self.offset, 'y': y,
                 'name': self.name,
                 'angle': angle,
                 'dot': dot,
                 'box': plate_corners,
-                'direction': direction
+                'direction': direction,
+                'front': front
             })
             return
 
@@ -345,7 +348,8 @@ class RobotTracker(Tracker):
             'angle': None,
             'dot': None,
             'box': None,
-            'direction': None
+            'direction': None,
+            'front': None
         })
         return
 
