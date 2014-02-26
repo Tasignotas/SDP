@@ -27,31 +27,34 @@ class Tracker(object):
         Adjust the given frame based on 'min', 'max', 'contrast' and 'blur'
         keys in adjustments dictionary.
         """
-        if frame is None:
+        try:
+            if frame is None:
+                return None
+            if adjustments['blur'] > 1:
+                frame = cv2.blur(frame, (adjustments['blur'], adjustments['blur']))
+
+            if adjustments['contrast'] > 1.0:
+                frame = cv2.add(frame, np.array([float(adjustments['contrast'])]))
+
+            # Convert frame to HSV
+            frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+
+            # Create a mask
+            frame_mask = cv2.inRange(frame_hsv, adjustments['min'], adjustments['max'])
+
+            # Apply threshold to the masked image, no idea what the values mean
+            return_val, threshold = cv2.threshold(frame_mask, 127, 255, 0)
+
+            # Find contours
+            contours, hierarchy = cv2.findContours(
+                threshold,
+                cv2.RETR_TREE,
+                cv2.CHAIN_APPROX_SIMPLE
+            )
+            # print contours
+            return contours
+        except:
             return None
-        if adjustments['blur'] > 1:
-            frame = cv2.blur(frame, (adjustments['blur'], adjustments['blur']))
-
-        if adjustments['contrast'] > 1.0:
-            frame = cv2.add(frame, np.array([float(adjustments['contrast'])]))
-
-        # Convert frame to HSV
-        frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-
-        # Create a mask
-        frame_mask = cv2.inRange(frame_hsv, adjustments['min'], adjustments['max'])
-
-        # Apply threshold to the masked image, no idea what the values mean
-        return_val, threshold = cv2.threshold(frame_mask, 127, 255, 0)
-
-        # Find contours
-        contours, hierarchy = cv2.findContours(
-            threshold,
-            cv2.RETR_TREE,
-            cv2.CHAIN_APPROX_SIMPLE
-        )
-        # print contours
-        return contours
 
     # TODO: Used by Ball tracker - REFACTOR
     def preprocess(self, frame, crop, min_color, max_color, contrast, blur):
@@ -65,7 +68,7 @@ class Tracker(object):
 
         # Set Contrast
         if contrast > 1.0:
-            frame = cv2.add(frame, np.array([contrast]))
+            frame = cv2.add(frame, np.array([float(contrast)]))
 
         # Convert frame to HSV
         frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
