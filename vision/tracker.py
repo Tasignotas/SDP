@@ -327,7 +327,6 @@ class RobotTracker(Tracker):
                     )
 
                     angle = self.get_angle(direction[1], direction[0])
-                    print 'ANGLE', self.name, angle
 
             # Offset the x coordinates
             plate_corners = [(p[0] + self.offset, p[1]) for p in plate_corners]

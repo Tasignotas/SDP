@@ -137,10 +137,9 @@ class Vision:
         """
         x, y, angle, velocity = None, None, None, None
         if args is not None:
-            if 'location' in args:
-                x = args['location'][0] if args['location'] is not None else None
-                y = args['location'][1] if args['location'] is not None else None
-
+            if 'x' in args and 'y' in args:
+                x = args['x'] 
+                y = args['y']
                 if y is not None:
                     y = height - y
 
@@ -280,9 +279,6 @@ class GUI(object):
                     cv2.circle(frame, p1, 3, BGR_COMMON['white'], -1)
                     cv2.circle(frame, p2, 3, BGR_COMMON['white'], -1)
                     cv2.line(frame, p1, p2, BGR_COMMON['red'], 2)
-
-                if x['angle']:
-                    print '***', x['name'], x['angle']
 
         cv2.imshow(self.VISION, frame)
 

@@ -13,7 +13,7 @@ class Controller:
     Primary source of robot control. Ties vision and planning together.
     """
 
-    def __init__(self, pitch, color, our_side, video_port=0, comm_port='/dev/ttyUSB0', attacker=None, defender=None):
+    def __init__(self, pitch, color, our_side, video_port=0, comm_port='/dev/ttyUSB0'):
         """
         Entry point for the SDP system.
 
@@ -54,14 +54,11 @@ class Controller:
 
         self.color = color
 
-        self.attacker = attacker
-        self.defender = defender
-
         self.preprocessing = Preprocessing()
 
         self.pitch = pitch
 
-        self.attacker = Attacker_Controller()
+        self.attacker = None #Attacker_Controller()
         self.defender = Defender_Controller()
 
     def wow(self):
@@ -87,6 +84,7 @@ class Controller:
                 positions = self.postprocessing.analyze(positions)
 
                 # Find appropriate action
+                self.planner.update_world(positions)
                 attacker_actions = self.planner.plan('attacker')
                 defender_actions = self.planner.plan('defender')
 
@@ -130,36 +128,6 @@ class Robot_Controller(object):
             pass
 
 
-class Attacker_Controller(Robot_Controller):
-    """
-    Attacker implementation.
-    """
-
-    def __init__(self):
-        """
-        Do the same setup as the Robot class, as well as anything specific to the Attacker.
-        """
-        super(Attacker_Controller, self).__init__()
-
-    def execute(self, comm, action):
-        """
-        Execute robot action.
-        """
-        left_motor = action['attacker']['left_motor']
-        right_motor = action['attacker']['right_motor']
-        comm.write('A_RUN_ENGINE %d %d' % (left_motor, right_motor))
-        if action['attacker']['kicker'] != 0:
-            try:
-                comm.write('A_RUN_KICKER %d' % (action['attacker']['kicker']))
-            except StandardError:
-                pass
-        elif action['attacker']['catcher'] != 0:
-            try:
-                comm.write('A_RUN_CATCHER %d' % (action['attacker']['catcher']))
-            except StandardError:
-                pass
-
-
 class Defender_Controller(Robot_Controller):
     """
     Defender implementation.
@@ -175,17 +143,48 @@ class Defender_Controller(Robot_Controller):
         """
         Execute robot action.
         """
-        left_motor = action['defender']['left_motor']
-        right_motor = action['defender']['right_motor']
-        comm.write('D_RUN_ENGINE %d %d' % (left_motor, right_motor))
-        if action['defender']['kicker'] != 0:
+        print action
+        left_motor = action['left_motor']
+        right_motor = action['right_motor']
+        #comm.write('D_RUN_ENGINE %d %d\n' % (int(left_motor), int(right_motor)))
+        if action['kicker'] != 0:
             try:
-                comm.write('D_RUN_KICKER %d' % (action['defender']['kicker']))
+                comm.write('D_RUN_KICKER %d\n' % (action['kicker']))
             except StandardError:
                 pass
-        elif action['defender']['catcher'] != 0:
+        elif action['catcher'] != 0:
             try:
-                comm.write('D_RUN_CATCHER %d' % (action['defender']['catcher']))
+                comm.write('D_RUN_CATCHER %d\n' % (action['catcher']))
+            except StandardError:
+                pass
+
+
+class Attacker_Controller(Robot_Controller):
+    """
+    Attacker implementation.
+    """
+
+    def __init__(self):
+        """
+        Do the same setup as the Robot class, as well as anything specific to the Attacker.
+        """
+        super(Attacker_Controller, self).__init__()
+
+    def execute(self, comm, action):
+        """
+        Execute robot action.
+        """
+        left_motor = action['left_motor']
+        right_motor = action['right_motor']
+        comm.write('A_RUN_ENGINE %d %d\n' % (int(left_motor), int(right_motor)))
+        if action['kicker'] != 0:
+            try:
+                comm.write('A_RUN_KICKER %d\n' % (action['kicker']))
+            except StandardError:
+                pass
+        elif action['catcher'] != 0:
+            try:
+                comm.write('A_RUN_CATCHER %d\n' % (action['catcher']))
             except StandardError:
                 pass
 
