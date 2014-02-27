@@ -1,12 +1,11 @@
 from vision.vision import Vision, Camera, GUI
 from planning.planner import Planner
-from vision.tracker import Tracker
 from postprocessing.postprocessing import Postprocessing
 from preprocessing.preprocessing import Preprocessing
 import vision.tools as tools
-from nxt import *
 from cv2 import waitKey
 import cv2
+import serial
 
 
 class Controller:
@@ -14,12 +13,13 @@ class Controller:
     Primary source of robot control. Ties vision and planning together.
     """
 
-    def __init__(self, pitch, color, our_side, port=0, attacker=None, defender=None):
+    def __init__(self, pitch, color, our_side, video_port=0, comm_port='/dev/ttyUSB0', attacker=None, defender=None):
         """
         Entry point for the SDP system.
 
         Params:
-            [int] port                      port number for the camera
+            [int] video_port                port number for the camera
+            [string] comm_port              port number for the arduino
             [int] pitch                     0 - main pitch, 1 - secondary pitch
             [string] our_side               the side we're on - 'left' or 'right'
             *[int] port                     The camera port to take the feed from
@@ -30,8 +30,11 @@ class Controller:
         assert color in ['yellow', 'blue']
         assert our_side in ['left', 'right']
 
+        # Set up the Arduino communications
+        self.arduino = serial.Serial(comm_port, 9600, timeout=1)
+
         # Set up camera for frames
-        self.camera = Camera(port=port)
+        self.camera = Camera(port=video_port)
         frame = self.camera.get_frame()
 
         # Set up vision
@@ -58,8 +61,8 @@ class Controller:
 
         self.pitch = pitch
 
-        #self.attacker = Attacker_Controller(connectionName='GRP7A', leftMotorPort=PORT_C, rightMotorPort=PORT_B, kickerMotorPort=PORT_A)
-        # self.defender = Defender_Controller('GRP7D', PORT_C, PORT_A, PORT_B)
+        self.attacker = Attacker_Controller()
+        self.defender = Defender_Controller()
 
     def wow(self):
         """
@@ -84,13 +87,14 @@ class Controller:
                 positions = self.postprocessing.analyze(positions)
 
                 # Find appropriate action
-                #actions = self.planner.plan(positions, part='attacker')
+                attacker_actions = self.planner.plan('attacker')
+                defender_actions = self.planner.plan('defender')
 
                 if self.attacker is not None:
-                    self.attacker.execute(actions)
+                    self.attacker.execute(self.arduino, attacker_actions)
 
                 if self.defender is not None:
-                    self.defender.execute(actions)
+                    self.defender.execute(self.arduino, defender_actions)
 
                 # Use 'y', 'b', 'r' to change color.
                 c = waitKey(2) & 0xFF
@@ -111,41 +115,19 @@ class Controller:
             tools.save_colors(self.pitch, self.calibration)
 
 
-class Connection:
-
-    def __init__(self, name='NXT'):
-        print 'Connecting to NXT Brick with name %s' % name
-        self.brick = locator.find_one_brick(
-            name=name, method=locator.Method(usb=False))
-        if self.brick:
-            print 'Connection successful.'
-
-    def close(self):
-        """
-        TODO
-        Close connection to the brick, return success or failure.
-        """
-        pass
-
-
 class Robot_Controller(object):
     """
     Robot_Controller superclass for robot control.
     """
 
-    def __init__(self, connectionName, leftMotorPort, rightMotorPort, kickerMotorPort):
+    def __init__(self):
         """
         Connect to Brick and setup Motors/Sensors.
         """
-        connection = Connection(name=connectionName)
-        self.BRICK = connection.brick
-        self.MOTOR_L = Motor(self.BRICK, leftMotorPort)
-        self.MOTOR_R = Motor(self.BRICK, rightMotorPort)
-        self.MOTOR_K = Motor(self.BRICK, kickerMotorPort)
 
     def shutdown(self):
-        self.MOTOR_L.idle()
-        self.MOTOR_R.idle()
+        # TO DO
+            pass
 
 
 class Attacker_Controller(Robot_Controller):
@@ -153,26 +135,29 @@ class Attacker_Controller(Robot_Controller):
     Attacker implementation.
     """
 
-    def __init__(self, connectionName, leftMotorPort, rightMotorPort, kickerMotorPort):
+    def __init__(self):
         """
         Do the same setup as the Robot class, as well as anything specific to the Attacker.
         """
-        super(Attacker_Controller, self).__init__(
-            connectionName, leftMotorPort, rightMotorPort, kickerMotorPort)
+        super(Attacker_Controller, self).__init__()
 
-    def execute(self, action):
+    def execute(self, comm, action):
         """
         Execute robot action.
         """
-        self.MOTOR_L.run(action['attacker']['left_motor'], True)
-        self.MOTOR_R.run(action['attacker']['right_motor'], True)
+        left_motor = action['attacker']['left_motor']
+        right_motor = action['attacker']['right_motor']
+        comm.write('A_RUN_ENGINE %d %d' % (left_motor, right_motor))
         if action['attacker']['kicker'] != 0:
             try:
-                self.MOTOR_K.turn(action['attacker']['kicker'], 70, False, False)
-            except Exception, e:
+                comm.write('A_RUN_KICKER %d' % (action['attacker']['kicker']))
+            except StandardError:
                 pass
-        else:
-            self.MOTOR_K.idle()
+        elif action['attacker']['catcher'] != 0:
+            try:
+                comm.write('A_RUN_CATCHER %d' % (action['attacker']['catcher']))
+            except StandardError:
+                pass
 
 
 class Defender_Controller(Robot_Controller):
@@ -180,19 +165,29 @@ class Defender_Controller(Robot_Controller):
     Defender implementation.
     """
 
-    def __init__(self, connectionName, leftMotorPort, rightMotorPort, kickerMotorPort):
+    def __init__(self):
         """
         Do the same setup as the Robot class, as well as anything specific to the Defender.
         """
-        super(Defender_Controller, self).__init__(
-            connectionName, leftMotorPort, rightMotorPort, kickerMotorPort)
+        super(Defender_Controller, self).__init__()
 
-    def execute(self, action):
+    def execute(self, comm, action):
         """
         Execute robot action.
         """
-        self.MOTOR_L.run(action['defender']['left_motor'], True)
-        self.MOTOR_R.run(action['defender']['right_motor'], True)
+        left_motor = action['defender']['left_motor']
+        right_motor = action['defender']['right_motor']
+        comm.write('D_RUN_ENGINE %d %d' % (left_motor, right_motor))
+        if action['defender']['kicker'] != 0:
+            try:
+                comm.write('D_RUN_KICKER %d' % (action['defender']['kicker']))
+            except StandardError:
+                pass
+        elif action['defender']['catcher'] != 0:
+            try:
+                comm.write('D_RUN_CATCHER %d' % (action['defender']['catcher']))
+            except StandardError:
+                pass
 
 
 if __name__ == '__main__':
