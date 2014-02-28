@@ -4,8 +4,8 @@ from math import tan, pi, hypot, log
 
 REVERSE = 1
 DISTANCE_MATCH_THRESHOLD = 20
-ANGLE_MATCH_THRESHOLD = pi/6
-MAX_DISPLACEMENT_SPEED = 1000 * REVERSE
+ANGLE_MATCH_THRESHOLD = pi/18
+MAX_DISPLACEMENT_SPEED = 690 * REVERSE
 MAX_ANGLE_SPEED = 50 * REVERSE
 
 
@@ -36,7 +36,7 @@ class Planner:
         their_attacker = self._world.their_attacker
         their_defender = self._world.their_defender
         our_goal = self._world.our_goal
-        goal_front_x = our_goal.x + 30 if self._world._our_side == 'left' else our_goal.x - 30
+        goal_front_x = our_goal.x + 35 if self._world._our_side == 'left' else our_goal.x - 35
         # If the robot is not on the goal line:
         if our_defender.state == 'defence_somewhere':
             # Need to go to the front of the goal line
@@ -52,7 +52,6 @@ class Planner:
                 displacement, angle = our_defender.get_direction_to_point(goal_front_x, predicted_y)
                 return self.calculate_motor_speed(our_defender, displacement, angle, backwards_ok=True)
             return self.calculate_motor_speed(our_defender, 0, 0)
-        raise
 
     def predict_y_intersection(self, goal, robot):
         '''

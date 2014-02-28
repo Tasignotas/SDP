@@ -33,7 +33,7 @@ class Controller:
         # Set up the Arduino communications
         self.arduino = serial.Serial(comm_port, 9600, timeout=1)
 
-        self.arduino.write('A_SET_ENGINE 500 500 500 500\n')
+        self.arduino.write('A_SET_ENGINE 1000 1000 1000 1000\n')
 
         # Set up camera for frames
         self.camera = Camera(port=video_port)
