@@ -33,6 +33,8 @@ class Controller:
         # Set up the Arduino communications
         self.arduino = serial.Serial(comm_port, 9600, timeout=1)
 
+        self.arduino.write('A_SET_ENGINE 500 500 500 500\n')
+
         # Set up camera for frames
         self.camera = Camera(port=video_port)
         frame = self.camera.get_frame()
@@ -82,6 +84,8 @@ class Controller:
                 # Find object positions
                 positions, extras = self.vision.locate(frame)
                 positions = self.postprocessing.analyze(positions)
+
+                print positions
 
                 # Find appropriate action
                 self.planner.update_world(positions)
@@ -146,7 +150,7 @@ class Defender_Controller(Robot_Controller):
         print action
         left_motor = action['left_motor']
         right_motor = action['right_motor']
-        #comm.write('D_RUN_ENGINE %d %d\n' % (int(left_motor), int(right_motor)))
+        comm.write('D_RUN_ENGINE %d %d\n' % (int(left_motor), int(right_motor)))
         if action['kicker'] != 0:
             try:
                 comm.write('D_RUN_KICKER %d\n' % (action['kicker']))
