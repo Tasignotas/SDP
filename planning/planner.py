@@ -46,10 +46,8 @@ class Planner:
                 displacement, angle = our_defender.get_direction_to_point(goal_front_x, our_goal.y)
                 return self.calculate_motor_speed(our_defender, displacement, angle)
         if our_defender.state == 'defence_goal_line':
-            print 'defending goal line'
-            print 'Their attacker', their_attacker
             predicted_y = self.predict_y_intersection(our_goal, their_attacker)
-            print 'PREDICTED', predicted_y
+            print 'PREDICTED Y', predicted_y
             if not (predicted_y == None):
                 displacement, angle = our_defender.get_direction_to_point(goal_front_x, predicted_y)
                 return self.calculate_motor_speed(our_defender, displacement, angle, backwards_ok=True)
@@ -65,7 +63,6 @@ class Planner:
         y = robot.y
         max_iter = 10
         angle = robot.angle
-        print angle
 
         if (robot.zone == 2 and not (pi/2 < angle < 3*pi/2)) or (robot.zone == 1 and (3*pi/2 > angle > pi/2)):
             while True and max_iter > 0:

@@ -123,7 +123,6 @@ class Vision:
 
         # Find robots and ball, use queue to
         # avoid deadlock and share resources
-        # positions = [queues[0].get()]
         positions = [q.get() for q in queues]
 
         # terminate processes
@@ -208,6 +207,10 @@ class GUI(object):
                 x = args['location'][0] if args['location'] is not None else None
                 y = args['location'][1] if args['location'] is not None else None
 
+            elif 'x' in args and 'y' in args:
+                x = args['x']
+                y = args['y']
+
             if 'angle' in args:
                 angle = args['angle']
 
@@ -240,6 +243,7 @@ class GUI(object):
             cv2.line(frame, (zone[1], 0), (zone[1], height), BGR_COMMON['red'], 1)
 
 
+
         positions = {
             'our_attacker': self.to_info(extras[1]),
             'their_attacker': self.to_info(extras[3]),
@@ -249,11 +253,8 @@ class GUI(object):
         }
 
         their_color = list(TEAM_COLORS - set([our_color]))[0]
+
         self.draw_ball(frame, positions['ball']['x'], positions['ball']['y'])
-        for key in ['our_defender', 'our_attacker']:
-            self.draw_robot(frame, positions[key]['x'], positions[key]['y'], our_color)
-        for key in ['their_defender', 'their_attacker']:
-            self.draw_robot(frame, positions[key]['x'], positions[key]['y'], their_color)
 
         if extras is not None:
             for x in extras[:4]:

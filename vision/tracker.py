@@ -422,18 +422,18 @@ class BallTracker(Tracker):
                 # queue.put(None)
             else:
                 # Trim contours matrix
-                cnt = contours[0]
+                cnt = self.get_largest_contour(contours)
 
                 # Get center
                 (x, y), radius = cv2.minEnclosingCircle(cnt)
 
                 queue.put({
                     'name': self.name,
-                    'location': (int(x) + self.offset, int(y)),
+                    'x': x,
+                    'y': y,
                     'angle': None,
                     'velocity': None
                 })
-                # queue.put([(x + self.offset, y), angle, speed])
                 return
 
         queue.put(None)
