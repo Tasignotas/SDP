@@ -70,7 +70,7 @@ class Planner:
         angle = robot.angle
         print angle
 
-        if (robot.zone == 2 and not (pi/2 < angle < 3*pi/2)) or (robot.zone == 3 and (3*pi/2 > angle > pi/2)):
+        if (robot.zone == 2 and not (pi/2 < angle < 3*pi/2)) or (robot.zone == 1 and (3*pi/2 > angle > pi/2)):
             while True and max_iter > 0:
                 if not (0 <= (y + tan(angle) * (goal.x - x)) <= self._world._pitch.height):
                     bounce_pos = 'top' if (y + tan(angle) * (goal.x - x)) > self._world._pitch.height else 'bottom'
