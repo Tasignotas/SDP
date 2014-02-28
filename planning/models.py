@@ -308,12 +308,12 @@ class Pitch(object):
         self._zones.append(Polygon([(x, self._height - y) for (x, y) in config_json['Zone_2']]))
         self._zones.append(Polygon([(x, self._height - y) for (x, y) in config_json['Zone_3']]))
 
-    def is_within_bounds(self, robot, point):
+    def is_within_bounds(self, robot, x, y):
         '''
         Checks whether the position/point planned for the robot is reachable
         '''
         zone = self._zones[robot.zone]
-        return zone.isInside(point.x, point.y)
+        return zone.isInside(x, y)
 
     @property
     def width(self):
@@ -391,3 +391,19 @@ class World(object):
         self.our_defender.vector = pos_dict['our_defender']
         self.their_defender.vector = pos_dict['their_defender']
         self.ball.vector = pos_dict['ball']
+        # Checking if the robot locations make sense:
+        # Is the side correct:
+        if not(self._pitch.is_within_bounds(self.our_attacker, self.our_attacker.x, self.our_attacker.y)):
+            print "WARNING: our attacker's position does not make sense"
+        if not(self._pitch.is_within_bounds(self.our_defender, self.our_defender.x, self.our_defender.y)):
+            print "WARNING: our attacker's position does not make sense"
+        if not(self._pitch.is_within_bounds(self.their_attacker, self.their_attacker.x, self.their_attacker.y)):
+            print "WARNING: our attacker's position does not make sense"
+        if not(self._pitch.is_within_bounds(self.their_defender, self.their_defender.x, self.their_defender.y)):
+            print "WARNING: our attacker's position does not make sense"
+        if (self._our_side == 'left' and not(self.our_defender.x < self.their_attacker.x
+            < self.our_attacker.x < self.their_defender.x)):
+            print "WARNING: The sides are probably wrong!"
+        if (self._our_side == 'right' and not(self.our_defender.x > self.their_attacker.x
+            > self.our_attacker.x > self.their_defender.x)):
+            print "WARNING: The sides are probably wrong!"

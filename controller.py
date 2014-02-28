@@ -85,8 +85,6 @@ class Controller:
                 positions, extras = self.vision.locate(frame)
                 positions = self.postprocessing.analyze(positions)
 
-                print positions
-
                 # Find appropriate action
                 self.planner.update_world(positions)
                 attacker_actions = self.planner.plan('attacker')
@@ -147,10 +145,10 @@ class Defender_Controller(Robot_Controller):
         """
         Execute robot action.
         """
-        print action
         left_motor = action['left_motor']
         right_motor = action['right_motor']
-        comm.write('D_RUN_ENGINE %d %d\n' % (int(left_motor), int(right_motor)))
+        comm.write('D_SET_ENGINE %d %d %d %d\n' % (int(left_motor), int(left_motor), int(right_motor), int(right_motor)))
+        comm.write('D_RUN_ENGINE %d %d\n' % (10000000, 10000000))
         if action['kicker'] != 0:
             try:
                 comm.write('D_RUN_KICKER %d\n' % (action['kicker']))
