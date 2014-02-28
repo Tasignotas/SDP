@@ -100,7 +100,7 @@ class TestYPredictionRight(unittest.TestCase):
         assert_almost_equal(self.planner.predict_y_intersection(self.our_goal, self.their_attacker), self.pitch.height/2.0)
         # Shot bounced of the top that needs to be corrected:
         goal_top = self.our_goal.y + (self.our_goal.width/2.0)
-        self.their_attacker.vector = Vector(self.pitch.width - (self.pitch.height/2.0), self.pitch.height/2.0, (5*pi)/16, 0)
+        self.their_attacker.vector = Vector(self.pitch.width - (self.pitch.height/2.0), self.pitch.height/2.0, (3*pi)/16, 0)
         assert_almost_equal(self.planner.predict_y_intersection(self.our_goal, self.their_attacker), goal_top)
 
     def test_no_intersection(self):
