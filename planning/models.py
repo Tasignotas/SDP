@@ -16,7 +16,7 @@ BALL_LENGTH = 5
 BALL_HEIGHT = 5
 BALL_POSS_THRESH = 20
 
-GOAL_WIDTH = 130
+GOAL_WIDTH = 150
 GOAL_LENGTH = 1
 GOAL_HEIGHT = 10
 
@@ -397,11 +397,11 @@ class World(object):
         if not(self._pitch.is_within_bounds(self.our_attacker, self.our_attacker.x, self.our_attacker.y)):
             print "WARNING: our attacker's position does not make sense"
         if not(self._pitch.is_within_bounds(self.our_defender, self.our_defender.x, self.our_defender.y)):
-            print "WARNING: our attacker's position does not make sense"
+            print "WARNING: our defender's position does not make sense"
         if not(self._pitch.is_within_bounds(self.their_attacker, self.their_attacker.x, self.their_attacker.y)):
-            print "WARNING: our attacker's position does not make sense"
+            print "WARNING: their attacker's position does not make sense"
         if not(self._pitch.is_within_bounds(self.their_defender, self.their_defender.x, self.their_defender.y)):
-            print "WARNING: our attacker's position does not make sense"
+            print "WARNING: their defender's position does not make sense"
         if (self._our_side == 'left' and not(self.our_defender.x < self.their_attacker.x
             < self.our_attacker.x < self.their_defender.x)):
             print "WARNING: The sides are probably wrong!"
