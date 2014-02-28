@@ -83,8 +83,10 @@ class Controller:
 
                 # Find object positions
                 positions, extras = self.vision.locate(frame)
+
                 positions = self.postprocessing.analyze(positions)
 
+                print 'BALL', positions['ball']
                 # Find appropriate action
                 self.planner.update_world(positions)
                 attacker_actions = self.planner.plan('attacker')
@@ -105,14 +107,18 @@ class Controller:
 
         except:
             if self.defender is not None:
-                self.defender.shutdown()
+                self.defender.shutdown(self.arduino)
             if self.attacker is not None:
-                self.attacker.shutdown()
+                self.attacker.shutdown(self.arduino)
             raise
 
         finally:
             # Write the new calibrations to a file.
             tools.save_colors(self.pitch, self.calibration)
+            if self.attacker is not None:
+                self.attacker.shutdown(self.arduino)
+            if self.defender is not None:
+                self.defender.shutdown(self.arduino)
 
 
 class Robot_Controller(object):
@@ -145,10 +151,15 @@ class Defender_Controller(Robot_Controller):
         """
         Execute robot action.
         """
+        print action
         left_motor = action['left_motor']
         right_motor = action['right_motor']
-        comm.write('D_SET_ENGINE %d %d %d %d\n' % (int(left_motor), int(left_motor), int(right_motor), int(right_motor)))
-        comm.write('D_RUN_ENGINE %d %d\n' % (10000000, 10000000))
+        print action
+        if left_motor == 0 and right_motor == 0:
+            comm.write('D_RUN_ENGINE 0 0\n')
+        else:
+            #comm.write('D_SET_ENGINE %d %d %d %d\n' % (int(left_motor), int(left_motor), int(right_motor), int(right_motor)))
+            comm.write('D_RUN_ENGINE %d %d\n' % (int(left_motor), int(right_motor)))
         if action['kicker'] != 0:
             try:
                 comm.write('D_RUN_KICKER %d\n' % (action['kicker']))
@@ -159,6 +170,9 @@ class Defender_Controller(Robot_Controller):
                 comm.write('D_RUN_CATCHER %d\n' % (action['catcher']))
             except StandardError:
                 pass
+
+    def shutdown(self, comm):
+        comm.write('D_RUN_ENGINE %d %d\n' % (0, 0))
 
 
 class Attacker_Controller(Robot_Controller):
@@ -189,6 +203,9 @@ class Attacker_Controller(Robot_Controller):
                 comm.write('A_RUN_CATCHER %d\n' % (action['catcher']))
             except StandardError:
                 pass
+
+    def shutdown(self, comm):
+        comm.write('D_RUN_ENGINE %d %d\n' % (0, 0))
 
 
 if __name__ == '__main__':
