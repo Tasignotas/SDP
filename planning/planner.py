@@ -36,10 +36,10 @@ class Planner:
         their_attacker = self._world.their_attacker
         their_defender = self._world.their_defender
         our_goal = self._world.our_goal
+        goal_front_x = our_goal.x + 30 if self._world._our_side == 'left' else our_goal.x - 30
         # If the robot is not on the goal line:
         if our_defender.state == 'defence_somewhere':
             # Need to go to the front of the goal line
-            goal_front_x = our_goal.x + 30 if self._world._our_side == 'left' else our_goal.x - 30
             if self.has_matched(our_defender, x=goal_front_x, y=our_goal.y):
                 our_defender.state = 'defence_goal_line'
             else:
@@ -51,11 +51,8 @@ class Planner:
             predicted_y = self.predict_y_intersection(our_goal, their_attacker)
             print 'PREDICTED', predicted_y
             if not (predicted_y == None):
-                displacement, angle = our_defender.get_direction_to_point(our_defender.x, predicted_y)
-                # if our_defender.y > predicted_y and (angle < pi/2 or angle > 3*pi/2) :
-                    # return self.calculate_motor_speed(our_defender, -displacement, 0)
-                # else:
-                return self.calculate_motor_speed(our_defender, displacement, angle)
+                displacement, angle = our_defender.get_direction_to_point(goal_front_x, predicted_y)
+                return self.calculate_motor_speed(our_defender, displacement, angle, backwards_ok=True)
             return self.calculate_motor_speed(our_defender, 0, 0)
         raise
 
@@ -92,12 +89,14 @@ class Planner:
         else:
             return None
 
-    def calculate_motor_speed(self, robot, displacement, angle):
+    def calculate_motor_speed(self, robot, displacement, angle, backwards_ok=False):
         '''
         Simplistic view of calculating the speed: no modes or trying to be careful
         '''
-        print 'abs angle', angle,   abs(angle) > ANGLE_MATCH_THRESHOLD
-
+        moving_backwards = False
+        if backwards_ok and abs(angle) > pi/2:
+            angle = (-pi + angle) if angle > 0 else (pi + angle)
+            moving_backwards = True
         if displacement < DISTANCE_MATCH_THRESHOLD:
             return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0, 'catcher' : 0}
         elif abs(angle) > ANGLE_MATCH_THRESHOLD:
@@ -105,6 +104,7 @@ class Planner:
             return {'left_motor' : -speed, 'right_motor' : speed, 'kicker' : 0, 'catcher' : 0}
         else:
             speed = log(displacement, 10) * MAX_DISPLACEMENT_SPEED
+            speed = -speed if moving_backwards else speed
             return {'left_motor' : speed, 'right_motor' : speed, 'kicker' : 0, 'catcher' : 0}
 
     def has_matched(self, robot, x, y):
