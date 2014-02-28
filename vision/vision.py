@@ -93,9 +93,9 @@ class Vision:
 
         result = {
             'our_attacker': self.to_info(positions[1], height),
-            'their_attacker': self.to_info(positions[2], height),
+            'their_attacker': self.to_info(positions[3], height),
             'our_defender': self.to_info(positions[0], height),
-            'their_defender': self.to_info(positions[3], height),
+            'their_defender': self.to_info(positions[2], height),
             'ball': self.to_info(positions[4], height)
         }
 
