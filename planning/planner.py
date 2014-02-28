@@ -1,13 +1,14 @@
 from models import *
 from collisions import *
-from math import tan, pi, hypot
+from math import tan, pi, hypot, log
 
-DISTANCE_REACH_THRESHOLD = 0
+REVERSE = 1
+DISTANCE_REACH_THRESHOLD = 5
 ANGLE_REACH_THRESHOLD = 0
-DISTANCE_MATCH_THRESHOLD = 0
-ANGLE_MATCH_THRESHOLD = 0
-MAX_DISPLACEMENT_SPEED = 0
-MAX_ANGLE_SPEED = 0
+DISTANCE_MATCH_THRESHOLD = 10
+ANGLE_MATCH_THRESHOLD = pi/6
+MAX_DISPLACEMENT_SPEED = 1000 * REVERSE
+MAX_ANGLE_SPEED = 50 * REVERSE
 
 
 
@@ -35,6 +36,9 @@ class Planner:
     def defend_goal(self):
         our_defender = self._world.our_defender
         their_attacker = self._world.their_attacker
+
+        their_defender = self._world.their_defender
+
         our_goal = self._world.our_goal
         # If the robot is not on the goal line:
         if our_defender.state == 'defence_somewhere':
@@ -46,9 +50,15 @@ class Planner:
                 displacement, angle = our_defender.get_direction_to_point(goal_front_x, our_goal.y)
                 return self.calculate_motor_speed(our_defender, displacement, angle)
         if our_defender.state == 'defence_goal_line':
-            predicted_y = self.predict_y_intersection(our_goal, their_attacker)
+            print 'defending goal line'
+            print 'Their attacker', their_defender
+            predicted_y = self.predict_y_intersection(our_goal, their_defender)
+            print 'PREDICTED', predicted_y
             if not (predicted_y == None):
                 displacement, angle = our_defender.get_direction_to_point(our_defender.x, predicted_y)
+                # if our_defender.y > predicted_y and (angle < pi/2 or angle > 3*pi/2) :
+                    # return self.calculate_motor_speed(our_defender, -displacement, 0)
+                # else:
                 return self.calculate_motor_speed(our_defender, displacement, angle)
             return self.calculate_motor_speed(our_defender, 0, 0)
         raise
@@ -62,7 +72,9 @@ class Planner:
         y = robot.y
         max_iter = 10
         angle = robot.angle
-        if (robot.zone == 2 and not (pi/2 < angle < 3*pi/2)) or (robot.zone == 1 and (pi/2 < angle < 3*pi/2)):
+        print angle
+
+        if (robot.zone == 2 and not (pi/2 < angle < 3*pi/2)) or (robot.zone == 3 and (3*pi/2 > angle > pi/2)):
             while True and max_iter > 0:
                 if not (0 <= (y + tan(angle) * (goal.x - x)) <= self._world._pitch.height):
                     bounce_pos = 'top' if (y + tan(angle) * (goal.x - x)) > self._world._pitch.height else 'bottom'
@@ -88,14 +100,16 @@ class Planner:
         '''
         Simplistic view of calculating the speed: no modes or trying to be careful
         '''
+        print 'abs angle', angle,   abs(angle) > ANGLE_MATCH_THRESHOLD
+
         if displacement < DISTANCE_MATCH_THRESHOLD:
-            return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0}
+            return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0, 'catcher' : 0}
         elif abs(angle) > ANGLE_MATCH_THRESHOLD:
             speed = (angle/pi) * MAX_ANGLE_SPEED
-            return {'left_motor' : -speed, 'right_motor' : speed, 'kicker' : 0}
+            return {'left_motor' : -speed, 'right_motor' : speed, 'kicker' : 0, 'catcher' : 0}
         else:
             speed = log(displacement, 10) * MAX_DISPLACEMENT_SPEED
-            return {'left_motor' : speed, 'right_motor' : speed, 'kicker' : 0}
+            return {'left_motor' : speed, 'right_motor' : speed, 'kicker' : 0, 'catcher' : 0}
 
     def has_matched(self, robot, x, y):
         return hypot(robot.x - x, robot.y - y) < DISTANCE_MATCH_THRESHOLD

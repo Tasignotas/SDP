@@ -123,6 +123,7 @@ class Vision:
 
         # Find robots and ball, use queue to
         # avoid deadlock and share resources
+        # positions = [queues[0].get()]
         positions = [q.get() for q in queues]
 
         # terminate processes
@@ -138,7 +139,7 @@ class Vision:
         x, y, angle, velocity = None, None, None, None
         if args is not None:
             if 'x' in args and 'y' in args:
-                x = args['x'] 
+                x = args['x']
                 y = args['y']
                 if y is not None:
                     y = height - y
