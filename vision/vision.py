@@ -8,6 +8,7 @@ from planning.models import Vector
 from colors import BGR_COMMON
 from collections import namedtuple
 import numpy as np
+from copy import deepcopy
 
 from findHSV import CalibrationGUI
 
@@ -224,7 +225,6 @@ class GUI(object):
 
     def draw(
         self, frame, positions, actions, extras, our_color, key=None, preprocess=None):
-
         if preprocess is not None:
             preprocess['normalize'] = self.cast_binary(
                 cv2.getTrackbarPos(self.NORMALIZE, self.VISION))
@@ -242,8 +242,8 @@ class GUI(object):
         for zone in self.zones:
             cv2.line(frame, (zone[1], 0), (zone[1], height), BGR_COMMON['red'], 1)
 
-
-
+        vec_positions = deepcopy(positions)
+        #print extras[4]
         positions = {
             'our_attacker': self.to_info(extras[1]),
             'their_attacker': self.to_info(extras[3]),
@@ -255,6 +255,8 @@ class GUI(object):
         their_color = list(TEAM_COLORS - set([our_color]))[0]
 
         self.draw_ball(frame, positions['ball']['x'], positions['ball']['y'])
+
+        
 
         if extras is not None:
             for x in extras[:4]:
@@ -269,8 +271,8 @@ class GUI(object):
 
                 if x['box'] is not None:
                     cv2.polylines(frame, [np.array(x['box'])], True, BGR_COMMON[color_c], 2)
-                    # for point in x['box']:
-                        # cv2.circle(frame, (point[0], point[1]), 1, BGR_COMMON['white'], -1)
+                    #for point in x['box']:
+                        #cv2.circle(frame, (point[0], point[1]), 1, BGR_COMMON['white'], -1)
 
                 if x['dot'] is not None:
                     cv2.circle(frame, (int(x['dot'][0]), int(x['dot'][1])), 2, BGR_COMMON['black'], -1)
@@ -282,15 +284,24 @@ class GUI(object):
                     cv2.circle(frame, p2, 3, BGR_COMMON['white'], -1)
                     cv2.line(frame, p1, p2, BGR_COMMON['red'], 2)
 
+
+        self.data_text(frame, "ball", positions['ball']['x'], positions['ball']['y'],vec_positions['ball'].angle,vec_positions['ball'].velocity)
+        self.data_text(frame, "our attacker", positions['our_attacker']['x'], positions['our_attacker']['y'],positions['our_attacker']['angle'],vec_positions['our_attacker'].velocity)
+        self.data_text(frame, "their attacker", positions['their_attacker']['x'], positions['their_attacker']['y'],positions['their_attacker']['angle'],vec_positions['their_attacker'].velocity)
+        self.data_text(frame, "our defender", positions['our_defender']['x'], positions['our_defender']['y'],positions['our_defender']['angle'],vec_positions['our_defender'].velocity)
+        self.data_text(frame, "their defender", positions['their_defender']['x'], positions['their_defender']['y'],positions['their_defender']['angle'],vec_positions['their_defender'].velocity)
+        
         cv2.imshow(self.VISION, frame)
 
     def draw_robot(self, frame, x, y, color, thickness=1):
         if x is not None and y is not None:
             cv2.circle(frame, (x, y), 16, BGR_COMMON[color], thickness)
 
+
     def draw_ball(self, frame, x, y):
         if x is not None and y is not None:
             cv2.circle(frame, (x, y), 7, BGR_COMMON['red'], 2)
+
 
     def draw_dot(self, frame, location):
         if location is not None:
@@ -304,4 +315,15 @@ class GUI(object):
     def draw_line(self, frame, points):
         if points is not None:
             cv2.line(frame, points[0], points[1], BGR_COMMON['red'], 2)
+
+    def data_text(self,frame,text,x,y,angle,velocity):
+        if x is not None and y is not None:
+            cv2.putText(frame,text, (x,y),cv2.FONT_HERSHEY_DUPLEX, 0.35,(170,170,170),1.8)
+            cv2.putText(frame,"x: "+str("%.2f" % x),(x,y+10), cv2.FONT_HERSHEY_SIMPLEX, 0.35,(255,255,255),1.3)
+            cv2.putText(frame,"y: "+str("%.2f" % y),(x,y+20), cv2.FONT_HERSHEY_SIMPLEX, 0.35,(255,255,255),1.3)
+            if angle is not None:
+                cv2.putText(frame,"angle: "+str("%.2f" % angle),(x,y+30), cv2.FONT_HERSHEY_SIMPLEX, 0.3,(255,255,255),1.3)
+            if velocity is not None:
+                cv2.putText(frame,"velocity: "+str("%.2f" % velocity),(x,y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.3,(255,255,255),1.3)
+        
 
