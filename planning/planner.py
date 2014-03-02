@@ -24,14 +24,21 @@ class Planner:
         our_defender = self._world.our_defender
         ball = self._world.ball
         if robot == 'defender':
-            # If the ball is in not in our defender zone:
+            # If the ball is in not in our defender zone, we defend:
             if not (self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y)):
-                return self.defend_goal()
+                if not(our_defender.state in DEFENDER_DEFENCE_STATES):
+                    our_defender.state = DEFENDER_DEFENCE_STATES[0]
+                return self.defender_defend()
+            # We have the ball in our zone, so we attack
+            else:
+                if not(our_defender.state in DEFENDER_ATTACK_STATES):
+                    our_defender.state = DEFENDER_ATTACK_STATES[0]
+                return self.defender_attack()
         else:
             pass
 
 
-    def defend_goal(self):
+    def defender_defend(self):
         our_defender = self._world.our_defender
         their_attacker = self._world.their_attacker
         their_defender = self._world.their_defender
@@ -52,6 +59,9 @@ class Planner:
                 displacement, angle = our_defender.get_direction_to_point(goal_front_x, predicted_y)
                 return self.calculate_motor_speed(our_defender, displacement, angle, backwards_ok=True)
             return self.calculate_motor_speed(our_defender, 0, 0)
+
+    def defender_attack(self):
+        return self.calculate_motor_speed(our_defender, 0, 0)
 
     def predict_y_intersection(self, goal, robot):
         '''
