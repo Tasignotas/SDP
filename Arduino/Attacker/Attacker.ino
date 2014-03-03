@@ -44,11 +44,11 @@ void setup()
 {
   Serial.begin(9600);
   
-  comm.addCommand("D_SET_ENGINE", set_engine);
-  comm.addCommand("D_RUN_ENGINE", run_engine);
-  comm.addCommand("D_RUN_KICKER", run_kicker); 
-  comm.addCommand("D_OPEN_CATCHER", open_catcher); 
-  comm.addCommand("D_CLOSE_CATCHER", close_catcher); 
+  comm.addCommand("A_SET_ENGINE", set_engine);
+  comm.addCommand("A_RUN_ENGINE", run_engine);
+  comm.addCommand("A_RUN_KICKER", run_kicker); 
+  comm.addCommand("A_OPEN_CATCHER", open_catcher); 
+  comm.addCommand("A_CLOSE_CATCHER", close_catcher); 
   comm.setDefaultHandler(invalid_command);
   
   left_stepper.setMaxSpeed(1000.0);
@@ -131,7 +131,7 @@ void run_kicker()
 }
 
 
-void open_catcher()
+void close_catcher()
 {
   catcher.write(35);
   delay(300);
@@ -139,7 +139,7 @@ void open_catcher()
 }
 
 
-void close_catcher()
+void open_catcher()
 {
   catcher.write(85);
   delay(300);
