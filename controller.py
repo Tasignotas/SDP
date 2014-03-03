@@ -58,7 +58,7 @@ class Controller:
 
         self.pitch = pitch
 
-        self.attacker = None #Attacker_Controller()
+        self.attacker = Attacker_Controller()
         self.defender = Defender_Controller()
 
     def wow(self):
