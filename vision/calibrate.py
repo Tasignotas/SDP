@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import tools
-
+import cPickle
 
 FRAME_NAME = 'ConfigureWindow'
 
@@ -10,6 +10,14 @@ BLACK = (0,0,0)
 BLUE = (255, 0, 0)
 GREEN = (0, 255, 0)
 RED = (0, 0, 255)
+
+with open('calibrations/undistort.txt','rb') as fp:
+	distort_data = cPickle.load(fp)
+distort_data = distort_data[0]
+
+NCMATRIX = distort_data['new_camera_matrix']
+CMATRIX = distort_data['camera_matrix']
+DIST = distort_data['dist']
 
 
 class Configure:
@@ -42,9 +50,11 @@ class Configure:
 		if camera:
 			cap = cv2.VideoCapture(0)
 			for i in range(10):
-				status, self.image = cap.read()
+				status, image = cap.read()
 		else:
-			self.image = cv2.imread('00000001.jpg')
+			image = cv2.imread('00000001.jpg')
+
+		self.image = cv2.undistort(image, CMATRIX, DIST, None, NCMATRIX)
 
 		# Get various data about the image from the user
 		self.get_pitch_outline()
