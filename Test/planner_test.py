@@ -2,6 +2,7 @@ import unittest
 from planning.models import Vector
 from planning.planner import *
 from numpy.testing import assert_almost_equal
+from math import *
 
 
 class TestYPredictionLeft(unittest.TestCase):
@@ -114,37 +115,37 @@ class MotorDifferentialTest(unittest.TestCase):
         self.planner = Planner('right')
         self.motor_diff = self.planner.calculate_motor_differential
 
-    def set_angle_match_thresh(self, new_thres):
-        ANGLE_MATCH_THRESHOLD = new_thres
-
     def test_angle_zero(self):
         angle = 0
-        self.assertEqual((1, 1), self.motor_diff(angle))
+        self.assertEqual((DIFF_NORMALIZE_RATIO, DIFF_NORMALIZE_RATIO), self.motor_diff(angle))
 
     def test_angle_positive(self):
-        self.set_angle_match_thresh(pi / 4)
         angle = pi / 2
-        ratio = self.motor_diff(angle)
+        ratio = self.motor_diff(angle, pi / 4)
         right_motor_ratio = ratio[1]
         self.assertTrue(right_motor_ratio > 1)
 
     def test_angle_negative(self):
-        self.set_angle_match_thresh(pi / 4)
         angle = -pi / 2
-        ratio = self.motor_diff(angle)
+        ratio = self.motor_diff(angle, pi / 4)
         right_motor_ratio = ratio[0]
         self.assertTrue(right_motor_ratio > 1)
 
     def test_ratio_complete(self):
-        self.set_angle_match_thresh(pi / 2)
-        angle = -pi / 4
-        ratio = self.motor_diff(angle)
+        angle = -pi / 16
+        ratio = self.motor_diff(angle, pi / 8)
         total = ratio[0] + ratio[1]
         self.assertEqual(DIFF_NORMALIZE_RATIO, total)
 
     def test_ratio_is_one_when_angle_matched(self):
-        self.set_angle_match_thresh(pi / 4)
-        angle = -pi / 5
-        ratio = self.motor_diff(angle)
-        self.assertEqual(DIFF_NORMALIZE_RATIO / 2 , ratio[1])
-        self.assertEqual(DIFF_NORMALIZE_RATIO / 2, ratio[0])
+        angle = pi / 4
+        ratio = self.motor_diff(angle, pi / 4)
+        self.assertEqual(DIFF_NORMALIZE_RATIO , ratio[1])
+        self.assertEqual(DIFF_NORMALIZE_RATIO, ratio[0])
+
+    def test_ratio_actual_value(self):
+        angle = pi / 18
+        ratio = self.motor_diff(angle, pi / 16)
+        expected_ratio = int(1 / log(angle, pi / 16) * DIFF_NORMALIZE_RATIO)
+        self.assertEqual(DIFF_NORMALIZE_RATIO - expected_ratio, ratio[0])
+        self.assertEqual(expected_ratio, ratio[1])

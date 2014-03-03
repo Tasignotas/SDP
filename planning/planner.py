@@ -10,7 +10,7 @@ MAX_DISPLACEMENT_SPEED = 690 * REVERSE
 MAX_ANGLE_SPEED = 50 * REVERSE
 
 # Differential Normalization
-DIFF_NORMALIZE_RATIO = 2000
+DIFF_NORMALIZE_RATIO = 1000
 
 
 WheelRatio = namedtuple('WheelRatio', ['left', 'right'])
@@ -151,18 +151,22 @@ class Planner:
             else:
                 return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0, 'catcher' : 0, 'left_ratio': left_ratio, 'right_ratio': right_ratio}
 
-    def calculate_motor_differential(self, angle_delta):
+    def calculate_motor_differential(
+            self, angle_delta, match_thresh=ANGLE_MATCH_THRESHOLD):
         """
         Take the THRESHOLD log of the angle difference to get ratio of left to right wheel.
 
         If we want to turn left, right motor turns faster and vice versa.
         """
         if angle_delta == 0:
-            return WheelRatio(1, 1)
-        ratio_const = log(abs(angle_delta % (2*pi)), ANGLE_MATCH_THRESHOLD)
+            return WheelRatio(DIFF_NORMALIZE_RATIO, DIFF_NORMALIZE_RATIO)
+
+        ratio_const = log(abs(angle_delta), match_thresh)
+
+        print 'ratio_const', ratio_const
+
         if ratio_const <= 1:
-            ratio = DIFF_NORMALIZE_RATIO / 2
-            return WheelRatio(ratio, DIFF_NORMALIZE_RATIO - ratio)
+            return WheelRatio(DIFF_NORMALIZE_RATIO , DIFF_NORMALIZE_RATIO)
 
         # Normalize
         ratio = int(1 / ratio_const * DIFF_NORMALIZE_RATIO)
