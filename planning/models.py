@@ -20,9 +20,13 @@ GOAL_WIDTH = 150
 GOAL_LENGTH = 1
 GOAL_HEIGHT = 10
 
+DEFENDER_DEFENCE_STATES = ['defence_somewhere', 'defence_goal_line'] 
+DEFENDER_ATTACK_STATES = ['attack_go_to_ball', 'attack_grab_ball', 'attack_rotate_to_pass', 'attack_pass']
+ATTACKER_DEFENCE_STATES = ['defence_block']
+ATTACKER_ATTACK_STATES = ['attack_grab_ball', 'attack_move_to_shooting', 'attack_rotate_to_shoot', 'attack_shoot']
+
 
 class Coordinate(object):
-
 
     def __init__(self, x, y):
         if x == None or y == None:
@@ -290,6 +294,7 @@ class Goal(PitchObject):
         return ('zone: %s\nx: %s\ny: %s\nangle: %s\nvelocity: %s\ndimensions: %s\n' %
                 (self._zone, self.x, self.y, self.angle, self.velocity, (self.width, self.length, self.height)))
 
+
 class Pitch(object):
     '''
     Class that describes the pitch
@@ -391,17 +396,8 @@ class World(object):
         self.our_defender.vector = pos_dict['our_defender']
         self.their_defender.vector = pos_dict['their_defender']
         self.ball.vector = pos_dict['ball']
-
         # Checking if the robot locations make sense:
         # Is the side correct:
-        if not(self._pitch.is_within_bounds(self.our_attacker, self.our_attacker.x, self.our_attacker.y)):
-            print "WARNING: our attacker's position does not make sense"
-        if not(self._pitch.is_within_bounds(self.our_defender, self.our_defender.x, self.our_defender.y)):
-            print "WARNING: our defender's position does not make sense"
-        if not(self._pitch.is_within_bounds(self.their_attacker, self.their_attacker.x, self.their_attacker.y)):
-            print "WARNING: their attacker's position does not make sense"
-        if not(self._pitch.is_within_bounds(self.their_defender, self.their_defender.x, self.their_defender.y)):
-            print "WARNING: their defender's position does not make sense"
         if (self._our_side == 'left' and not(self.our_defender.x < self.their_attacker.x
             < self.our_attacker.x < self.their_defender.x)):
             print "WARNING: The sides are probably wrong!"
