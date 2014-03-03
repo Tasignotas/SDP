@@ -1,12 +1,19 @@
 from models import *
 from collisions import *
 from math import tan, pi, hypot, log
+from collections import namedtuple
 
 REVERSE = 1
 DISTANCE_MATCH_THRESHOLD = 20
 ANGLE_MATCH_THRESHOLD = pi/18
 MAX_DISPLACEMENT_SPEED = 690 * REVERSE
 MAX_ANGLE_SPEED = 50 * REVERSE
+
+# Differential Normalization
+DIFF_NORMALIZE_RATIO = 1000
+
+
+WheelRatio = namedtuple('WheelRatio', ['left', 'right'])
 
 
 
@@ -198,8 +205,12 @@ class Planner:
         else:
             return None
 
+<<<<<<< HEAD
 
     def calculate_motor_speed(self, robot, displacement, angle, backwards_ok=False):
+=======
+    def calculate_motor_speed(self, robot, displacement, angle, backwards_ok=False, differential=False):
+>>>>>>> e1d5cc203c712e1da1766938d6d9f72e90e29f52
         '''
         Simplistic view of calculating the speed: no modes or trying to be careful
         '''
@@ -207,22 +218,55 @@ class Planner:
         if backwards_ok and abs(angle) > pi/2:
             angle = (-pi + angle) if angle > 0 else (pi + angle)
             moving_backwards = True
+
+        left_ratio, right_ratio = None, None
+        if differential:
+            left_ratio, right_ratio = self.calculate_motor_differential(angle)
+
         if not (displacement is None):
             if displacement < DISTANCE_MATCH_THRESHOLD:
-                return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0, 'catcher' : 0}
+                return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0, 'catcher' : 0, 'left_ratio': left_ratio, 'right_ratio': left_ratio}
             elif abs(angle) > ANGLE_MATCH_THRESHOLD:
                 speed = (angle/pi) * MAX_ANGLE_SPEED
-                return {'left_motor' : -speed, 'right_motor' : speed, 'kicker' : 0, 'catcher' : 0}
+                return {'left_motor' : -speed, 'right_motor' : speed, 'kicker' : 0, 'catcher' : 0, 'left_ratio': left_ratio, 'right_ratio': right_ratio}
             else:
                 speed = log(displacement, 10) * MAX_DISPLACEMENT_SPEED
                 speed = -speed if moving_backwards else speed
-                return {'left_motor' : speed, 'right_motor' : speed, 'kicker' : 0, 'catcher' : 0}
+                return {'left_motor' : speed, 'right_motor' : speed, 'kicker' : 0, 'catcher' : 0, 'left_ratio': left_ratio, 'right_ratio': right_ratio}
         else:
             if abs(angle) > ANGLE_MATCH_THRESHOLD:
                 speed = (angle/pi) * MAX_ANGLE_SPEED
-                return {'left_motor' : -speed, 'right_motor' : speed, 'kicker' : 0, 'catcher' : 0}
+                return {'left_motor' : -speed, 'right_motor' : speed, 'kicker' : 0, 'catcher' : 0, 'left_ratio': left_ratio, 'right_ratio': right_ratio}
             else:
-                return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0, 'catcher' : 0}
+                return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0, 'catcher' : 0, 'left_ratio': left_ratio, 'right_ratio': right_ratio}
+
+    def calculate_motor_differential(
+            self, angle_delta, match_thresh=ANGLE_MATCH_THRESHOLD):
+        """
+        Take the THRESHOLD log of the angle difference to get ratio of left to right wheel.
+
+        If we want to turn left, right motor turns faster and vice versa.
+        """
+        if angle_delta == 0:
+            return WheelRatio(DIFF_NORMALIZE_RATIO, DIFF_NORMALIZE_RATIO)
+
+        ratio_const = log(abs(angle_delta), match_thresh)
+
+        print 'ratio_const', ratio_const
+
+        if ratio_const <= 1:
+            return WheelRatio(DIFF_NORMALIZE_RATIO , DIFF_NORMALIZE_RATIO)
+
+        # Normalize
+        ratio = int(1 / ratio_const * DIFF_NORMALIZE_RATIO)
+
+        # Positive angle means turn left, negative - turn right
+        if angle_delta > 0:
+            return WheelRatio(DIFF_NORMALIZE_RATIO - ratio, ratio)
+        else:
+            return WheelRatio(ratio, DIFF_NORMALIZE_RATIO - ratio)
+
+
 
     def has_matched(self, robot, x=None, y=None, angle=None):
         dist_matched = True
