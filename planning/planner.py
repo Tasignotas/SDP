@@ -1,12 +1,19 @@
 from models import *
 from collisions import *
 from math import tan, pi, hypot, log
+from collections import namedtuple
 
 REVERSE = 1
 DISTANCE_MATCH_THRESHOLD = 20
 ANGLE_MATCH_THRESHOLD = pi/18
 MAX_DISPLACEMENT_SPEED = 690 * REVERSE
 MAX_ANGLE_SPEED = 50 * REVERSE
+
+# Differential Normalization
+DIFF_NORMALIZE_RATIO = 2000
+
+
+WheelRatio = namedtuple('WheelRatio', ['left', 'right'])
 
 
 
@@ -138,6 +145,30 @@ class Planner:
                 return {'left_motor' : -speed, 'right_motor' : speed, 'kicker' : 0, 'catcher' : 0}
             else:
                 return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0, 'catcher' : 0}
+
+    def calculate_motor_differential(self, angle_delta):
+        """
+        Take the THRESHOLD log of the angle difference to get ratio of left to right wheel.
+
+        If we want to turn left, right motor turns faster and vice versa.
+        """
+        if angle_delta == 0:
+            return WheelRatio(1, 1)
+        ratio_const = log(abs(angle_delta % (2*pi)), ANGLE_MATCH_THRESHOLD)
+        if ratio_const <= 1:
+            ratio = DIFF_NORMALIZE_RATIO / 2
+            return WheelRatio(ratio, DIFF_NORMALIZE_RATIO - ratio)
+
+        # Normalize
+        ratio = int(1 / ratio_const * DIFF_NORMALIZE_RATIO)
+
+        # Positive angle means turn left, negative - turn right
+        if angle_delta > 0:
+            return WheelRatio(DIFF_NORMALIZE_RATIO - ratio, ratio)
+        else:
+            return WheelRatio(ratio, DIFF_NORMALIZE_RATIO - ratio)
+
+
 
     def has_matched(self, robot, x=None, y=None, angle=None):
         dist_matched = True

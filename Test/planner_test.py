@@ -82,7 +82,7 @@ class TestYPredictionRight(unittest.TestCase):
         goal_bottom = self.our_goal.y - (self.our_goal.width/2.0)
         self.their_attacker.vector = Vector(200, goal_bottom - 20, 0, 0)
         assert_almost_equal(self.planner.predict_y_intersection(self.our_goal, self.their_attacker), goal_bottom)
-    
+
     def test_angle_shot(self):
         # Shot above the center:
         self.their_attacker.vector = Vector(self.pitch.width - 50, self.our_goal.y, pi/4, 0)
@@ -106,3 +106,45 @@ class TestYPredictionRight(unittest.TestCase):
     def test_no_intersection(self):
         self.their_attacker.vector = Vector(self.pitch.height, self.pitch.height/2.0, (3*pi)/4, 0)
         self.assertEqual(self.planner.predict_y_intersection(self.our_goal, self.their_attacker), None)
+
+
+class MotorDifferentialTest(unittest.TestCase):
+
+    def setUp(self):
+        self.planner = Planner('right')
+        self.motor_diff = self.planner.calculate_motor_differential
+
+    def set_angle_match_thresh(self, new_thres):
+        ANGLE_MATCH_THRESHOLD = new_thres
+
+    def test_angle_zero(self):
+        angle = 0
+        self.assertEqual((1, 1), self.motor_diff(angle))
+
+    def test_angle_positive(self):
+        self.set_angle_match_thresh(pi / 4)
+        angle = pi / 2
+        ratio = self.motor_diff(angle)
+        right_motor_ratio = ratio[1]
+        self.assertTrue(right_motor_ratio > 1)
+
+    def test_angle_negative(self):
+        self.set_angle_match_thresh(pi / 4)
+        angle = -pi / 2
+        ratio = self.motor_diff(angle)
+        right_motor_ratio = ratio[0]
+        self.assertTrue(right_motor_ratio > 1)
+
+    def test_ratio_complete(self):
+        self.set_angle_match_thresh(pi / 2)
+        angle = -pi / 4
+        ratio = self.motor_diff(angle)
+        total = ratio[0] + ratio[1]
+        self.assertEqual(DIFF_NORMALIZE_RATIO, total)
+
+    def test_ratio_is_one_when_angle_matched(self):
+        self.set_angle_match_thresh(pi / 4)
+        angle = -pi / 5
+        ratio = self.motor_diff(angle)
+        self.assertEqual(DIFF_NORMALIZE_RATIO / 2 , ratio[1])
+        self.assertEqual(DIFF_NORMALIZE_RATIO / 2, ratio[0])
