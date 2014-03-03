@@ -4,6 +4,7 @@ import json
 import thread
 import socket
 import os
+import cPickle
 
 PATH = os.path.dirname(os.path.realpath(__file__))
 
@@ -59,6 +60,12 @@ def get_json(filename=PATH+'calibrate.json'):
     content = json.loads(_file.read())
     _file.close()
     return content
+
+def get_radial_data(pitch=0, filename=PATH+'/calibrations/undistort.txt'):
+    _file = open(filename, 'r')
+    data = cPickle.load(_file)
+    _file.close()
+    return data[pitch]
 
 def get_colors(pitch=0, filename=PATH+'/calibrations/calibrations.json'):
     """

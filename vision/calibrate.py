@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
 import tools
-import cPickle
 
 FRAME_NAME = 'ConfigureWindow'
 
@@ -11,10 +10,7 @@ BLUE = (255, 0, 0)
 GREEN = (0, 255, 0)
 RED = (0, 0, 255)
 
-with open('calibrations/undistort.txt','rb') as fp:
-	distort_data = cPickle.load(fp)
-distort_data = distort_data[0]
-
+distort_data = tools.get_radial_data()
 NCMATRIX = distort_data['new_camera_matrix']
 CMATRIX = distort_data['camera_matrix']
 DIST = distort_data['dist']
