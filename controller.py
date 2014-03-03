@@ -76,15 +76,14 @@ class Controller:
                 preprocessed = self.preprocessing.run(frame, pre_options)
                 frame = preprocessed['frame']
 
-                if 'background_sub' in preprocessed:
-                    cv2.imshow('bg sub', preprocessed['background_sub'])
+                # if 'background_sub' in preprocessed:
+                #     cv2.imshow('bg sub', preprocessed['background_sub'])
 
                 # Find object positions
                 positions, extras = self.vision.locate(frame)
 
                 positions = self.postprocessing.analyze(positions)
 
-                print 'BALL', positions['ball']
                 # Find appropriate action
                 self.planner.update_world(positions)
                 attacker_actions = self.planner.plan('attacker')
