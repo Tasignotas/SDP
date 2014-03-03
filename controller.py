@@ -33,8 +33,6 @@ class Controller:
         # Set up the Arduino communications
         self.arduino = serial.Serial(comm_port, 9600, timeout=1)
 
-        self.arduino.write('A_SET_ENGINE 1000 1000 1000 1000\n')
-
         # Set up camera for frames
         self.camera = Camera(port=video_port)
         frame = self.camera.get_frame()
@@ -154,6 +152,11 @@ class Defender_Controller(Robot_Controller):
         left_motor = action['left_motor']
         right_motor = action['right_motor']
 
+        # Set differential
+        if action['left_ratio'] and action['right_ratio']:
+            com.write('D_SET_ENGINE %d %d\n' %
+                (action['left_ratio'], action['right_ratio']))
+
         comm.write('D_RUN_ENGINE %d %d\n' % (int(left_motor), int(right_motor)))
 
         if action['kicker'] != 0:
@@ -166,6 +169,10 @@ class Defender_Controller(Robot_Controller):
                 comm.write('D_RUN_CATCHER %d\n' % (action['catcher']))
             except StandardError:
                 pass
+
+        # Reset differential
+        if action['left_ratio'] and action['right_ratio']:
+            com.write('D_SET_ENGINE %d %d\n' % (1000, 1000))
 
     def shutdown(self, comm):
         comm.write('D_RUN_ENGINE %d %d\n' % (0, 0))
@@ -188,6 +195,12 @@ class Attacker_Controller(Robot_Controller):
         """
         left_motor = action['left_motor']
         right_motor = action['right_motor']
+
+        # Set differential
+        if action['left_ratio'] and action['right_ratio']:
+            com.write('A_SET_ENGINE %d %d\n' %
+                (action['left_ratio'], action['right_ratio']))
+
         comm.write('A_RUN_ENGINE %d %d\n' % (int(left_motor), int(right_motor)))
         if action['kicker'] != 0:
             try:
@@ -200,8 +213,12 @@ class Attacker_Controller(Robot_Controller):
             except StandardError:
                 pass
 
+        # Reset differential
+        if action['left_ratio'] and action['right_ratio']:
+            com.write('A_SET_ENGINE %d %d\n' % (1000, 1000))
+
     def shutdown(self, comm):
-        comm.write('D_RUN_ENGINE %d %d\n' % (0, 0))
+        comm.write('A_RUN_ENGINE %d %d\n' % (0, 0))
 
 
 if __name__ == '__main__':

@@ -121,7 +121,7 @@ class Planner:
         else:
             return None
 
-    def calculate_motor_speed(self, robot, displacement, angle, backwards_ok=False):
+    def calculate_motor_speed(self, robot, displacement, angle, backwards_ok=False, differential=False):
         '''
         Simplistic view of calculating the speed: no modes or trying to be careful
         '''
@@ -129,22 +129,27 @@ class Planner:
         if backwards_ok and abs(angle) > pi/2:
             angle = (-pi + angle) if angle > 0 else (pi + angle)
             moving_backwards = True
+
+        left_ratio, right_ratio = None, None
+        if differential:
+            left_ratio, right_ratio = self.calculate_motor_differential(angle)
+
         if not (displacement is None):
             if displacement < DISTANCE_MATCH_THRESHOLD:
-                return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0, 'catcher' : 0}
+                return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0, 'catcher' : 0, 'left_ratio': left_ratio, 'right_ratio': left_ratio}
             elif abs(angle) > ANGLE_MATCH_THRESHOLD:
                 speed = (angle/pi) * MAX_ANGLE_SPEED
-                return {'left_motor' : -speed, 'right_motor' : speed, 'kicker' : 0, 'catcher' : 0}
+                return {'left_motor' : -speed, 'right_motor' : speed, 'kicker' : 0, 'catcher' : 0, 'left_ratio': left_ratio, 'right_ratio': right_ratio}
             else:
                 speed = log(displacement, 10) * MAX_DISPLACEMENT_SPEED
                 speed = -speed if moving_backwards else speed
-                return {'left_motor' : speed, 'right_motor' : speed, 'kicker' : 0, 'catcher' : 0}
+                return {'left_motor' : speed, 'right_motor' : speed, 'kicker' : 0, 'catcher' : 0, 'left_ratio': left_ratio, 'right_ratio': right_ratio}
         else:
             if abs(angle) > ANGLE_MATCH_THRESHOLD:
                 speed = (angle/pi) * MAX_ANGLE_SPEED
-                return {'left_motor' : -speed, 'right_motor' : speed, 'kicker' : 0, 'catcher' : 0}
+                return {'left_motor' : -speed, 'right_motor' : speed, 'kicker' : 0, 'catcher' : 0, 'left_ratio': left_ratio, 'right_ratio': right_ratio}
             else:
-                return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0, 'catcher' : 0}
+                return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0, 'catcher' : 0, 'left_ratio': left_ratio, 'right_ratio': right_ratio}
 
     def calculate_motor_differential(self, angle_delta):
         """
