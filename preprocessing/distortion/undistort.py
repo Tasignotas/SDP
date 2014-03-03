@@ -5,6 +5,9 @@ import cv2
 import glob
 from copy import copy
 
+import cPickle
+filename = "../../vision/calibrations/undistort.txt"
+
 # Set the required dimension of all sample checkboard images
 dim = (9,6)
 
@@ -40,9 +43,9 @@ for fname in images:
 
         # Draw and display the corners
         # Comment this out to skip showing sample images!
-        _ = cv2.drawChessboardCorners(img, dim, corners2, ret)
-        cv2.imshow('img',img)
-        cv2.waitKey(1000)
+        # _ = cv2.drawChessboardCorners(img, dim, corners2, ret)
+        # cv2.imshow('img',img)
+        # cv2.waitKey(1000)
 
 cv2.destroyAllWindows()
 
@@ -68,3 +71,18 @@ while c != 27:
     cv2.imshow('Undistorted',dst)
 
     c = cv2.waitKey(2) & 0xFF
+
+pitch1 = {'new_camera_matrix' : newcameramtx,
+        'roi' : roi,
+        'camera_matrix' : mtx,
+        'dist' : dist}
+
+pitch0 = {'new_camera_matrix' : newcameramtx,
+        'roi' : roi,
+        'camera_matrix' : mtx,
+        'dist' : dist}
+
+data = {0 : pitch0, 1: pitch1}
+
+with open(filename,'wb') as fp:
+    cPickle.dump(data,fp)
