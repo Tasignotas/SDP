@@ -22,6 +22,7 @@ class Planner:
     def plan(self, robot='attacker'):
         assert robot in ['attacker', 'defender']
         our_defender = self._world.our_defender
+        our_attacker = self._world.our_attacker
         ball = self._world.ball
         if robot == 'defender':
             # If the ball is in not in our defender zone, we defend:
@@ -35,8 +36,13 @@ class Planner:
                     our_defender.state = DEFENDER_ATTACK_STATES[0]
                 return self.defender_attack()
         else:
-            pass
-
+            #if the ball is in attackers zone, go to ball
+            if (self._world.pitch.zones[our_attacker.zone].isInside(ball.x, ball.y)):
+                our_attacker.state = ATTACKER_ATTACK_STATES[1]
+            else:
+                pass
+            return self.attacker_defend()
+            #pass
 
     def defender_defend(self):
         our_defender = self._world.our_defender
@@ -58,6 +64,70 @@ class Planner:
                 displacement, angle = our_defender.get_direction_to_point(goal_front_x, predicted_y)
                 return self.calculate_motor_speed(our_defender, displacement, angle, backwards_ok=True)
             return self.calculate_motor_speed(our_defender, 0, 0)
+
+    def attacker_defend(self):
+        ''' This function will make our attacker block the path between
+        the opposition's defender and our goal
+        When the bal
+        '''
+
+        print "Reached the function"
+        their_defender = self._world.their_defender
+        their_attacker = self._world.their_attacker
+        our_defender = self._world.our_defender
+        our_attacker = self._world.our_attacker
+        our_goal = self._world.our_goal
+        ball = self._world.ball
+        zone = self._world._pitch._zones[our_attacker.zone]
+        if self._world._our_side == 'right':
+            _,border,_,_ = zone.boundingBox()
+            border = border - 40
+        else:
+            border,_,_,_ = zone.boundingBox()
+            border = border + 40
+        
+
+        #print type(their_attacker)
+        print our_attacker.state
+
+        #offset = 10 # Test value to keep away from white lines
+        #border = #(zones[their_defender.zone].length + offset) if self._world._our_side == 'right' else ((zones[our_defender.zone].length + zones[their_attacker.zone].length + zones[our_attacker.zone].length) - offset)
+        print("BORDER {0}".format(border))
+        #get_pass_path not usable here
+        # If the robot is not on the goal line:
+        if their_defender.has_ball(self._world._ball):
+            #print their_defender.has_ball
+            our_attacker.state = 'not_blocked'
+        #else:
+            #our_attacker.state = 'defence_block' 
+
+        if our_attacker.state == 'not_blocked': #Add some logic to see if bounce
+            y = self.predict_pass_intersection(their_defender,their_attacker,our_attacker) #self.predict_y_intersection(their_defender, their_attacker)
+            print "y",y
+            if y is not None:
+                if self.has_matched(our_attacker, x=border, y=y):
+                    return self.calculate_motor_speed(our_attacker, 0, 0)
+                else:
+                    displacement, angle = our_attacker.get_direction_to_point(border, y)#self.predict_y_intersection(their_defender, their_attacker))
+                    #print(displacement, angle)
+                    #print(self.calculate_motor_speed(our_attacker, displacement, angle))
+                    return self.calculate_motor_speed(our_attacker, displacement, angle)
+            else:
+                return self.calculate_motor_speed(our_attacker, 0, 0)
+           #    print "goes here"
+     
+        if our_attacker.state == 'defence_block':
+            predicted_y = self.predict_y_intersection(their_defender, their_attacker)
+            print 'PREDICTED Y', predicted_y
+            if not (predicted_y == None):
+                displacement, angle = our_attacker.get_direction_to_point(border, predicted_y)
+                return self.calculate_motor_speed(our_attacker, displacement, angle, backwards_ok=True)
+            return self.calculate_motor_speed(our_attacker, 0, 0)
+
+        if our_attacker.state == 'attack_go_to_ball':
+            displacement, angle = our_attacker.get_direction_to_point(ball.x, ball.y)
+            print(displacement, angle)
+            return self.calculate_motor_speed(our_attacker, displacement, angle)
 
     def defender_attack(self):
         our_defender = self._world.our_defender
@@ -81,6 +151,20 @@ class Planner:
                 return self.calculate_motor_speed(our_defender, None, angle)
         if our_defender.state == 'attack_pass':
             return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 30, 'catcher' : -30}
+    
+    def predict_pass_intersection(self, robot1,robot2,ourRobot):
+        '''
+        Predicts the y coordinate required to intercept a pass from robot1 to robot2
+        '''
+        x1 = robot1.x
+        y1 = robot1.y
+        x2 = robot2.x
+        y2 = robot2.y
+
+        m = (y2-y1)*1.0/(x2-x1)
+        c = y1-m*x1
+
+        return int(m*ourRobot.x + c)
 
     def predict_y_intersection(self, goal, robot):
         '''
@@ -113,6 +197,7 @@ class Planner:
             return predicted_y
         else:
             return None
+
 
     def calculate_motor_speed(self, robot, displacement, angle, backwards_ok=False):
         '''
