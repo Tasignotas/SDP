@@ -1,12 +1,19 @@
 from models import *
 from collisions import *
 from math import tan, pi, hypot, log
+from collections import namedtuple
 
 REVERSE = 1
 DISTANCE_MATCH_THRESHOLD = 20
 ANGLE_MATCH_THRESHOLD = pi/10
 MAX_DISPLACEMENT_SPEED = 690 * REVERSE
 MAX_ANGLE_SPEED = 50 * REVERSE
+
+# Differential Normalization
+DIFF_NORMALIZE_RATIO = 1000
+
+
+WheelRatio = namedtuple('WheelRatio', ['left', 'right'])
 
 
 
@@ -22,6 +29,7 @@ class Planner:
     def plan(self, robot='attacker'):
         assert robot in ['attacker', 'defender']
         our_defender = self._world.our_defender
+        our_attacker = self._world.our_attacker
         ball = self._world.ball
         if robot == 'defender':
             # If the ball is in not in our defender zone, we defend:
@@ -35,8 +43,13 @@ class Planner:
                     our_defender.state = DEFENDER_ATTACK_STATES[0]
                 return self.defender_attack()
         else:
-            pass
-
+            #if the ball is in attackers zone, go to ball
+            if (self._world.pitch.zones[our_attacker.zone].isInside(ball.x, ball.y)):
+                our_attacker.state = ATTACKER_ATTACK_STATES[1]
+            else:
+                pass
+            return self.attacker_defend()
+            #pass
 
     def defender_defend(self):
         our_defender = self._world.our_defender
@@ -58,6 +71,70 @@ class Planner:
                 displacement, angle = our_defender.get_direction_to_point(goal_front_x, predicted_y)
                 return self.calculate_motor_speed(our_defender, displacement, angle, backwards_ok=True)
             return self.calculate_motor_speed(our_defender, 0, 0)
+
+    def attacker_defend(self):
+        ''' This function will make our attacker block the path between
+        the opposition's defender and our goal
+        When the bal
+        '''
+
+        print "Reached the function"
+        their_defender = self._world.their_defender
+        their_attacker = self._world.their_attacker
+        our_defender = self._world.our_defender
+        our_attacker = self._world.our_attacker
+        our_goal = self._world.our_goal
+        ball = self._world.ball
+        zone = self._world._pitch._zones[our_attacker.zone]
+        if self._world._our_side == 'right':
+            _,border,_,_ = zone.boundingBox()
+            border = border - 40
+        else:
+            border,_,_,_ = zone.boundingBox()
+            border = border + 40
+        
+
+        #print type(their_attacker)
+        print our_attacker.state
+
+        #offset = 10 # Test value to keep away from white lines
+        #border = #(zones[their_defender.zone].length + offset) if self._world._our_side == 'right' else ((zones[our_defender.zone].length + zones[their_attacker.zone].length + zones[our_attacker.zone].length) - offset)
+        print("BORDER {0}".format(border))
+        #get_pass_path not usable here
+        # If the robot is not on the goal line:
+        if their_defender.has_ball(self._world._ball):
+            #print their_defender.has_ball
+            our_attacker.state = 'not_blocked'
+        #else:
+            #our_attacker.state = 'defence_block' 
+
+        if our_attacker.state == 'not_blocked': #Add some logic to see if bounce
+            y = self.predict_pass_intersection(their_defender,their_attacker,our_attacker) #self.predict_y_intersection(their_defender, their_attacker)
+            print "y",y
+            if y is not None:
+                if self.has_matched(our_attacker, x=border, y=y):
+                    return self.calculate_motor_speed(our_attacker, 0, 0)
+                else:
+                    displacement, angle = our_attacker.get_direction_to_point(border, y)#self.predict_y_intersection(their_defender, their_attacker))
+                    #print(displacement, angle)
+                    #print(self.calculate_motor_speed(our_attacker, displacement, angle))
+                    return self.calculate_motor_speed(our_attacker, displacement, angle)
+            else:
+                return self.calculate_motor_speed(our_attacker, 0, 0)
+           #    print "goes here"
+     
+        if our_attacker.state == 'defence_block':
+            predicted_y = self.predict_y_intersection(their_defender, their_attacker)
+            print 'PREDICTED Y', predicted_y
+            if not (predicted_y == None):
+                displacement, angle = our_attacker.get_direction_to_point(border, predicted_y)
+                return self.calculate_motor_speed(our_attacker, displacement, angle, backwards_ok=True)
+            return self.calculate_motor_speed(our_attacker, 0, 0)
+
+        if our_attacker.state == 'attack_go_to_ball':
+            displacement, angle = our_attacker.get_direction_to_point(ball.x, ball.y)
+            print(displacement, angle)
+            return self.calculate_motor_speed(our_attacker, displacement, angle)
 
     def defender_attack(self):
         our_defender = self._world.our_defender
@@ -81,6 +158,16 @@ class Planner:
                 return self.calculate_motor_speed(our_defender, None, angle)
         if our_defender.state == 'attack_pass':
             return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 30, 'catcher' : -30}
+    
+    def predict_pass_intersection(self, robot1,robot2,ourRobot):
+        '''
+        Predicts the y coordinate required to intercept a pass from robot1 to robot2
+        '''
+        delta_x = robot2.x - robot1.x
+        delta_y = robot2.y - robot1.y
+        k = delta_y*1.0/delta_x if delta_x else 0
+        c = robot1.y - k * robot1.x
+        return k * ourRobot.x + c
 
     def predict_y_intersection(self, predict_for_x, robot, full_width=False):
         '''
@@ -109,7 +196,7 @@ class Planner:
         else:
             return None
 
-    def calculate_motor_speed(self, robot, displacement, angle, backwards_ok=False):
+    def calculate_motor_speed(self, robot, displacement, angle, backwards_ok=False, differential=False):
         '''
         Simplistic view of calculating the speed: no modes or trying to be careful
         '''
@@ -117,22 +204,44 @@ class Planner:
         if backwards_ok and abs(angle) > pi/2:
             angle = (-pi + angle) if angle > 0 else (pi + angle)
             moving_backwards = True
+        left_ratio, right_ratio = None, None
+        if differential:
+            left_ratio, right_ratio = self.calculate_motor_differential(angle)
         if not (displacement is None):
             if displacement < DISTANCE_MATCH_THRESHOLD:
-                return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0, 'catcher' : 0}
+                return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0, 'catcher' : 0, 'left_ratio': left_ratio, 'right_ratio': left_ratio}
             elif abs(angle) > ANGLE_MATCH_THRESHOLD:
                 speed = (angle/pi) * MAX_ANGLE_SPEED
-                return {'left_motor' : -speed, 'right_motor' : speed, 'kicker' : 0, 'catcher' : 0}
+                return {'left_motor' : -speed, 'right_motor' : speed, 'kicker' : 0, 'catcher' : 0, 'left_ratio': left_ratio, 'right_ratio': right_ratio}
             else:
                 final_xpeed = log(displacement, 10) * MAX_DISPLACEMENT_SPEED
                 speed = -speed if moving_backwards else speed
-                return {'left_motor' : speed, 'right_motor' : speed, 'kicker' : 0, 'catcher' : 0}
+                return {'left_motor' : speed, 'right_motor' : speed, 'kicker' : 0, 'catcher' : 0, 'left_ratio': left_ratio, 'right_ratio': right_ratio}
         else:
             if abs(angle) > ANGLE_MATCH_THRESHOLD:
                 speed = (angle/pi) * MAX_ANGLE_SPEED
-                return {'left_motor' : -speed, 'right_motor' : speed, 'kicker' : 0, 'catcher' : 0}
+                return {'left_motor' : -speed, 'right_motor' : speed, 'kicker' : 0, 'catcher' : 0, 'left_ratio': left_ratio, 'right_ratio': right_ratio}
             else:
-                return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0, 'catcher' : 0}
+                return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0, 'catcher' : 0, 'left_ratio': left_ratio, 'right_ratio': right_ratio}
+
+    def calculate_motor_differential(
+            self, angle_delta, match_thresh=ANGLE_MATCH_THRESHOLD):
+        """
+        Take the THRESHOLD log of the angle difference to get ratio of left to right wheel.
+
+        If we want to turn left, right motor turns faster and vice versa.
+        """
+        if angle_delta == 0:
+            return WheelRatio(DIFF_NORMALIZE_RATIO, DIFF_NORMALIZE_RATIO)
+        ratio_const = log(abs(angle_delta), match_thresh)
+        print 'ratio_const', ratio_const
+        if ratio_const <= 1:
+            return WheelRatio(DIFF_NORMALIZE_RATIO , DIFF_NORMALIZE_RATIO)
+        ratio = int(1 / ratio_const * DIFF_NORMALIZE_RATIO)
+        if angle_delta > 0:
+            return WheelRatio(DIFF_NORMALIZE_RATIO - ratio, ratio)
+        else:
+            return WheelRatio(ratio, DIFF_NORMALIZE_RATIO - ratio)
 
     def has_matched(self, robot, x=None, y=None, angle=None):
         dist_matched = True
