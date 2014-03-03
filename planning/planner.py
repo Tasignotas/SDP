@@ -4,7 +4,7 @@ from math import tan, pi, hypot, log
 
 REVERSE = 1
 DISTANCE_MATCH_THRESHOLD = 20
-ANGLE_MATCH_THRESHOLD = pi/18
+ANGLE_MATCH_THRESHOLD = pi/10
 MAX_DISPLACEMENT_SPEED = 690 * REVERSE
 MAX_ANGLE_SPEED = 50 * REVERSE
 
@@ -89,22 +89,14 @@ class Planner:
         '''
         x = robot.x
         y = robot.y
-        max_iter = 10
         angle = robot.angle
-
         if (robot.zone == 2 and not (pi/2 < angle < 3*pi/2)) or (robot.zone == 1 and (3*pi/2 > angle > pi/2)):
-            while True and max_iter > 0:
-                if not (0 <= (y + tan(angle) * (goal.x - x)) <= self._world._pitch.height):
-                    bounce_pos = 'top' if (y + tan(angle) * (goal.x - x)) > self._world._pitch.height else 'bottom'
-                    x += (self._world._pitch.height - y) / tan(angle) if bounce_pos == 'top' else (0 - y) / tan(angle)
-                    y = self._world._pitch.height if bounce_pos == 'top' else 0
-                    angle = (-angle) % (2*pi)
-                    max_iter -= 1
-                else:
-                    predicted_y = (y + tan(angle) * (goal.x - x))
-                    break
-            if max_iter == 0:
-                return None
+            if not (0 <= (y + tan(angle) * (goal.x - x)) <= self._world._pitch.height):
+                bounce_pos = 'top' if (y + tan(angle) * (goal.x - x)) > self._world._pitch.height else 'bottom'
+                x += (self._world._pitch.height - y) / tan(angle) if bounce_pos == 'top' else (0 - y) / tan(angle)
+                y = self._world._pitch.height if bounce_pos == 'top' else 0
+                angle = (-angle) % (2*pi)
+            predicted_y = (y + tan(angle) * (goal.x - x))
             # Correcting the y coordinate to the closest y coordinate on the goal line:
             if predicted_y > goal.y + (goal.width/2):
                 return goal.y + (goal.width/2)
