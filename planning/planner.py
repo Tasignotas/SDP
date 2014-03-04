@@ -143,7 +143,7 @@ class Planner:
                 our_attacker.catcher = 'open'
                 return self.open_catcher()
             else:
-                _, angle = our_attacker.get_direction_to_point(0, self._world.pitch.height/2)
+                _, angle = our_attacker.get_direction_to_point(their_goal.x, their_goal.y)
                 if self.has_matched(our_attacker, angle=angle):
                     our_attacker.state = 'attack_shoot'
                 else:

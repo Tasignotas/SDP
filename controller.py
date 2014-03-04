@@ -7,6 +7,7 @@ from cv2 import waitKey
 import cv2
 import serial
 import warnings
+import time
 
 
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
@@ -72,6 +73,9 @@ class Controller:
         try:
             c = True
             while c != 27:  # the ESC key
+
+                
+
                 frame = self.camera.get_frame()
                 pre_options = self.preprocessing.options
                 # Apply preprocessing methods toggled in the UI
@@ -86,16 +90,21 @@ class Controller:
                 self.planner.update_world(positions)
                 attacker_actions = self.planner.plan('attacker')
                 defender_actions = self.planner.plan('defender')
+                timer = time.clock()
                 if self.attacker is not None:
                     self.attacker.execute(self.arduino, attacker_actions)
                 if self.defender is not None:
                     self.defender.execute(self.arduino, defender_actions)
+
+                print time.clock() - timer
+
                 # Use 'y', 'b', 'r' to change color.
                 c = waitKey(2) & 0xFF
                 actions = []
                 # Draw vision content and actions
                 self.GUI.draw(frame, positions, actions, extras, our_color=self.color, key=c, preprocess=pre_options)
 
+                
         except:
             if self.defender is not None:
                 self.defender.shutdown(self.arduino)
