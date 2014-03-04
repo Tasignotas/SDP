@@ -6,6 +6,10 @@ import vision.tools as tools
 from cv2 import waitKey
 import cv2
 import serial
+import warnings
+
+
+warnings.filterwarnings("ignore", category=DeprecationWarning) 
 
 
 class Controller:
@@ -33,7 +37,7 @@ class Controller:
         # Set up the Arduino communications
         self.arduino = serial.Serial(comm_port, 9600, timeout=1)
 
-        self.arduino.write('A_SET_ENGINE 1000 1000 1000 1000\n')
+        self.arduino.write('D_SET_ENGINE 100 100 100 100\n')
 
         # Set up camera for frames
         self.camera = Camera(port=video_port)
@@ -71,36 +75,25 @@ class Controller:
             c = True
             while c != 27:  # the ESC key
                 frame = self.camera.get_frame()
-
                 pre_options = self.preprocessing.options
-
                 # Apply preprocessing methods toggled in the UI
                 preprocessed = self.preprocessing.run(frame, pre_options)
                 frame = preprocessed['frame']
-
                 if 'background_sub' in preprocessed:
                     cv2.imshow('bg sub', preprocessed['background_sub'])
-
                 # Find object positions
                 positions, extras = self.vision.locate(frame)
-
                 positions = self.postprocessing.analyze(positions)
-
-                print 'BALL', positions['ball']
                 # Find appropriate action
                 self.planner.update_world(positions)
-                attacker_actions = self.planner.plan('attacker')
+                #attacker_actions = self.planner.plan('attacker')
                 defender_actions = self.planner.plan('defender')
-
                 if self.attacker is not None:
                     self.attacker.execute(self.arduino, attacker_actions)
-
                 if self.defender is not None:
                     self.defender.execute(self.arduino, defender_actions)
-
                 # Use 'y', 'b', 'r' to change color.
                 c = waitKey(2) & 0xFF
-
                 actions = []
                 # Draw vision content and actions
                 self.GUI.draw(frame, positions, actions, extras, our_color=self.color, key=c, preprocess=pre_options)
@@ -153,17 +146,18 @@ class Defender_Controller(Robot_Controller):
         """
         left_motor = action['left_motor']
         right_motor = action['right_motor']
-
         comm.write('D_RUN_ENGINE %d %d\n' % (int(left_motor), int(right_motor)))
-
         if action['kicker'] != 0:
             try:
-                comm.write('D_RUN_KICKER %d\n' % (action['kicker']))
+                comm.write('D_RUN_KICKER\n')
             except StandardError:
                 pass
         elif action['catcher'] != 0:
             try:
-                comm.write('D_RUN_CATCHER %d\n' % (action['catcher']))
+                if action['catcher'] == 1:
+                    comm.write('D_OPEN_CATCHER\n')
+                else:
+                    comm.write('D_CLOSE_CATCHER\n')
             except StandardError:
                 pass
 

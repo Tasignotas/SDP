@@ -4,14 +4,13 @@ from math import tan, pi, hypot, log
 
 REVERSE = 1
 DISTANCE_MATCH_THRESHOLD = 20
-ANGLE_MATCH_THRESHOLD = pi/10
+ANGLE_MATCH_THRESHOLD = pi/20
 MAX_DISPLACEMENT_SPEED = 690 * REVERSE
 MAX_ANGLE_SPEED = 50 * REVERSE
 
 
 
 class Planner:
-
 
     def __init__(self, our_side):
         self._world = World(our_side)
@@ -37,7 +36,6 @@ class Planner:
         else:
             pass
 
-
     def defender_defend(self):
         our_defender = self._world.our_defender
         their_attacker = self._world.their_attacker
@@ -52,8 +50,7 @@ class Planner:
                 displacement, angle = our_defender.get_direction_to_point(goal_front_x, our_goal.y)
                 return self.calculate_motor_speed(our_defender, displacement, angle)
         if our_defender.state == 'defence_goal_line':
-            predicted_y = self.predict_y_intersection(our_goal, their_attacker)
-            print 'PREDICTED Y', predicted_y
+            predicted_y = self.predict_y_intersection(goal_front_x, their_attacker)
             if not (predicted_y == None):
                 displacement, angle = our_defender.get_direction_to_point(goal_front_x, predicted_y)
                 return self.calculate_motor_speed(our_defender, displacement, angle, backwards_ok=True)
@@ -65,14 +62,17 @@ class Planner:
         ball = self._world.ball
         if our_defender.state == 'attack_go_to_ball':
             # If we don't need to move or rotate, we advance to grabbing:
-            displacement, angle = our_defender.get_direction_to_point(our_attacker.x, our_attacker.y)
-            if self.has_matched(our_defender, x=ball.x, y=ball.y, angle=angle):
-                our_defender = 'attack_grab_ball'
+            displacement, angle = our_defender.get_direction_to_point(ball.x, ball.y)
+            if our_defender.is_near_ball(ball):
+                our_defender.state = 'attack_grab_ball'
             else:
                 return self.calculate_motor_speed(our_defender, displacement, angle)
         if our_defender.state == 'attack_grab_ball':
-            our_defender.state = 'attack_rotate_to_pass'
-            return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0, 'catcher' : 30}
+            if our_defender.has_ball(ball):
+                our_defender.state = 'attack_rotate_to_pass'
+            else:
+                our_defender.catcher = 'closed'
+                return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0, 'catcher' : -1}
         if our_defender.state == 'attack_rotate_to_pass':
             _, angle = our_defender.get_direction_to_point(our_attacker.x, our_attacker.y)
             if self.has_matched(our_defender, angle=angle):
@@ -80,28 +80,34 @@ class Planner:
             else:
                 return self.calculate_motor_speed(our_defender, None, angle)
         if our_defender.state == 'attack_pass':
-            return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 30, 'catcher' : -30}
+            our_defender.state == 'defence_somewhere'
+            our_defender.catcher = 'open'
+            return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 1, 'catcher' : 0}
+        
 
-    def predict_y_intersection(self, goal, robot):
+    def predict_y_intersection(self, predict_for_x, robot, full_width=False):
         '''
         Predicts the (x, y) coordinates of the ball shot by the robot
-        Corrects them so that it's definitely within the goal
+        Corrects them if it's out of the bottom_y - top_y range.
+        Returns None if the robot is facing the wrong direction.
         '''
         x = robot.x
         y = robot.y
+        top_y = self._world._pitch.height if full_width else self._world.our_goal.y + (self._world.our_goal.width/2)
+        bottom_y = 0 if full_width else self._world.our_goal.y - (self._world.our_goal.width/2)
         angle = robot.angle
-        if (robot.zone == 2 and not (pi/2 < angle < 3*pi/2)) or (robot.zone == 1 and (3*pi/2 > angle > pi/2)):
-            if not (0 <= (y + tan(angle) * (goal.x - x)) <= self._world._pitch.height):
-                bounce_pos = 'top' if (y + tan(angle) * (goal.x - x)) > self._world._pitch.height else 'bottom'
+        if (robot.x < predict_for_x and not (pi/2 < angle < 3*pi/2)) or (robot.x > predict_for_x and (3*pi/2 > angle > pi/2)):
+            if not (0 <= (y + tan(angle) * (predict_for_x - x)) <= self._world._pitch.height):
+                bounce_pos = 'top' if (y + tan(angle) * (predict_for_x - x)) > self._world._pitch.height else 'bottom'
                 x += (self._world._pitch.height - y) / tan(angle) if bounce_pos == 'top' else (0 - y) / tan(angle)
                 y = self._world._pitch.height if bounce_pos == 'top' else 0
                 angle = (-angle) % (2*pi)
-            predicted_y = (y + tan(angle) * (goal.x - x))
+            predicted_y = (y + tan(angle) * (predict_for_x - x))
             # Correcting the y coordinate to the closest y coordinate on the goal line:
-            if predicted_y > goal.y + (goal.width/2):
-                return goal.y + (goal.width/2)
-            elif predicted_y < goal.y - (goal.width/2):
-                return goal.y - (goal.width/2)
+            if predicted_y > top_y:
+                return top_y
+            elif predicted_y < bottom_y:
+                return bottom_y
             return predicted_y
         else:
             return None
