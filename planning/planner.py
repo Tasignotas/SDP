@@ -139,24 +139,29 @@ class Planner:
             displacement, angle = our_attacker.get_direction_to_point(ball.x, ball.y)
             if our_attacker.has_ball(ball):
                 our_attacker.state = 'attack_grab_ball'
-            else:
-
+            elif our_attacker.catcher == 'closed':
+                our_attacker.catcher = 'open'
+                return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0, 'catcher' : 1}
             return self.calculate_motor_speed(our_attacker, displacement, angle)
 
         elif our_attacker.state == 'attack_grab_ball':
             our_attacker.state = 'attack_move_to_shooting'
             print 'attack move to shooting'
+            our_attacker.catcher = 'closed'
             return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0, 'catcher' : -1}
 
         elif our_attacker.state == 'attack_move_to_shooting':
             req_rot = our_attacker.get_rotation_to_point(their_goal.x, their_goal.y)
             if req_rot < pi/12 and req_rot > -pi/12:
                 our_attacker.state = 'attack_shoot'
+                our_attacker.catcher = 'open'
                 return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 1, 'catcher' : 0}
             else:
-                displacement, angle = our_attacker.get_direction_to_point(border, their_goal.y)
+                displacement, angle = our_attacker.get_direction_to_point(their_goal.x, their_goal.y)
                 return self.calculate_motor_speed(our_attacker, displacement, angle)
         elif our_attacker.state == 'attack_shoot':
+            our_attacker.catcher = 'open'
+            our_attacker.state = 'attack_go_to_ball'
             return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 1, 'catcher' : 0}
 
     def defender_attack(self):
@@ -237,7 +242,7 @@ class Planner:
                 speed = (angle/pi) * MAX_ANGLE_SPEED
                 return {'left_motor' : -speed, 'right_motor' : speed, 'kicker' : 0, 'catcher' : 0, 'left_ratio': left_ratio, 'right_ratio': right_ratio}
             else:
-                if displacement < 75:
+                if displacement < 100:
                     print "slowing down is breaking it"
                     speed = -25 if moving_backwards else 25
                     return {'left_motor' : speed, 'right_motor' : speed, 'kicker' : 0, 'catcher' : 0, 'left_ratio': left_ratio, 'right_ratio': right_ratio}
