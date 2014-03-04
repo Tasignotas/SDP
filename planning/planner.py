@@ -4,9 +4,9 @@ from math import tan, pi, hypot, log
 from collections import namedtuple
 
 REVERSE = 1
-DISTANCE_MATCH_THRESHOLD = 20
+DISTANCE_MATCH_THRESHOLD = 20 #Changed
 ANGLE_MATCH_THRESHOLD = pi/10
-MAX_DISPLACEMENT_SPEED = 690 * REVERSE
+MAX_DISPLACEMENT_SPEED = 65 * REVERSE
 MAX_ANGLE_SPEED = 50 * REVERSE
 
 # Differential Normalization
@@ -44,11 +44,15 @@ class Planner:
                 return self.defender_attack()
         else:
             #if the ball is in attackers zone, go to ball
+            print "our attackers state", our_attacker.state
             if (self._world.pitch.zones[our_attacker.zone].isInside(ball.x, ball.y)):
-                our_attacker.state = ATTACKER_ATTACK_STATES[1]
+                if not (our_attacker.state in ATTACKER_ATTACK_STATES):
+                    our_attacker.state = ATTACKER_ATTACK_STATES[0] 
+                return self.attacker_attack()
             else:
-                our_attacker.state = 'not_blocked'
-            return self.attacker_defend()
+                if not (our_attacker.state in ATTACKER_ATTACK_STATES):
+                    our_attacker.state = ATTACKER_DEFENCE_STATES[0]
+                return self.attacker_defend()
             #pass
 
     def defender_defend(self):
@@ -83,7 +87,6 @@ class Planner:
         our_goal = self._world.our_goal
         ball = self._world.ball
         zone = self._world._pitch._zones[our_attacker.zone]
-
         if self._world._our_side == 'right':
             _,border,_,_ = zone.boundingBox()
             border = border - 40
@@ -93,46 +96,68 @@ class Planner:
 
         if their_defender.has_ball(self._world._ball):
             our_attacker.state = 'not_blocked'
-        elif our_attacker.has_ball(self._world._ball):
+        elif our_attacker.is_near_ball(self._world._ball):
             our_attacker.state = 'attack_grab_ball'
-        #else:
-            #our_attacker.state = 'defence_block' 
 
         if our_attacker.state == 'not_blocked': #Add some logic to see if bounce
-            y = self.predict_pass_intersection(their_defender,their_attacker,our_attacker) #self.predict_y_intersection(their_defender, their_attacker)
-            print "y",y
+            y = self.predict_pass_intersection(their_defender,their_attacker,our_attacker)
             if y is not None:
                 if self.has_matched(our_attacker, x=border, y=y):
                     return self.calculate_motor_speed(our_attacker, 0, 0)
                 else:
-                    displacement, angle = our_attacker.get_direction_to_point(border, y)#self.predict_y_intersection(their_defender, their_attacker))
-                    print(displacement, angle)
-                    print(self.calculate_motor_speed(our_attacker, displacement, angle))
+                    displacement, angle = our_attacker.get_direction_to_point(border, y)
                     return self.calculate_motor_speed(our_attacker, displacement, angle)
             else:
                 return self.calculate_motor_speed(our_attacker, 0, 0)
-           #    print "goes here"
      
         elif our_attacker.state == 'defence_block':
-            predicted_y = self.predict_y_intersection(their_defender, their_attacker)
-            print 'PREDICTED Y', predicted_y
+            predicted_y = self.predict_pass_intersection(their_defender, their_attacker,our_attacker)
             if not (predicted_y == None):
                 displacement, angle = our_attacker.get_direction_to_point(border, predicted_y)
                 return self.calculate_motor_speed(our_attacker, displacement, angle, backwards_ok=True)
             return self.calculate_motor_speed(our_attacker, 0, 0)
 
-        elif our_attacker.state == 'attack_go_to_ball':
+    def attacker_attack(self):
+
+        their_defender = self._world.their_defender
+        their_attacker = self._world.their_attacker
+        our_defender = self._world.our_defender
+        our_attacker = self._world.our_attacker
+        our_goal = self._world.our_goal
+        their_goal = self._world.their_goal
+        ball = self._world.ball
+        zone = self._world._pitch._zones[our_attacker.zone]
+
+        if self._world._our_side == 'right':
+            _,border,_,_ = zone.boundingBox()
+            border = border - 40
+        else:
+            border,_,_,_ = zone.boundingBox()
+            border = border + 40
+
+        if our_attacker.state == 'attack_go_to_ball':
             displacement, angle = our_attacker.get_direction_to_point(ball.x, ball.y)
+            if our_attacker.has_ball(ball):
+                our_attacker.state = 'attack_grab_ball'
+            else:
+
             return self.calculate_motor_speed(our_attacker, displacement, angle)
 
         elif our_attacker.state == 'attack_grab_ball':
             our_attacker.state = 'attack_move_to_shooting'
             print 'attack move to shooting'
-            return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0, 'catcher' : 30}
+            return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0, 'catcher' : -1}
 
         elif our_attacker.state == 'attack_move_to_shooting':
-            print our_attacker.state
-
+            req_rot = our_attacker.get_rotation_to_point(their_goal.x, their_goal.y)
+            if req_rot < pi/12 and req_rot > -pi/12:
+                our_attacker.state = 'attack_shoot'
+                return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 1, 'catcher' : 0}
+            else:
+                displacement, angle = our_attacker.get_direction_to_point(border, their_goal.y)
+                return self.calculate_motor_speed(our_attacker, displacement, angle)
+        elif our_attacker.state == 'attack_shoot':
+            return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 1, 'catcher' : 0}
 
     def defender_attack(self):
         our_defender = self._world.our_defender
@@ -153,7 +178,7 @@ class Planner:
             if self.has_matched(our_defender, angle=angle):
                 our_defender.state = 'attack_pass'
             else:
-                return self.calculate_motor_speed(our_defender, None, angle)
+                return self.calculate_motor_speed(our_defender, 0, angle)
         if our_defender.state == 'attack_pass':
             return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 30, 'catcher' : -30}
     
@@ -212,9 +237,22 @@ class Planner:
                 speed = (angle/pi) * MAX_ANGLE_SPEED
                 return {'left_motor' : -speed, 'right_motor' : speed, 'kicker' : 0, 'catcher' : 0, 'left_ratio': left_ratio, 'right_ratio': right_ratio}
             else:
-                speed = log(displacement, 10) * MAX_DISPLACEMENT_SPEED
-                speed = -speed if moving_backwards else speed
-                return {'left_motor' : speed, 'right_motor' : speed, 'kicker' : 0, 'catcher' : 0, 'left_ratio': left_ratio, 'right_ratio': right_ratio}
+                if displacement < 75:
+                    print "slowing down is breaking it"
+                    speed = -25 if moving_backwards else 25
+                    return {'left_motor' : speed, 'right_motor' : speed, 'kicker' : 0, 'catcher' : 0, 'left_ratio': left_ratio, 'right_ratio': right_ratio}
+                else:
+                    speed = log(displacement, 10) * MAX_DISPLACEMENT_SPEED
+                    speed = -speed if moving_backwards else speed
+                    return {'left_motor' : speed, 'right_motor' : speed, 'kicker' : 0, 'catcher' : 0, 'left_ratio': left_ratio, 'right_ratio': right_ratio}
+                '''
+                if robot.state == 'attack_go_to_ball':
+                    if displacement < 50:
+                        speed = 10
+                else:    
+                    speed = log(displacement, 10) * MAX_DISPLACEMENT_SPEED
+                    speed = -speed if moving_backwards else speed
+                return {'left_motor' : speed, 'right_motor' : speed, 'kicker' : 0, 'catcher' : 0, 'left_ratio': left_ratio, 'right_ratio': right_ratio}'''
         else:
             if abs(angle) > ANGLE_MATCH_THRESHOLD:
                 speed = (angle/pi) * MAX_ANGLE_SPEED

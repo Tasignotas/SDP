@@ -59,7 +59,7 @@ class Controller:
         self.pitch = pitch
 
         self.attacker = Attacker_Controller()
-        self.defender = Defender_Controller()
+        self.defender = None #Defender_Controller()
 
     def wow(self):
         """
@@ -87,7 +87,7 @@ class Controller:
                 # Find appropriate action
                 self.planner.update_world(positions)
                 attacker_actions = self.planner.plan('attacker')
-                defender_actions = self.planner.plan('defender')
+                #defender_actions = self.planner.plan('defender')
 
                 if self.attacker is not None:
                     self.attacker.execute(self.arduino, attacker_actions)
@@ -153,25 +153,30 @@ class Defender_Controller(Robot_Controller):
 
         # Set differential
         if action['left_ratio'] and action['right_ratio']:
-            com.write('D_SET_ENGINE %d %d\n' %
+            comm.write('D_SET_ENGINE %d %d\n' %
                 (action['left_ratio'], action['right_ratio']))
 
         comm.write('D_RUN_ENGINE %d %d\n' % (int(left_motor), int(right_motor)))
 
-        if action['kicker'] != 0:
+        if action['kicker'] != 0:#kicker opens catcher and kicks.
             try:
-                comm.write('D_RUN_KICKER %d\n' % (action['kicker']))
+                comm.write('D_RUN_KICKER\n')
             except StandardError:
                 pass
-        elif action['catcher'] != 0:
+        if action['catcher'] == 1:
             try:
-                comm.write('D_RUN_CATCHER %d\n' % (action['catcher']))
+                comm.write('D_OPEN_CATCHER\n')
+            except StandardError:
+                pass
+        else:
+            try:
+                comm.write('D_CLOSE_CATCHER\n')
             except StandardError:
                 pass
 
         # Reset differential
         if action['left_ratio'] and action['right_ratio']:
-            com.write('D_SET_ENGINE %d %d\n' % (1000, 1000))
+            comm.write('D_SET_ENGINE %d %d\n' % (1000, 1000))
 
     def shutdown(self, comm):
         comm.write('D_RUN_ENGINE %d %d\n' % (0, 0))
@@ -192,31 +197,37 @@ class Attacker_Controller(Robot_Controller):
         """
         Execute robot action.
         """
+        print "action",action
         left_motor = action['left_motor']
         right_motor = action['right_motor']
-
         # Set differential
-        if action['left_ratio'] and action['right_ratio']:
-            com.write('A_SET_ENGINE %d %d\n' %
+        if ('left_ratio' in action) and ('right_ratio' in action) and action['right_ratio'] and action['left_ratio']:
+            comm.write('A_SET_ENGINE %d %d\n' %
                 (action['left_ratio'], action['right_ratio']))
-
         comm.write('A_RUN_ENGINE %d %d\n' % (int(left_motor), int(right_motor)))
         if action['kicker'] != 0:
             try:
                 comm.write('A_RUN_KICKER %d\n' % (action['kicker']))
             except StandardError:
                 pass
-        elif action['catcher'] != 0:
+
+        if action['catcher'] == 1:
             try:
-                comm.write('A_RUN_CATCHER %d\n' % (action['catcher']))
+                comm.write('A_OPEN_CATCHER\n')
+            except StandardError:
+                pass
+        elif action['catcher'] == -1:
+            try:
+                comm.write('A_CLOSE_CATCHER\n')
             except StandardError:
                 pass
 
         # Reset differential
-        if action['left_ratio'] and action['right_ratio']:
-            com.write('A_SET_ENGINE %d %d\n' % (1000, 1000))
+        if ('left_ratio' in action) and ('right_ratio' in action) and action['right_ratio'] and action['left_ratio']:
+            comm.write('A_SET_ENGINE %d %d\n' % (1000, 1000))
 
     def shutdown(self, comm):
+        comm.write('A_OPEN_CATCHER\n')
         comm.write('A_RUN_ENGINE %d %d\n' % (0, 0))
 
 
