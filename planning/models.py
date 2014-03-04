@@ -23,7 +23,7 @@ GOAL_HEIGHT = 10
 DEFENDER_DEFENCE_STATES = ['defence_somewhere', 'defence_goal_line'] 
 DEFENDER_ATTACK_STATES = ['attack_go_to_ball', 'attack_grab_ball', 'attack_rotate_to_pass', 'attack_pass']
 ATTACKER_DEFENCE_STATES = ['defence_block']
-ATTACKER_ATTACK_STATES = ['attack_grab_ball', 'attack_move_to_shooting', 'attack_rotate_to_shoot', 'attack_shoot']
+ATTACKER_ATTACK_STATES = ['attack_go_to_ball', 'attack_grab_ball', 'attack_rotate_to_goal', 'attack_shoot']
 
 
 class Coordinate(object):

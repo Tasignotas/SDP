@@ -37,8 +37,6 @@ class Controller:
         # Set up the Arduino communications
         self.arduino = serial.Serial(comm_port, 9600, timeout=1)
 
-        self.arduino.write('D_SET_ENGINE 100 100 100 100\n')
-
         # Set up camera for frames
         self.camera = Camera(port=video_port)
         frame = self.camera.get_frame()
@@ -64,7 +62,7 @@ class Controller:
 
         self.pitch = pitch
 
-        self.attacker = None #Attacker_Controller()
+        self.attacker = Attacker_Controller()
         self.defender = Defender_Controller()
 
     def wow(self):
@@ -86,7 +84,7 @@ class Controller:
                 positions = self.postprocessing.analyze(positions)
                 # Find appropriate action
                 self.planner.update_world(positions)
-                #attacker_actions = self.planner.plan('attacker')
+                attacker_actions = self.planner.plan('attacker')
                 defender_actions = self.planner.plan('defender')
                 if self.attacker is not None:
                     self.attacker.execute(self.arduino, attacker_actions)
@@ -146,6 +144,8 @@ class Defender_Controller(Robot_Controller):
         """
         left_motor = action['left_motor']
         right_motor = action['right_motor']
+        speed = int(action['speed'])
+        comm.write('D_SET_ENGINE %d %d %d %d\n' % (speed, speed, speed, speed))
         comm.write('D_RUN_ENGINE %d %d\n' % (int(left_motor), int(right_motor)))
         if action['kicker'] != 0:
             try:
@@ -182,20 +182,25 @@ class Attacker_Controller(Robot_Controller):
         """
         left_motor = action['left_motor']
         right_motor = action['right_motor']
+        speed = int(action['speed'])
+        comm.write('A_SET_ENGINE %d %d %d %d\n' % (speed, speed, speed, speed))
         comm.write('A_RUN_ENGINE %d %d\n' % (int(left_motor), int(right_motor)))
         if action['kicker'] != 0:
             try:
-                comm.write('A_RUN_KICKER %d\n' % (action['kicker']))
+                comm.write('A_RUN_KICKER\n')
             except StandardError:
                 pass
         elif action['catcher'] != 0:
             try:
-                comm.write('A_RUN_CATCHER %d\n' % (action['catcher']))
+                if action['catcher'] == 1:
+                    comm.write('A_OPEN_CATCHER\n')
+                else:
+                    comm.write('A_CLOSE_CATCHER\n')
             except StandardError:
                 pass
 
     def shutdown(self, comm):
-        comm.write('D_RUN_ENGINE %d %d\n' % (0, 0))
+        comm.write('A_RUN_ENGINE %d %d\n' % (0, 0))
 
 
 if __name__ == '__main__':
