@@ -10,7 +10,7 @@ import warnings
 import time
 
 
-warnings.filterwarnings("ignore", category=DeprecationWarning) 
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
 class Controller:
@@ -74,7 +74,7 @@ class Controller:
             c = True
             while c != 27:  # the ESC key
 
-                
+
 
                 frame = self.camera.get_frame()
                 pre_options = self.preprocessing.options
@@ -104,7 +104,7 @@ class Controller:
                 # Draw vision content and actions
                 self.GUI.draw(frame, positions, actions, extras, our_color=self.color, key=c, preprocess=pre_options)
 
-                
+
         except:
             if self.defender is not None:
                 self.defender.shutdown(self.arduino)
@@ -130,6 +130,7 @@ class Robot_Controller(object):
         """
         Connect to Brick and setup Motors/Sensors.
         """
+        self.current_speed = 0
 
     def shutdown(self):
         # TO DO
@@ -154,7 +155,9 @@ class Defender_Controller(Robot_Controller):
         left_motor = action['left_motor']
         right_motor = action['right_motor']
         speed = int(action['speed'])
-        comm.write('D_SET_ENGINE %d %d %d %d\n' % (speed, speed, speed, speed))
+        if not(speed == self.current_speed):
+            comm.write('D_SET_ENGINE %d %d %d %d\n' % (speed, speed, speed, speed))
+            self.current_speed = speed
         comm.write('D_RUN_ENGINE %d %d\n' % (int(left_motor), int(right_motor)))
         if action['kicker'] != 0:
             try:
@@ -192,7 +195,9 @@ class Attacker_Controller(Robot_Controller):
         left_motor = action['left_motor']
         right_motor = action['right_motor']
         speed = int(action['speed'])
-        comm.write('A_SET_ENGINE %d %d %d %d\n' % (speed, speed, speed, speed))
+        if not(speed == self.current_speed):
+            comm.write('A_SET_ENGINE %d %d %d %d\n' % (speed, speed, speed, speed))
+            self.current_speed = speed
         comm.write('A_RUN_ENGINE %d %d\n' % (int(left_motor), int(right_motor)))
         if action['kicker'] != 0:
             try:
