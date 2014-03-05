@@ -22,8 +22,8 @@ GOAL_HEIGHT = 10
 
 DEFENDER_DEFENCE_STATES = ['defence_somewhere', 'defence_goal_line'] 
 DEFENDER_ATTACK_STATES = ['attack_go_to_ball', 'attack_grab_ball', 'attack_rotate_to_pass', 'attack_pass']
-ATTACKER_DEFENCE_STATES = ['defence_block', 'not_blocked']
-ATTACKER_ATTACK_STATES = ['attack_go_to_ball', 'attack_grab_ball', 'attack_move_to_shooting', 'attack_rotate_to_shoot', 'attack_shoot']
+ATTACKER_DEFENCE_STATES = ['defence_block']
+ATTACKER_ATTACK_STATES = ['attack_go_to_ball', 'attack_grab_ball', 'attack_rotate_to_goal', 'attack_shoot']
 
 
 class Coordinate(object):
@@ -191,6 +191,7 @@ class Robot(PitchObject):
     def __init__(self, zone, x, y, angle, velocity, width=ROBOT_WIDTH, length=ROBOT_LENGTH, height=ROBOT_HEIGHT, angle_offset=0):
         super(Robot, self).__init__(x, y, angle, velocity, width, length, height, angle_offset)
         self._zone = zone
+        self._catcher = 'open'
         self._state = 'defence_somewhere'
 
     @property
@@ -205,18 +206,18 @@ class Robot(PitchObject):
     def state(self, new_state):
         self._state = new_state
 
+    @property
+    def catcher(self):
+        return self._catcher
+
+    @catcher.setter
+    def catcher(self, new_position):
+        assert new_position in ['open', 'closed']
+        self._catcher = new_position
+
     def is_near_ball(self, ball):
         '''
         Get if the robot is near the ball but may not have possession
-        '''
-        delta_x = ball.x - self.x
-        delta_y = ball.y - self.y
-        check_displacement = hypot(delta_x, delta_y) <= BALL_POSS_THRESH
-        return check_displacement
-
-    def has_ball(self, ball):
-        '''
-        Gets if the robot has possession of the ball
         '''
         robot_poly = self.get_polygon()
         center_x = (robot_poly[0][0] + robot_poly[1][0]) / 2
@@ -225,6 +226,12 @@ class Robot(PitchObject):
         delta_y = ball.y - center_y
         check_displacement = hypot(delta_x, delta_y) <= ball.width + BALL_POSS_THRESH
         return check_displacement
+
+    def has_ball(self, ball):
+        '''
+        Gets if the robot has possession of the ball
+        '''
+        return (self._catcher == 'closed') and self.is_near_ball(ball)
 
     def get_rotation_to_point(self, x, y):
         '''
@@ -259,6 +266,14 @@ class Robot(PitchObject):
         This method returns the displacement and angle to coordinate x, y.
         '''
         return self.get_displacement_to_point(x, y), self.get_rotation_to_point(x, y)
+
+    def get_pass_path(self, target):
+        '''
+        Gets a path represented by a Polygon for the area for passing ball between two robots
+        '''
+        robot_poly = self.get_polygon()
+        target_poly = target.get_polygon()
+        return Polygon(robot_poly[0], robot_poly[1], target_poly[0], target_poly[1])
 
     def __repr__(self):
         return ('zone: %s\nx: %s\ny: %s\nangle: %s\nvelocity: %s\ndimensions: %s\n' %
