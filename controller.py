@@ -90,7 +90,9 @@ class Controller:
                 self.planner.update_world(positions)
                 attacker_actions = self.planner.plan('attacker')
                 defender_actions = self.planner.plan('defender')
+
                 #timer = time.clock()
+
                 if self.attacker is not None:
                     self.attacker.execute(self.arduino, attacker_actions)
                 if self.defender is not None:

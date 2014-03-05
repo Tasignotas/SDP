@@ -36,8 +36,7 @@ class Planner:
                     our_defender.state = DEFENDER_ATTACK_STATES[0]
                 return self.defender_attack()
         else:
-            print robot
-            print "attackers state", our_attacker.state
+
             # If ball is not in our defender or attacker zones, defend:
             if self._world.pitch.zones[their_defender.zone].isInside(ball.x, ball.y):
                 if not(our_attacker.state in ATTACKER_DEFENCE_STATES):
