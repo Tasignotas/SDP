@@ -23,11 +23,9 @@ YELLOW_LOWER = np.array([9, 50, 50])
 YELLOW_HIGHER = np.array([11, 255, 255])
 
 
-def get_zones(width, height):
-    calibration = get_calibration('vision/calibrate.json')
+def get_zones(width, height, path=PATH+'/calibrations/calibrations.json'):
+    calibration = get_calibration(path)
     zones_poly = [calibration[key] for key in ['Zone_0', 'Zone_1', 'Zone_2', 'Zone_3']]
-
-    # print zones_poly
 
     maxes = [max(zone, key=lambda x: x[0])[0] for zone in zones_poly[:3]]
     mins = [min(zone, key=lambda x: x[0])[0] for zone in zones_poly[1:]]
@@ -38,7 +36,7 @@ def get_zones(width, height):
     return [(mids[i], mids[i+1], 0, height) for i in range(4)]
 
 
-def get_calibration(filename=PATH+'calibrate.json'):
+def get_calibration(filename=PATH+'/calibrations/calibrate.json'):
     _file = open(filename, 'r')
     return get_json(filename)
 
