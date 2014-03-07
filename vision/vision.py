@@ -359,22 +359,15 @@ class GUI(object):
 
     def data_text(self, frame, text, x, y, angle, velocity):
         if x is not None and y is not None:
-            cv2.putText(
-                frame, text, (x, y),
-                cv2.FONT_HERSHEY_DUPLEX, 0.35, (170, 170, 170), 1.8)
-            cv2.putText(
-                frame, "x: "+str("%.2f" % x), (x, y+10),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.35, (255, 255, 255), 1.3)
-            cv2.putText(
-                frame, "y: "+str("%.2f" % y), (x, y+20),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.35, (255, 255, 255), 1.3)
+            self.draw_text(frame, text, x, y)
+            self.draw_text(frame, 'x: %.2f' % x, (x, y + 10))
+            self.draw_text(frame, 'y: %.2f' % y, (x, y + 20))
 
             if angle is not None:
-                cv2.putText(
-                    frame, "angle: "+str("%.2f" % angle), (x, y+30),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255), 1.3)
+                self.draw_text(frame, 'angle: %.2f' % angle, (x, y + 30))
 
             if velocity is not None:
-                cv2.putText(
-                    frame, "velocity: "+str("%.2f" % velocity), (x, y+40),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255), 1.3)
+                self.draw_text(frame, 'velocity: %.2f' % velocity, (x, y + 40))
+
+    def draw_text(self, frame, text, x, y, color=BGR_COMMON['white']):
+        cv2.putText(frame, text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.3, color, 1.3)
