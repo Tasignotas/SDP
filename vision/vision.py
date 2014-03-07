@@ -40,13 +40,10 @@ class Vision:
 
         height, width, channels = frame_shape
 
-        zone_size = int(math.floor(width / 4.0))
+        # Find the zone division
+        self.zones = zones = self._get_zones(width, height)
 
-        zones = [(val[0], val[1], 0, height) for val in tools.get_zones(width, height)]
-        self.zones = zones
-
-        # Do set difference to find the other color - if is too long :)
-        opponent_color = (TEAM_COLORS - set([color])).pop()
+        opponent_color = self._get_opponent_color()
 
         if our_side == 'left':
             self.us = [
@@ -90,6 +87,12 @@ class Vision:
         self.ball_tracker = BallTracker(
             (0, width, 0, height), 0, pitch, calibration)
 
+    def _get_zones(self, width, height):
+        return [(val[0], val[1], 0, height) for val in tools.get_zones(width, height)]
+
+    def _get_opponent_color(self, our_color):
+        return (TEAM_COLORS - set([our_color])).pop()
+
     def locate(self, frame):
         """
         Find objects on the pitch using multiprocessing.
@@ -100,12 +103,7 @@ class Vision:
         # Run trackers as processes
         positions = self._run_trackers(frame)
 
-        # MULTIPROCESSING DEBUG
-        if PROCESSING_DEBUG:
-            if hasattr(os, 'getppid'):  # only available on Unix
-                print 'Parent process:', os.getppid()
-            print 'Process id:', os.getpid()
-
+        # Error check we got a frame
         height, width, channels = frame.shape if frame is not None else (None, None, None)
 
         result = {
@@ -115,7 +113,6 @@ class Vision:
             'their_defender': self.to_info(positions[2], height),
             'ball': self.to_info(positions[4], height)
         }
-
         return result, positions
 
     def _run_trackers(self, frame):
