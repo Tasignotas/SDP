@@ -42,7 +42,7 @@ void right_backward() {
 
 void setup()
 {
-  Serial.begin(9600);
+  Serial.begin(115200);
   
   comm.addCommand("D_SET_ENGINE", set_engine);
   comm.addCommand("D_RUN_ENGINE", run_engine);
