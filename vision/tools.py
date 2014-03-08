@@ -7,40 +7,25 @@ import os
 import cPickle
 
 PATH = os.path.dirname(os.path.realpath(__file__))
-
-
-BLACK = (0,0,0)
+BLACK = (0, 0, 0)
 
 # HSV Colors
-
-WHITE_LOWER = np.array([1,0,100])
-
+WHITE_LOWER = np.array([1, 0, 100])
 WHITE_HIGHER = np.array([36, 255, 255])
 
-
-
-BLUE_LOWER = np.array([95., 50.,50.])
-
-BLUE_HIGHER = np.array([110.,255.,255.])
-
-
+BLUE_LOWER = np.array([95., 50., 50.])
+BLUE_HIGHER = np.array([110., 255., 255.])
 
 RED_LOWER = np.array([0, 240, 140])
-
 RED_HIGHER = np.array([9, 255, 255])
 
-
-
 YELLOW_LOWER = np.array([9, 50, 50])
-
 YELLOW_HIGHER = np.array([11, 255, 255])
 
 
-def get_zones(width, height):
-    calibration = get_calibration('vision/calibrate.json')
+def get_zones(width, height, path=PATH+'/calibrations/calibrations.json'):
+    calibration = get_calibration(path)
     zones_poly = [calibration[key] for key in ['Zone_0', 'Zone_1', 'Zone_2', 'Zone_3']]
-
-    # print zones_poly
 
     maxes = [max(zone, key=lambda x: x[0])[0] for zone in zones_poly[:3]]
     mins = [min(zone, key=lambda x: x[0])[0] for zone in zones_poly[1:]]
@@ -51,9 +36,10 @@ def get_zones(width, height):
     return [(mids[i], mids[i+1], 0, height) for i in range(4)]
 
 
-def get_calibration(filename=PATH+'calibrate.json'):
+def get_calibration(filename=PATH+'/calibrations/calibrate.json'):
     _file = open(filename, 'r')
     return get_json(filename)
+
 
 def get_json(filename=PATH+'calibrate.json'):
     _file = open(filename, 'r')
@@ -61,11 +47,13 @@ def get_json(filename=PATH+'calibrate.json'):
     _file.close()
     return content
 
+
 def get_radial_data(pitch=0, filename=PATH+'/calibrations/undistort.txt'):
     _file = open(filename, 'r')
     data = cPickle.load(_file)
     _file.close()
     return data[pitch]
+
 
 def get_colors(pitch=0, filename=PATH+'/calibrations/calibrations.json'):
     """
@@ -77,9 +65,9 @@ def get_colors(pitch=0, filename=PATH+'/calibrations/calibrations.json'):
     pitch_name = 'PITCH0' if pitch == 0 else 'PITCH1'
 
     if machine_name in json_content:
-        current =  json_content[machine_name][pitch_name]
+        current = json_content[machine_name][pitch_name]
     else:
-        current =  json_content['default'][pitch_name]
+        current = json_content['default'][pitch_name]
 
     # convert mins and maxes into np.array
     for key in current:
@@ -90,6 +78,7 @@ def get_colors(pitch=0, filename=PATH+'/calibrations/calibrations.json'):
             key_dict['max'] = np.array(tuple(key_dict['max']))
 
     return current
+
 
 def save_colors(pitch, colors, filename=PATH+'/calibrations/calibrations.json'):
     json_content = get_json(filename)
@@ -114,25 +103,29 @@ def save_colors(pitch, colors, filename=PATH+'/calibrations/calibrations.json'):
     _file.write(json.dumps(json_content))
     _file.close()
 
+
 def write_json(filename='calibrate.json', data={}):
     _file = open(filename, 'w')
     _file.write(json.dumps(data))
     _file.close()
+
 
 def mask_pitch(frame, points):
     mask = frame.copy()
     points = np.array(points, np.int32)
     cv2.fillConvexPoly(mask, points, BLACK)
     hsv_mask = cv2.cvtColor(mask, cv2.COLOR_BGR2HSV)
-    mask = cv2.inRange(hsv_mask, (0,0,0), (0,0,0))
+    mask = cv2.inRange(hsv_mask, (0, 0, 0), (0, 0, 0))
     return cv2.bitwise_and(frame, frame, mask=mask)
+
 
 def find_extremes(coords):
     left = min(coords, key=lambda x: x[0])[0]
-    right = max(coords, key=lambda x:x[0])[0]
-    top = min(coords, key=lambda x:x[1])[1]
-    bottom = max(coords, key=lambda x:x[1])[1]
+    right = max(coords, key=lambda x: x[0])[0]
+    top = min(coords, key=lambda x: x[1])[1]
+    bottom = max(coords, key=lambda x: x[1])[1]
     return (left, right, top, bottom)
+
 
 def find_crop_coordinates(frame, keypoints=None, width=520, height=285):
     """
@@ -180,6 +173,7 @@ def find_crop_coordinates(frame, keypoints=None, width=520, height=285):
     return (
         x_min, x_max,
         y_min, y_max)
+
 
 def crop(frame, size=None):
     """

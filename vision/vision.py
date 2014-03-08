@@ -40,39 +40,58 @@ class Vision:
 
         height, width, channels = frame_shape
 
-        zone_size = int(math.floor(width / 4.0))
+        # Find the zone division
+        self.zones = zones = self._get_zones(width, height)
 
-        zones = [(val[0], val[1], 0, height) for val in tools.get_zones(width, height)]
-        self.zones = zones
-
-        # Do set difference to find the other color - if is too long :)
-        opponent_color = (TEAM_COLORS - set([color])).pop()
+        opponent_color = self._get_opponent_color()
 
         if our_side == 'left':
             self.us = [
-                RobotTracker(color=color, crop=zones[0], offset=zones[0][0], pitch=pitch, name='Our Defender', calibration=calibration),   # defender
-                RobotTracker(color=color, crop=zones[2], offset=zones[2][0], pitch=pitch, name='Our Attacker', calibration=calibration) # attacker
+                RobotTracker(
+                    color=color, crop=zones[0], offset=zones[0][0], pitch=pitch,
+                    name='Our Defender', calibration=calibration),   # defender
+                RobotTracker(
+                    color=color, crop=zones[2], offset=zones[2][0], pitch=pitch,
+                    name='Our Attacker', calibration=calibration)   # attacker
             ]
 
             self.opponents = [
-                RobotTracker(opponent_color, zones[3], zones[3][0], pitch, 'Their Defender', calibration),
-                RobotTracker(opponent_color, zones[1], zones[1][0], pitch, 'Their Attacker', calibration)
+                RobotTracker(
+                    color=opponent_color, crop=zones[3], offset=zones[3][0], pitch=pitch,
+                    name='Their Defender', calibration=calibration),
+                RobotTracker(
+                    color=opponent_color, crop=zones[1], offset=zones[1][0], pitch=pitch,
+                    name='Their Attacker', calibration=calibration)
 
             ]
         else:
             self.us = [
-                RobotTracker(color, zones[3], zones[3][0], pitch, 'Our Defender', calibration),
-                RobotTracker(color, zones[1], zones[1][0], pitch, 'Our Attacker', calibration)
+                RobotTracker(
+                    color=color, crop=zones[3], offset=zones[3][0], pitch=pitch,
+                    name='Our Defender', calibration=calibration),
+                RobotTracker(
+                    color=color, crop=zones[1], offset=zones[1][0], pitch=pitch,
+                    name='Our Attacker', calibration=calibration)
             ]
 
             self.opponents = [
-                RobotTracker(opponent_color, zones[0], zones[0][0], pitch, 'Their Defender', calibration),   # defender
-                RobotTracker(opponent_color, zones[2], zones[2][0], pitch, 'Their Attacker', calibration)
+                RobotTracker(
+                    color=opponent_color, crop=zones[0], offset=zones[0][0], pitch=pitch,
+                    name='Their Defender', calibration=calibration),   # defender
+                RobotTracker(
+                    color=opponent_color, crop=zones[2], offset=zones[2][0], pitch=pitch,
+                    name='Their Attacker', calibrattion=calibration)
             ]
 
         # Set up trackers
         self.ball_tracker = BallTracker(
             (0, width, 0, height), 0, pitch, calibration)
+
+    def _get_zones(self, width, height):
+        return [(val[0], val[1], 0, height) for val in tools.get_zones(width, height)]
+
+    def _get_opponent_color(self, our_color):
+        return (TEAM_COLORS - set([our_color])).pop()
 
     def locate(self, frame):
         """
@@ -84,12 +103,7 @@ class Vision:
         # Run trackers as processes
         positions = self._run_trackers(frame)
 
-        # MULTIPROCESSING DEBUG
-        if PROCESSING_DEBUG:
-            if hasattr(os, 'getppid'):  # only available on Unix
-                print 'Parent process:', os.getppid()
-            print 'Process id:', os.getpid()
-
+        # Error check we got a frame
         height, width, channels = frame.shape if frame is not None else (None, None, None)
 
         result = {
@@ -99,7 +113,6 @@ class Vision:
             'their_defender': self.to_info(positions[2], height),
             'ball': self.to_info(positions[4], height)
         }
-
         return result, positions
 
     def _run_trackers(self, frame):
@@ -116,7 +129,8 @@ class Vision:
         objects = [self.us[0], self.us[1], self.opponents[0], self.opponents[1], self.ball_tracker]
 
         # Define processes
-        processes = [Process(target=obj.find, args=((frame, queues[i]))) for (i, obj) in enumerate(objects)]
+        processes = [
+            Process(target=obj.find, args=((frame, queues[i]))) for (i, obj) in enumerate(objects)]
 
         # Start processes
         for process in processes:
@@ -150,7 +164,7 @@ class Vision:
             if 'velocity' in args:
                 velocity = args['velocity']
 
-        return {'x' : x, 'y' : y, 'angle' : angle, 'velocity' : velocity}
+        return {'x': x, 'y': y, 'angle': angle, 'velocity': velocity}
 
 
 class Camera(object):
@@ -185,9 +199,9 @@ class Camera(object):
             ]
 
     def fix_radial_distortion(self, frame):
-        
-        return cv2.undistort(frame, self.c_matrix, self.dist, \
-                             None, self.nc_matrix)
+        return cv2.undistort(
+            frame, self.c_matrix, self.dist, None, self.nc_matrix)
+
 
 class GUI(object):
 
@@ -229,13 +243,12 @@ class GUI(object):
             if 'velocity' in args:
                 velocity = args['velocity']
 
-        return {'x' : x, 'y' : y, 'angle' : angle, 'velocity' : velocity}
+        return {'x': x, 'y': y, 'angle': angle, 'velocity': velocity}
 
     def cast_binary(self, x):
         return x == 1
 
-    def draw(
-        self, frame, positions, actions, extras, our_color, key=None, preprocess=None):
+    def draw(self, frame, positions, actions, extras, our_color, key=None, preprocess=None):
         if preprocess is not None:
             preprocess['normalize'] = self.cast_binary(
                 cv2.getTrackbarPos(self.NORMALIZE, self.VISION))
@@ -267,8 +280,6 @@ class GUI(object):
 
         self.draw_ball(frame, positions['ball']['x'], positions['ball']['y'])
 
-        
-
         if extras is not None:
             for x in extras[:4]:
                 if x['name'].split()[0] == 'Our':
@@ -286,7 +297,8 @@ class GUI(object):
                         #cv2.circle(frame, (point[0], point[1]), 1, BGR_COMMON['white'], -1)
 
                 if x['dot'] is not None:
-                    cv2.circle(frame, (int(x['dot'][0]), int(x['dot'][1])), 2, BGR_COMMON['black'], -1)
+                    cv2.circle(
+                        frame, (int(x['dot'][0]), int(x['dot'][1])), 2, BGR_COMMON['black'], -1)
 
                 if x['front'] is not None:
                     p1 = (x['front'][0][0], x['front'][0][1])
@@ -295,24 +307,39 @@ class GUI(object):
                     cv2.circle(frame, p2, 3, BGR_COMMON['white'], -1)
                     cv2.line(frame, p1, p2, BGR_COMMON['red'], 2)
 
+        self.data_text(
+            frame, "ball", positions['ball']['x'], positions['ball']['y'],
+            vec_positions['ball'].angle, vec_positions['ball'].velocity)
 
-        self.data_text(frame, "ball", positions['ball']['x'], positions['ball']['y'],vec_positions['ball'].angle,vec_positions['ball'].velocity)
-        self.data_text(frame, "our attacker", positions['our_attacker']['x'], positions['our_attacker']['y'],positions['our_attacker']['angle'],vec_positions['our_attacker'].velocity)
-        self.data_text(frame, "their attacker", positions['their_attacker']['x'], positions['their_attacker']['y'],positions['their_attacker']['angle'],vec_positions['their_attacker'].velocity)
-        self.data_text(frame, "our defender", positions['our_defender']['x'], positions['our_defender']['y'],positions['our_defender']['angle'],vec_positions['our_defender'].velocity)
-        self.data_text(frame, "their defender", positions['their_defender']['x'], positions['their_defender']['y'],positions['their_defender']['angle'],vec_positions['their_defender'].velocity)
-        
+        self.data_text(
+            frame, "our attacker", positions['our_attacker']['x'],
+            positions['our_attacker']['y'], positions['our_attacker']['angle'],
+            vec_positions['our_attacker'].velocity)
+
+        self.data_text(
+            frame, "their attacker", positions['their_attacker']['x'],
+            positions['their_attacker']['y'], positions['their_attacker']['angle'],
+            vec_positions['their_attacker'].velocity)
+
+        self.data_text(
+            frame, "our defender", positions['our_defender']['x'],
+            positions['our_defender']['y'], positions['our_defender']['angle'],
+            vec_positions['our_defender'].velocity)
+
+        self.data_text(
+            frame, "their defender", positions['their_defender']['x'],
+            positions['their_defender']['y'], positions['their_defender']['angle'],
+            vec_positions['their_defender'].velocity)
+
         cv2.imshow(self.VISION, frame)
 
     def draw_robot(self, frame, x, y, color, thickness=1):
         if x is not None and y is not None:
             cv2.circle(frame, (x, y), 16, BGR_COMMON[color], thickness)
 
-
     def draw_ball(self, frame, x, y):
         if x is not None and y is not None:
             cv2.circle(frame, (x, y), 7, BGR_COMMON['red'], 2)
-
 
     def draw_dot(self, frame, location):
         if location is not None:
@@ -327,14 +354,17 @@ class GUI(object):
         if points is not None:
             cv2.line(frame, points[0], points[1], BGR_COMMON['red'], 2)
 
-    def data_text(self,frame,text,x,y,angle,velocity):
+    def data_text(self, frame, text, x, y, angle, velocity):
         if x is not None and y is not None:
-            cv2.putText(frame,text, (x,y),cv2.FONT_HERSHEY_DUPLEX, 0.35,(170,170,170),1.8)
-            cv2.putText(frame,"x: "+str("%.2f" % x),(x,y+10), cv2.FONT_HERSHEY_SIMPLEX, 0.35,(255,255,255),1.3)
-            cv2.putText(frame,"y: "+str("%.2f" % y),(x,y+20), cv2.FONT_HERSHEY_SIMPLEX, 0.35,(255,255,255),1.3)
-            if angle is not None:
-                cv2.putText(frame,"angle: "+str("%.2f" % angle),(x,y+30), cv2.FONT_HERSHEY_SIMPLEX, 0.3,(255,255,255),1.3)
-            if velocity is not None:
-                cv2.putText(frame,"velocity: "+str("%.2f" % velocity),(x,y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.3,(255,255,255),1.3)
-        
+            self.draw_text(frame, text, x, y)
+            self.draw_text(frame, 'x: %.2f' % x, (x, y + 10))
+            self.draw_text(frame, 'y: %.2f' % y, (x, y + 20))
 
+            if angle is not None:
+                self.draw_text(frame, 'angle: %.2f' % angle, (x, y + 30))
+
+            if velocity is not None:
+                self.draw_text(frame, 'velocity: %.2f' % velocity, (x, y + 40))
+
+    def draw_text(self, frame, text, x, y, color=BGR_COMMON['white']):
+        cv2.putText(frame, text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.3, color, 1.3)

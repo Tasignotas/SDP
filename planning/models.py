@@ -23,7 +23,7 @@ GOAL_HEIGHT = 10
 DEFENDER_DEFENCE_STATES = ['defence_somewhere', 'defence_goal_line'] 
 DEFENDER_ATTACK_STATES = ['attack_go_to_ball', 'attack_grab_ball', 'attack_rotate_to_pass', 'attack_pass']
 ATTACKER_DEFENCE_STATES = ['defence_block', 'not_blocked']
-ATTACKER_ATTACK_STATES = ['attack_grab_ball', 'attack_go_to_ball','attack_move_to_shooting', 'attack_rotate_to_shoot', 'attack_shoot']
+ATTACKER_ATTACK_STATES = ['attack_go_to_ball', 'attack_grab_ball', 'attack_move_to_shooting', 'attack_rotate_to_shoot', 'attack_shoot']
 
 
 class Coordinate(object):
@@ -259,14 +259,6 @@ class Robot(PitchObject):
         This method returns the displacement and angle to coordinate x, y.
         '''
         return self.get_displacement_to_point(x, y), self.get_rotation_to_point(x, y)
-
-    def get_pass_path(self, target):
-        '''
-        Gets a path represented by a Polygon for the area for passing ball between two robots
-        '''
-        robot_poly = self.get_polygon()
-        target_poly = target.get_polygon()
-        return Polygon([robot_poly[0], robot_poly[1], target_poly[0], target_poly[1]])
 
     def __repr__(self):
         return ('zone: %s\nx: %s\ny: %s\nangle: %s\nvelocity: %s\ndimensions: %s\n' %
