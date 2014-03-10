@@ -42,7 +42,7 @@ void right_backward() {
 
 void setup()
 {
-  Serial.begin(9600);
+  Serial.begin(115200);
   
   comm.addCommand("A_SET_ENGINE", set_engine);
   comm.addCommand("A_RUN_ENGINE", run_engine);
@@ -133,17 +133,17 @@ void run_kicker()
 
 void close_catcher()
 {
-  catcher.write(35);
+  catcher.write(60);
   delay(300);
-  catcher.write(40);
+  catcher.write(65);
 }
 
 
 void open_catcher()
 {
-  catcher.write(85);
+  catcher.write(120);
   delay(300);
-  catcher.write(80);
+  catcher.write(115);
 }
 
 

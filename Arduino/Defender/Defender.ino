@@ -20,10 +20,9 @@ AccelStepper left_stepper(left_backward, left_forward);
 AccelStepper right_stepper(right_backward, right_forward);
 
 // Servo
-Servo catcher;
+Servo grabber;
 
 // Solenoid
-int kicker = 2;
 
 // Stepper Control Functions
 
@@ -42,12 +41,12 @@ void right_backward() {
 
 void setup()
 {
-  Serial.begin(9600);
+  Serial.begin(115200);
   
   comm.addCommand("D_SET_ENGINE", set_engine);
   comm.addCommand("D_RUN_ENGINE", run_engine);
-  comm.addCommand("D_RUN_KICKER", run_kicker); 
-  comm.addCommand("D_RUN_CATCHER", run_catcher); 
+  comm.addCommand("D_RUN_CATCH", run_catch); 
+  comm.addCommand("D_RUN_KICK", run_kick); 
   comm.setDefaultHandler(invalid_command);
   
   left_stepper.setMaxSpeed(1000.0);
@@ -56,8 +55,7 @@ void setup()
   right_stepper.setMaxSpeed(1000.0);
   right_stepper.setAcceleration(1000.0);
   
-  catcher.attach(9);
-  pinMode(kicker, OUTPUT);
+  grabber.attach(9);
 }
 
 
@@ -132,23 +130,15 @@ void run_engine()
 }
 
 
-void run_kicker()
+void run_catch()
 {
-  digitalWrite(kicker, HIGH);
-  delay(80);
-  digitalWrite(kicker, LOW);
+  grabber.write(0); 
 }
 
 
-void run_catcher()
+void run_kick()
 {
-  char *pos;
-  
-  pos = comm.next();
-  if (pos != NULL)
-  {
-    catcher.write(atoi(pos)); 
-  }
+  grabber.write(180); 
 }
 
 
