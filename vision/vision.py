@@ -335,11 +335,11 @@ class GUI(object):
 
     def draw_robot(self, frame, x, y, color, thickness=1):
         if x is not None and y is not None:
-            cv2.circle(frame, (x, y), 16, BGR_COMMON[color], thickness)
+            cv2.circle(frame, (int(x), int(y)), 16, BGR_COMMON[color], thickness)
 
     def draw_ball(self, frame, x, y):
         if x is not None and y is not None:
-            cv2.circle(frame, (x, y), 7, BGR_COMMON['red'], 2)
+            cv2.circle(frame, (int(x), int(y)), 7, BGR_COMMON['red'], 2)
 
     def draw_dot(self, frame, location):
         if location is not None:
@@ -348,7 +348,7 @@ class GUI(object):
     def draw_box(self, frame, location):
         if location is not None:
             x, y, width, height = location
-            cv2.rectangle(frame, (x, y), (x + width, y + height), BGR_COMMON['bright_green'], 1)
+            cv2.rectangle(frame, (int(x), int(y)), (x + width, y + height), BGR_COMMON['bright_green'], 1)
 
     def draw_line(self, frame, points):
         if points is not None:
@@ -367,4 +367,4 @@ class GUI(object):
                 self.draw_text(frame, 'velocity: %.2f' % velocity, (x, y + 40))
 
     def draw_text(self, frame, text, x, y, color=BGR_COMMON['white']):
-        cv2.putText(frame, text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.3, color, 1.3)
+        cv2.putText(frame, text, (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 0.3, color, 1.3)
