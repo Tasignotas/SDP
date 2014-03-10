@@ -187,7 +187,6 @@ class Robot(PitchObject):
         super(Robot, self).__init__(x, y, angle, velocity, width, length, height, angle_offset)
         self._zone = zone
         self._catcher = 'open'
-        self._state = ''
 
     @property
     def zone(self):
@@ -196,6 +195,19 @@ class Robot(PitchObject):
     @property
     def state(self):
         return self._state
+
+    @property
+    def catcher_area(self):
+        front_left = (self.x + self._catcher_area['front_offset'] + self._catcher_area['height'], self.y + self._catcher_area['width']/2.0)
+        front_right = (self.x + self._catcher_area['front_offset'] + self._catcher_area['height'], self.y - self._catcher_area['width']/2.0)
+        back_left = (self.x + self._catcher_area['front_offset'], self.y + self._catcher_area['width']/2.0)
+        back_right = (self.x + self._catcher_area['front_offset'], self.y - self._catcher_area['width']/2.0)
+        area = Polygon((front_left, front_right, back_left, back_right))
+        return area.rotate(self.angle, self.x + self._catcher_area['front_offset'], self.y)
+
+    @catcher_area.setter
+    def catcher_area(self, width, height, front_offset):
+        self._catcher_area = {'width' : width, 'height' : height, 'front_offset' : front_offset}
 
     @state.setter
     def state(self, new_state):
@@ -210,23 +222,17 @@ class Robot(PitchObject):
         assert new_position in ['open', 'closed']
         self._catcher = new_position
 
-    def is_near_ball(self, ball):
+    def can_catch_ball(self, ball):
         '''
-        Get if the robot is near the ball but may not have possession
+        Get if the ball is in the catcher zone but may not have possession
         '''
-        robot_poly = self.get_polygon()
-        center_x = (robot_poly[0][0] + robot_poly[1][0]) / 2
-        center_y = (robot_poly[0][1] + robot_poly[1][1]) / 2
-        delta_x = ball.x - center_x
-        delta_y = ball.y - center_y
-        check_displacement = hypot(delta_x, delta_y) <= ball.width + BALL_POSS_THRESH
-        return check_displacement
+        return self._catcher_area.isInside(ball.x, ball.y)
 
     def has_ball(self, ball):
         '''
         Gets if the robot has possession of the ball
         '''
-        return (self._catcher == 'closed') and self.is_near_ball(ball)
+        return (self._catcher == 'closed') and self.can_catch_ball(ball)
 
     def get_rotation_to_point(self, x, y):
         '''
