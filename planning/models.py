@@ -20,11 +20,6 @@ GOAL_WIDTH = 150
 GOAL_LENGTH = 1
 GOAL_HEIGHT = 10
 
-DEFENDER_DEFENCE_STATES = ['defence_somewhere', 'defence_goal_line'] 
-DEFENDER_ATTACK_STATES = ['attack_go_to_ball', 'attack_grab_ball', 'attack_rotate_to_pass', 'attack_pass']
-ATTACKER_DEFENCE_STATES = ['defence_block']
-ATTACKER_ATTACK_STATES = ['attack_go_to_ball', 'attack_grab_ball', 'attack_rotate_to_goal', 'attack_shoot']
-
 
 class Coordinate(object):
 
@@ -192,7 +187,7 @@ class Robot(PitchObject):
         super(Robot, self).__init__(x, y, angle, velocity, width, length, height, angle_offset)
         self._zone = zone
         self._catcher = 'open'
-        self._state = 'defence_somewhere'
+        self._state = ''
 
     @property
     def zone(self):

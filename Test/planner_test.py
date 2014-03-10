@@ -43,14 +43,14 @@ class TestYPredictionLeft(unittest.TestCase):
     def test_bounce_shot(self):
         # Shot bounced of the top:
         self.their_attacker.vector = Vector(self.pitch.height, self.pitch.height/2.0, (3*pi)/4, 0)
-        assert_almost_equal(self.planner.predict_y_intersection(self.our_goal.x, self.their_attacker), self.pitch.height/2.0)
+        assert_almost_equal(self.planner.predict_y_intersection(self.our_goal.x, self.their_attacker, bounce=True), self.pitch.height/2.0)
         # Shot bounced of the bottom:
         self.their_attacker.vector = Vector(self.pitch.height, self.pitch.height/2.0, (5*pi)/4, 0)
-        assert_almost_equal(self.planner.predict_y_intersection(self.our_goal.x, self.their_attacker), self.pitch.height/2.0)
+        assert_almost_equal(self.planner.predict_y_intersection(self.our_goal.x, self.their_attacker, bounce=True), self.pitch.height/2.0)
         # Shot bounced of the top that needs to be corrected:
         goal_top = self.our_goal.y + (self.our_goal.width/2.0)
         self.their_attacker.vector = Vector(self.pitch.height/2.0, self.pitch.height/2.0, (13*pi)/16, 0)
-        assert_almost_equal(self.planner.predict_y_intersection(self.our_goal.x, self.their_attacker), goal_top)
+        assert_almost_equal(self.planner.predict_y_intersection(self.our_goal.x, self.their_attacker, bounce=True), goal_top)
 
     def test_no_intersection(self):
         self.their_attacker.vector = Vector(self.pitch.height, self.pitch.height/2.0, pi/4, 0)
@@ -83,7 +83,7 @@ class TestYPredictionRight(unittest.TestCase):
         goal_bottom = self.our_goal.y - (self.our_goal.width/2.0)
         self.their_attacker.vector = Vector(200, goal_bottom - 20, 0, 0)
         assert_almost_equal(self.planner.predict_y_intersection(self.our_goal.x, self.their_attacker), goal_bottom)
-    
+
     def test_angle_shot(self):
         # Shot above the center:
         self.their_attacker.vector = Vector(self.pitch.width - 50, self.our_goal.y, pi/4, 0)
@@ -95,15 +95,15 @@ class TestYPredictionRight(unittest.TestCase):
     def test_bounce_shot(self):
         # Shot bounced of the top:
         self.their_attacker.vector = Vector(self.pitch.width - self.pitch.height, self.pitch.height/2.0, pi/4, 0)
-        assert_almost_equal(self.planner.predict_y_intersection(self.our_goal.x, self.their_attacker), self.pitch.height/2.0)
+        assert_almost_equal(self.planner.predict_y_intersection(self.our_goal.x, self.their_attacker, bounce=True), self.pitch.height/2.0)
         # Shot bounced of the bottom:
         self.their_attacker.vector = Vector(self.pitch.width - self.pitch.height, self.pitch.height/2.0, (7*pi)/4, 0)
-        assert_almost_equal(self.planner.predict_y_intersection(self.our_goal.x, self.their_attacker), self.pitch.height/2.0)
+        assert_almost_equal(self.planner.predict_y_intersection(self.our_goal.x, self.their_attacker, bounce=True), self.pitch.height/2.0)
         # Shot bounced of the top that needs to be corrected:
         goal_top = self.our_goal.y + (self.our_goal.width/2.0)
         self.their_attacker.vector = Vector(self.pitch.width - (self.pitch.height/2.0), self.pitch.height/2.0, (3*pi)/16, 0)
-        assert_almost_equal(self.planner.predict_y_intersection(self.our_goal.x, self.their_attacker), goal_top)
+        assert_almost_equal(self.planner.predict_y_intersection(self.our_goal.x, self.their_attacker, bounce=True), goal_top)
 
     def test_no_intersection(self):
         self.their_attacker.vector = Vector(self.pitch.height, self.pitch.height/2.0, (3*pi)/4, 0)
-        self.assertEqual(self.planner.predict_y_intersection(self.our_goal.x, self.their_attacker), None)
+        self.assertEqual(self.planner.predict_y_intersection(self.our_goal.x, self.their_attacker, bounce=True), None)
