@@ -20,7 +20,7 @@ GOAL_WIDTH = 150
 GOAL_LENGTH = 1
 GOAL_HEIGHT = 10
 
-DEFENDER_DEFENCE_STATES = ['defence_somewhere', 'defence_goal_line'] 
+DEFENDER_DEFENCE_STATES = ['defence_somewhere', 'defence_goal_line']
 DEFENDER_ATTACK_STATES = ['attack_go_to_ball', 'attack_grab_ball', 'attack_rotate_to_pass', 'attack_pass']
 ATTACKER_DEFENCE_STATES = ['defence_block', 'not_blocked']
 ATTACKER_ATTACK_STATES = ['attack_go_to_ball', 'attack_grab_ball', 'attack_move_to_shooting', 'attack_rotate_to_shoot', 'attack_shoot']
@@ -293,7 +293,7 @@ class Pitch(object):
     '''
 
     def __init__(self):
-        config_file = open('vision/calibrate.json', 'r')
+        config_file = open('vision/calibrations/calibrate.json', 'r')
         config_json = load(config_file)
         config_file.close()
         self._width = max([point[0] for point in config_json['outline']]) - min([point[0] for point in config_json['outline']])

@@ -43,7 +43,7 @@ class Vision:
         # Find the zone division
         self.zones = zones = self._get_zones(width, height)
 
-        opponent_color = self._get_opponent_color()
+        opponent_color = self._get_opponent_color(color)
 
         if our_side == 'left':
             self.us = [
@@ -357,14 +357,14 @@ class GUI(object):
     def data_text(self, frame, text, x, y, angle, velocity):
         if x is not None and y is not None:
             self.draw_text(frame, text, x, y)
-            self.draw_text(frame, 'x: %.2f' % x, (x, y + 10))
-            self.draw_text(frame, 'y: %.2f' % y, (x, y + 20))
+            self.draw_text(frame, 'x: %.2f' % x, x, y + 10)
+            self.draw_text(frame, 'y: %.2f' % y, x, y + 20)
 
             if angle is not None:
-                self.draw_text(frame, 'angle: %.2f' % angle, (x, y + 30))
+                self.draw_text(frame, 'angle: %.2f' % angle, x, y + 30)
 
             if velocity is not None:
-                self.draw_text(frame, 'velocity: %.2f' % velocity, (x, y + 40))
+                self.draw_text(frame, 'velocity: %.2f' % velocity, x, y + 40)
 
     def draw_text(self, frame, text, x, y, color=BGR_COMMON['white']):
         cv2.putText(frame, text, (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 0.3, color, 1.3)
