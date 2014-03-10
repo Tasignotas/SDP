@@ -174,7 +174,7 @@ class Camera(object):
 
     def __init__(self, port=0):
         self.capture = cv2.VideoCapture(port)
-        calibration = tools.get_calibration('vision/calibrate.json')
+        calibration = tools.get_calibration()
         self.crop_values = tools.find_extremes(calibration['outline'])
 
         # Parameters used to fix radial distortion
