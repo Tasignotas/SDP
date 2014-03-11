@@ -69,7 +69,7 @@ class Controller:
         self.pitch = pitch
 
         self.attacker = Attacker_Controller()
-        self.defender = None    # Defender_Controller()
+        self.defender = Defender_Controller()
 
     def wow(self):
         """
@@ -92,12 +92,13 @@ class Controller:
                 #     cv2.imshow('bg sub', preprocessed['background_sub'])
 
                 # Find object positions
-                positions, extras = self.vision.locate(frame)
+                # model_positions have their y coordinate inverted
+                model_positions, regular_positions = self.vision.locate(frame)
 
-                positions = self.postprocessing.analyze(positions)
+                model_positions = self.postprocessing.analyze(model_positions)
 
                 # Find appropriate action
-                self.planner.update_world(positions)
+                self.planner.update_world(model_positions)
                 attacker_actions = self.planner.plan('attacker')
                 defender_actions = self.planner.plan('defender')
 
@@ -112,9 +113,8 @@ class Controller:
 
                 actions = []
                 fps = float(counter) / (time.clock() - timer)
-                print fps
                 # Draw vision content and actions
-                self.GUI.draw(frame, positions, actions, extras, fps, our_color=self.color, key=c, preprocess=pre_options)
+                self.GUI.draw(frame, model_positions, actions, regular_positions, fps, our_color=self.color, key=c, preprocess=pre_options)
                 counter += 1
 
         except:
@@ -163,35 +163,36 @@ class Defender_Controller(Robot_Controller):
         """
         Execute robot action.
         """
-        left_motor = action['left_motor']
-        right_motor = action['right_motor']
+        if action is not None:
+            left_motor = action['left_motor']
+            right_motor = action['right_motor']
 
-        # Set differential
-        if action['left_ratio'] and action['right_ratio']:
-            comm.write('D_SET_ENGINE %d %d\n' %
-                (action['left_ratio'], action['right_ratio']))
+            # Set differential
+            if action['left_ratio'] and action['right_ratio']:
+                comm.write('D_SET_ENGINE %d %d\n' %
+                    (action['left_ratio'], action['right_ratio']))
 
-        comm.write('D_RUN_ENGINE %d %d\n' % (int(left_motor), int(right_motor)))
+            comm.write('D_RUN_ENGINE %d %d\n' % (int(left_motor), int(right_motor)))
 
-        if action['kicker'] != 0:#kicker opens catcher and kicks.
-            try:
-                comm.write('D_RUN_KICK\n')
-            except StandardError:
-                pass
-        if action['catcher'] == 1:
-            try:
-                comm.write('D_RUN_KICK\n')
-            except StandardError:
-                pass
-        elif action['catcher'] == -1:
-            try:
-                comm.write('D_RUN_CATCH\n')
-            except StandardError:
-                pass
+            if action['kicker'] != 0:#kicker opens catcher and kicks.
+                try:
+                    comm.write('D_RUN_KICK\n')
+                except StandardError:
+                    pass
+            if action['catcher'] == 1:
+                try:
+                    comm.write('D_RUN_KICK\n')
+                except StandardError:
+                    pass
+            elif action['catcher'] == -1:
+                try:
+                    comm.write('D_RUN_CATCH\n')
+                except StandardError:
+                    pass
 
-        # Reset differential
-        if action['left_ratio'] and action['right_ratio']:
-            comm.write('D_SET_ENGINE %d %d\n' % (1000, 1000))
+            # Reset differential
+            if action['left_ratio'] and action['right_ratio']:
+                comm.write('D_SET_ENGINE %d %d\n' % (1000, 1000))
 
     def shutdown(self, comm):
         comm.write('D_RUN_KICK\n')
@@ -213,34 +214,34 @@ class Attacker_Controller(Robot_Controller):
         """
         Execute robot action.
         """
-        print "action",action
-        left_motor = action['left_motor']
-        right_motor = action['right_motor']
-        # Set differential
-        if ('left_ratio' in action) and ('right_ratio' in action) and action['right_ratio'] and action['left_ratio']:
-            comm.write('A_SET_ENGINE %d %d\n' %
-                (action['left_ratio'], action['right_ratio']))
-        comm.write('A_RUN_ENGINE %d %d\n' % (int(left_motor), int(right_motor)))
-        if action['kicker'] != 0:
-            try:
-                comm.write('A_RUN_KICK %d\n' % (action['kicker']))
-            except StandardError:
-                pass
+        if action is not None:
+            left_motor = action['left_motor']
+            right_motor = action['right_motor']
+            # Set differential
+            if ('left_ratio' in action) and ('right_ratio' in action) and action['right_ratio'] and action['left_ratio']:
+                comm.write('A_SET_ENGINE %d %d\n' %
+                    (action['left_ratio'], action['right_ratio']))
+            comm.write('A_RUN_ENGINE %d %d\n' % (int(left_motor), int(right_motor)))
+            if action['kicker'] != 0:
+                try:
+                    comm.write('A_RUN_KICK %d\n' % (action['kicker']))
+                except StandardError:
+                    pass
 
-        if action['catcher'] == 1:
-            try:
-                comm.write('A_RUN_KICK\n')
-            except StandardError:
-                pass
-        elif action['catcher'] == -1:
-            try:
-                comm.write('A_RUN_CATCH\n')
-            except StandardError:
-                pass
+            if action['catcher'] == 1:
+                try:
+                    comm.write('A_RUN_KICK\n')
+                except StandardError:
+                    pass
+            elif action['catcher'] == -1:
+                try:
+                    comm.write('A_RUN_CATCH\n')
+                except StandardError:
+                    pass
 
-        # Reset differential
-        if ('left_ratio' in action) and ('right_ratio' in action) and action['right_ratio'] and action['left_ratio']:
-            comm.write('A_SET_ENGINE %d %d\n' % (1000, 1000))
+            # Reset differential
+            if ('left_ratio' in action) and ('right_ratio' in action) and action['right_ratio'] and action['left_ratio']:
+                comm.write('A_SET_ENGINE %d %d\n' % (1000, 1000))
 
     def shutdown(self, comm):
         comm.write('A_RUN_KICK\n')

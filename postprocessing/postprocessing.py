@@ -39,7 +39,7 @@ class Postprocessing(object):
 			angle = atan2(delta_y, delta_x) % (2*pi)
 			self._vectors['ball']['vec'] = Vector(info['x'], info['y'], angle, velocity)
 			self._vectors['ball']['time'] =  self._time
-			return Vector(info['x'], info['y'], angle, velocity)
+			return Vector(int(info['x']), int(info['y']), angle, velocity)
 		else:
 			return deepcopy(self._vectors['ball']['vec'])
 
@@ -55,4 +55,4 @@ class Postprocessing(object):
 			self._vectors[key]['time'] = self._time
 			return Vector(info['x'], info['y'], info['angle'], velocity)
 		else:
-			return deepcopy(self._vectors[key]['vec'])		
+			return deepcopy(self._vectors[key]['vec'])

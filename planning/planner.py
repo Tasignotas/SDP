@@ -47,7 +47,7 @@ class Planner:
             print "our attackers state", our_attacker.state
             if (self._world.pitch.zones[our_attacker.zone].isInside(ball.x, ball.y)):
                 if not (our_attacker.state in ATTACKER_ATTACK_STATES):
-                    our_attacker.state = ATTACKER_ATTACK_STATES[0] 
+                    our_attacker.state = ATTACKER_ATTACK_STATES[0]
                 return self.attacker_attack()
             else:
                 if not (our_attacker.state in ATTACKER_ATTACK_STATES):
@@ -109,7 +109,7 @@ class Planner:
                     return self.calculate_motor_speed(our_attacker, displacement, angle)
             else:
                 return self.calculate_motor_speed(our_attacker, 0, 0)
-     
+
         elif our_attacker.state == 'defence_block':
             predicted_y = self.predict_pass_intersection(their_defender, their_attacker,our_attacker)
             if not (predicted_y == None):
@@ -139,9 +139,9 @@ class Planner:
             displacement, angle = our_attacker.get_direction_to_point(ball.x, ball.y)
             if our_attacker.has_ball(ball):
                 our_attacker.state = 'attack_grab_ball'
-            elif our_attacker.catcher == 'closed':
-                our_attacker.catcher = 'open'
-                return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0, 'catcher' : 1}
+            # elif our_attacker.catcher == 'closed':
+            #     our_attacker.catcher = 'open'
+                # return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0, 'catcher' : 1}
             return self.calculate_motor_speed(our_attacker, displacement, angle)
 
         elif our_attacker.state == 'attack_grab_ball':
@@ -186,7 +186,7 @@ class Planner:
                 return self.calculate_motor_speed(our_defender, 0, angle)
         if our_defender.state == 'attack_pass':
             return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 30, 'catcher' : -30}
-    
+
     def predict_pass_intersection(self, robot1,robot2,ourRobot):
         '''
         Predicts the y coordinate required to intercept a pass from robot1 to robot2
@@ -254,7 +254,7 @@ class Planner:
                 if robot.state == 'attack_go_to_ball':
                     if displacement < 50:
                         speed = 10
-                else:    
+                else:
                     speed = log(displacement, 10) * MAX_DISPLACEMENT_SPEED
                     speed = -speed if moving_backwards else speed
                 return {'left_motor' : speed, 'right_motor' : speed, 'kicker' : 0, 'catcher' : 0, 'left_ratio': left_ratio, 'right_ratio': right_ratio}'''
