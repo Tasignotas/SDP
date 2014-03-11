@@ -14,16 +14,10 @@ ROBOT_HEIGHT = 10
 BALL_WIDTH = 5
 BALL_LENGTH = 5
 BALL_HEIGHT = 5
-BALL_POSS_THRESH = 20
 
 GOAL_WIDTH = 150
 GOAL_LENGTH = 1
 GOAL_HEIGHT = 10
-
-DEFENDER_DEFENCE_STATES = ['defence_somewhere', 'defence_goal_line']
-DEFENDER_ATTACK_STATES = ['attack_go_to_ball', 'attack_grab_ball', 'attack_rotate_to_pass', 'attack_pass']
-ATTACKER_DEFENCE_STATES = ['defence_block', 'not_blocked']
-ATTACKER_ATTACK_STATES = ['attack_go_to_ball', 'attack_grab_ball', 'attack_move_to_shooting', 'attack_rotate_to_shoot', 'attack_shoot']
 
 
 class Coordinate(object):
@@ -191,7 +185,7 @@ class Robot(PitchObject):
     def __init__(self, zone, x, y, angle, velocity, width=ROBOT_WIDTH, length=ROBOT_LENGTH, height=ROBOT_HEIGHT, angle_offset=0):
         super(Robot, self).__init__(x, y, angle, velocity, width, length, height, angle_offset)
         self._zone = zone
-        self._state = 'defence_somewhere'
+        self._catcher = 'open'
 
     @property
     def zone(self):
@@ -201,30 +195,44 @@ class Robot(PitchObject):
     def state(self):
         return self._state
 
+    @property
+    def catcher_area(self):
+        front_left = (self.x + self._catcher_area['front_offset'] + self._catcher_area['height'], self.y + self._catcher_area['width']/2.0)
+        front_right = (self.x + self._catcher_area['front_offset'] + self._catcher_area['height'], self.y - self._catcher_area['width']/2.0)
+        back_left = (self.x + self._catcher_area['front_offset'], self.y + self._catcher_area['width']/2.0)
+        back_right = (self.x + self._catcher_area['front_offset'], self.y - self._catcher_area['width']/2.0)
+        area = Polygon((front_left, front_right, back_left, back_right))
+        area.rotate(self.angle, self.x, self.y)
+        return area
+
+    @catcher_area.setter
+    def catcher_area(self, area_dict):
+        self._catcher_area = area_dict
+
     @state.setter
     def state(self, new_state):
         self._state = new_state
 
-    def is_near_ball(self, ball):
+    @property
+    def catcher(self):
+        return self._catcher
+
+    @catcher.setter
+    def catcher(self, new_position):
+        assert new_position in ['open', 'closed']
+        self._catcher = new_position
+
+    def can_catch_ball(self, ball):
         '''
-        Get if the robot is near the ball but may not have possession
+        Get if the ball is in the catcher zone but may not have possession
         '''
-        delta_x = ball.x - self.x
-        delta_y = ball.y - self.y
-        check_displacement = hypot(delta_x, delta_y) <= BALL_POSS_THRESH
-        return check_displacement
+        return self.catcher_area.isInside(ball.x, ball.y)
 
     def has_ball(self, ball):
         '''
         Gets if the robot has possession of the ball
         '''
-        robot_poly = self.get_polygon()
-        center_x = (robot_poly[0][0] + robot_poly[1][0]) / 2
-        center_y = (robot_poly[0][1] + robot_poly[1][1]) / 2
-        delta_x = ball.x - center_x
-        delta_y = ball.y - center_y
-        check_displacement = hypot(delta_x, delta_y) <= ball.width + BALL_POSS_THRESH
-        return check_displacement
+        return (self._catcher == 'closed') and self.can_catch_ball(ball)
 
     def get_rotation_to_point(self, x, y):
         '''
@@ -259,6 +267,14 @@ class Robot(PitchObject):
         This method returns the displacement and angle to coordinate x, y.
         '''
         return self.get_displacement_to_point(x, y), self.get_rotation_to_point(x, y)
+
+    def get_pass_path(self, target):
+        '''
+        Gets a path represented by a Polygon for the area for passing ball between two robots
+        '''
+        robot_poly = self.get_polygon()
+        target_poly = target.get_polygon()
+        return Polygon(robot_poly[0], robot_poly[1], target_poly[0], target_poly[1])
 
     def __repr__(self):
         return ('zone: %s\nx: %s\ny: %s\nangle: %s\nvelocity: %s\ndimensions: %s\n' %

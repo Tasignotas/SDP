@@ -6,7 +6,11 @@ import vision.tools as tools
 from cv2 import waitKey
 import cv2
 import serial
+import warnings
 import time
+
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
 class Controller:
@@ -69,7 +73,8 @@ class Controller:
         self.pitch = pitch
 
         self.attacker = Attacker_Controller()
-        self.defender = None    # Defender_Controller()
+        self.defender = Defender_Controller()
+
 
     def wow(self):
         """
@@ -80,22 +85,19 @@ class Controller:
         try:
             c = True
             while c != 27:  # the ESC key
+
+
+
                 frame = self.camera.get_frame()
-
                 pre_options = self.preprocessing.options
-
                 # Apply preprocessing methods toggled in the UI
                 preprocessed = self.preprocessing.run(frame, pre_options)
                 frame = preprocessed['frame']
-
-                # if 'background_sub' in preprocessed:
-                #     cv2.imshow('bg sub', preprocessed['background_sub'])
-
+                if 'background_sub' in preprocessed:
+                    cv2.imshow('bg sub', preprocessed['background_sub'])
                 # Find object positions
                 positions, extras = self.vision.locate(frame)
-
                 positions = self.postprocessing.analyze(positions)
-
                 # Find appropriate action
                 self.planner.update_world(positions)
                 attacker_actions = self.planner.plan('attacker')
@@ -103,19 +105,19 @@ class Controller:
 
                 if self.attacker is not None:
                     self.attacker.execute(self.arduino, attacker_actions)
-
                 if self.defender is not None:
                     self.defender.execute(self.arduino, defender_actions)
 
+
                 # Use 'y', 'b', 'r' to change color.
                 c = waitKey(2) & 0xFF
-
                 actions = []
                 fps = float(counter) / (time.clock() - timer)
                 print fps
                 # Draw vision content and actions
                 self.GUI.draw(frame, positions, actions, extras, fps, our_color=self.color, key=c, preprocess=pre_options)
                 counter += 1
+
 
         except:
             if self.defender is not None:
@@ -142,6 +144,7 @@ class Robot_Controller(object):
         """
         Connect to Brick and setup Motors/Sensors.
         """
+        self.current_speed = 0
 
     def shutdown(self, comm):
         # TO DO
@@ -165,33 +168,21 @@ class Defender_Controller(Robot_Controller):
         """
         left_motor = action['left_motor']
         right_motor = action['right_motor']
-
-        # Set differential
-        if action['left_ratio'] and action['right_ratio']:
-            comm.write('D_SET_ENGINE %d %d\n' %
-                (action['left_ratio'], action['right_ratio']))
-
+        speed = int(action['speed'])
+        if not(speed == self.current_speed):
+            comm.write('D_SET_ENGINE %d %d\n' % (speed, speed))
+            self.current_speed = speed
         comm.write('D_RUN_ENGINE %d %d\n' % (int(left_motor), int(right_motor)))
-
-        if action['kicker'] != 0:#kicker opens catcher and kicks.
+        if action['kicker'] != 0:
             try:
                 comm.write('D_RUN_KICK\n')
             except StandardError:
                 pass
-        if action['catcher'] == 1:
-            try:
-                comm.write('D_RUN_KICK\n')
-            except StandardError:
-                pass
-        elif action['catcher'] == -1:
+        elif action['catcher'] != 0:
             try:
                 comm.write('D_RUN_CATCH\n')
             except StandardError:
                 pass
-
-        # Reset differential
-        if action['left_ratio'] and action['right_ratio']:
-            comm.write('D_SET_ENGINE %d %d\n' % (1000, 1000))
 
     def shutdown(self, comm):
         comm.write('D_RUN_KICK\n')
@@ -213,34 +204,23 @@ class Attacker_Controller(Robot_Controller):
         """
         Execute robot action.
         """
-        print "action",action
         left_motor = action['left_motor']
         right_motor = action['right_motor']
-        # Set differential
-        if ('left_ratio' in action) and ('right_ratio' in action) and action['right_ratio'] and action['left_ratio']:
-            comm.write('A_SET_ENGINE %d %d\n' %
-                (action['left_ratio'], action['right_ratio']))
+        speed = int(action['speed'])
+        if not(speed == self.current_speed):
+            comm.write('A_SET_ENGINE %d %d\n' % (speed, speed))
+            self.current_speed = speed
         comm.write('A_RUN_ENGINE %d %d\n' % (int(left_motor), int(right_motor)))
         if action['kicker'] != 0:
-            try:
-                comm.write('A_RUN_KICK %d\n' % (action['kicker']))
-            except StandardError:
-                pass
-
-        if action['catcher'] == 1:
             try:
                 comm.write('A_RUN_KICK\n')
             except StandardError:
                 pass
-        elif action['catcher'] == -1:
+        elif action['catcher'] != 0:
             try:
                 comm.write('A_RUN_CATCH\n')
             except StandardError:
                 pass
-
-        # Reset differential
-        if ('left_ratio' in action) and ('right_ratio' in action) and action['right_ratio'] and action['left_ratio']:
-            comm.write('A_SET_ENGINE %d %d\n' % (1000, 1000))
 
     def shutdown(self, comm):
         comm.write('A_RUN_KICK\n')
