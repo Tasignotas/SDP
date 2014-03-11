@@ -37,7 +37,6 @@ def get_zones(width, height, path=PATH+'/calibrations/calibrate.json'):
 
 
 def get_calibration(filename=PATH+'/calibrations/calibrate.json'):
-    _file = open(filename, 'r')
     return get_json(filename)
 
 
