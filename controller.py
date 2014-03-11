@@ -35,7 +35,7 @@ class Controller:
             self.arduino = DummyArduino()
         else:
             try:
-                self.arduino = serial.Serial(comm_port, 9600, timeout=1)
+                self.arduino = serial.Serial(comm_port, 115200, timeout=1)
             except:
                 print "No Arduino detected!"
                 print "Continuing in NoComms Mode."
