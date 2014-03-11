@@ -80,7 +80,7 @@ class Vision:
                     name='Their Defender', calibration=calibration),   # defender
                 RobotTracker(
                     color=opponent_color, crop=zones[2], offset=zones[2][0], pitch=pitch,
-                    name='Their Attacker', calibrattion=calibration)
+                    name='Their Attacker', calibration=calibration)
             ]
 
         # Set up trackers
