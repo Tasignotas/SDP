@@ -295,6 +295,8 @@ class GUI(object):
             preprocess['background_sub'] = self.cast_binary(
                 cv2.getTrackbarPos(self.BG_SUB, self.VISION))
 
+        if grabbers:
+            self.draw_grabbers(frame, grabbers, frame_height)
 
         cv2.imshow(self.VISION, frame)
 
@@ -317,6 +319,7 @@ class GUI(object):
     def draw_robot(self, frame, position_dict, color):
         if position_dict['box']:
             cv2.polylines(frame, [np.array(position_dict['box'])], True, BGR_COMMON[color], 2)
+            print 'NP ARR', [np.array(position_dict['box'])]
 
         if position_dict['front']:
             p1 = (position_dict['front'][0][0], position_dict['front'][0][1])
@@ -352,5 +355,16 @@ class GUI(object):
         if x is not None and y is not None:
             cv2.putText(frame, text, (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 0.3, color, thickness)
 
-    def draw_grabbers(self, grabbers):
-        pass
+    def draw_grabbers(self, frame, grabbers, height):
+        def_grabber = grabbers['our_defender'][0]
+        att_grabber = grabbers['our_attacker'][0]
+
+        def_grabber = [(x, height - y) for x, y in def_grabber]
+        att_grabber = [(x, height - y) for x, y in att_grabber]
+
+        def_grabber = [(int(x) if x > -1 else 0, int(y) if y > -1 else 0) for x, y in def_grabber]
+        att_grabber = [(int(x) if x > -1 else 0, int(y) if y > -1 else 0) for x, y in att_grabber]
+
+        cv2.polylines(frame, [np.array(def_grabber)], True, BGR_COMMON['red'], 2)
+        cv2.polylines(frame, [np.array(att_grabber)], True, BGR_COMMON['red'], 2)
+
