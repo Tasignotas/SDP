@@ -24,7 +24,6 @@ YELLOW_HIGHER = np.array([11, 255, 255])
 
 
 def get_zones(width, height, path=PATH+'/calibrations/calibrate.json'):
-    print path
     calibration = get_calibration(path)
     zones_poly = [calibration[key] for key in ['Zone_0', 'Zone_1', 'Zone_2', 'Zone_3']]
 
