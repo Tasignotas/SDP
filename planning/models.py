@@ -309,7 +309,7 @@ class Pitch(object):
     '''
 
     def __init__(self):
-        config_file = open('../vision/calibrate.json', 'r')
+        config_file = open('vision/calibrate.json', 'r')
         config_json = load(config_file)
         config_file.close()
         self._width = max([point[0] for point in config_json['outline']]) - min([point[0] for point in config_json['outline']])
