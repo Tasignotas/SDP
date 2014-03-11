@@ -81,6 +81,7 @@ class Planner:
             else:
                 return self.calculate_motor_speed(0, 0)
 
+
     def predict_y_intersection(self, predict_for_x, robot, full_width=False, bounce=False):
         '''
         Predicts the (x, y) coordinates of the ball shot by the robot

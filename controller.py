@@ -75,7 +75,6 @@ class Controller:
         self.attacker = Attacker_Controller()
         self.defender = Defender_Controller()
 
-
     def wow(self):
         """
         Ready your sword, here be dragons.
@@ -96,10 +95,13 @@ class Controller:
                 if 'background_sub' in preprocessed:
                     cv2.imshow('bg sub', preprocessed['background_sub'])
                 # Find object positions
-                positions, extras = self.vision.locate(frame)
-                positions = self.postprocessing.analyze(positions)
+                # model_positions have their y coordinate inverted
+
+                model_positions, regular_positions = self.vision.locate(frame)
+                model_positions = self.postprocessing.analyze(model_positions)
+
                 # Find appropriate action
-                self.planner.update_world(positions)
+                self.planner.update_world(model_positions)
                 attacker_actions = self.planner.plan('attacker')
                 defender_actions = self.planner.plan('defender')
 
@@ -113,9 +115,8 @@ class Controller:
                 c = waitKey(2) & 0xFF
                 actions = []
                 fps = float(counter) / (time.clock() - timer)
-                print fps
                 # Draw vision content and actions
-                self.GUI.draw(frame, positions, actions, extras, fps, our_color=self.color, key=c, preprocess=pre_options)
+                self.GUI.draw(frame, model_positions, actions, regular_positions, fps, our_color=self.color, key=c, preprocess=pre_options)
                 counter += 1
 
 
