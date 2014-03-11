@@ -112,8 +112,10 @@ class Controller:
                 c = waitKey(2) & 0xFF
                 actions = []
                 fps = float(counter) / (time.clock() - timer)
+                attackerState = self.planner.attacker_state
+                defenderState = self.planner.defender_state
                 # Draw vision content and actions
-                self.GUI.draw(frame, model_positions, actions, regular_positions, fps, grabbers, our_color=self.color, key=c, preprocess=pre_options)
+                self.GUI.draw(frame, model_positions, actions, regular_positions, fps, attackerState, defenderState, grabbers, our_color=self.color, key=c, preprocess=pre_options)
                 counter += 1
 
 

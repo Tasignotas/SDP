@@ -254,7 +254,7 @@ class GUI(object):
     def cast_binary(self, x):
         return x == 1
 
-    def draw(self, frame, model_positions, actions, extras, fps, grabbers, our_color, key=None, preprocess=None):
+    def draw(self, frame, model_positions, actions, extras, fps, aState, dState, grabbers, our_color, key=None, preprocess=None):
         """
         Draw information onto the GUI given positions from the vision and post processing.
 
@@ -298,7 +298,13 @@ class GUI(object):
         if grabbers:
             self.draw_grabbers(frame, grabbers, frame_height)
 
-        cv2.imshow(self.VISION, frame)
+        # Extend image downwards and draw states.
+        blank = np.zeros_like(frame)[:100,:,:]
+        frame_with_blank = np.vstack((frame,blank))
+        self.draw_text(frame_with_blank,"Attacker State: " + aState,(frame_width/4),frame_height+20,size=0.6)
+        self.draw_text(frame_with_blank,"Defender State: " + dState,(frame_width/4),frame_height+60,size=0.6)
+
+        cv2.imshow(self.VISION, frame_with_blank)
 
     def draw_zones(self, frame, width, height):
         # Re-initialize zones in case they have not been initalized
@@ -351,9 +357,9 @@ class GUI(object):
             if velocity is not None:
                 self.draw_text(frame, 'velocity: %.2f' % velocity, x, text_y + 40)
 
-    def draw_text(self, frame, text, x, y, color=BGR_COMMON['green'], thickness=1.3):
+    def draw_text(self, frame, text, x, y, color=BGR_COMMON['green'], thickness=1.3, size=0.3,):
         if x is not None and y is not None:
-            cv2.putText(frame, text, (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 0.3, color, thickness)
+            cv2.putText(frame, text, (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, size , color, thickness)
 
     def draw_grabbers(self, frame, grabbers, height):
         def_grabber = grabbers['our_defender'][0]

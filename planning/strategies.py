@@ -108,7 +108,7 @@ class DefaultAttackerDefend(Strategy):
             displacement, angle = our_attacker.get_direction_to_point(border, predicted_y)
             if displacement > 30:
                 return calculate_motor_speed(displacement, angle, backwards_ok=True)
-        return self.calculate_motor_speed(0, 0)
+        return calculate_motor_speed(0, 0)
 
 
 class DefaultAttackerAttack(Strategy):
