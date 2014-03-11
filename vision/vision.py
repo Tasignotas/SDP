@@ -189,9 +189,9 @@ class Camera(object):
 
         Returns the frame if available, otherwise returns None.
         """
-        status, frame = True, cv2.imread('img/i_all/00000003.jpg')
-        # status, frame = self.capture.read()
-        # frame = self.fix_radial_distortion(frame)
+        # status, frame = True, cv2.imread('img/i_all/00000003.jpg')
+        status, frame = self.capture.read()
+        frame = self.fix_radial_distortion(frame)
         if status:
             return frame[
                 self.crop_values[2]:self.crop_values[3],
