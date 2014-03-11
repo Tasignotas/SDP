@@ -203,11 +203,12 @@ class Robot(PitchObject):
         back_left = (self.x + self._catcher_area['front_offset'], self.y + self._catcher_area['width']/2.0)
         back_right = (self.x + self._catcher_area['front_offset'], self.y - self._catcher_area['width']/2.0)
         area = Polygon((front_left, front_right, back_left, back_right))
-        return area.rotate(self.angle, self.x + self._catcher_area['front_offset'], self.y)
+        area.rotate(self.angle, self.x, self.y)
+        return area
 
     @catcher_area.setter
-    def catcher_area(self, width, height, front_offset):
-        self._catcher_area = {'width' : width, 'height' : height, 'front_offset' : front_offset}
+    def catcher_area(self, area_dict):
+        self._catcher_area = area_dict
 
     @state.setter
     def state(self, new_state):
@@ -226,7 +227,7 @@ class Robot(PitchObject):
         '''
         Get if the ball is in the catcher zone but may not have possession
         '''
-        return self._catcher_area.isInside(ball.x, ball.y)
+        return self.catcher_area.isInside(ball.x, ball.y)
 
     def has_ball(self, ball):
         '''
@@ -309,7 +310,7 @@ class Pitch(object):
     '''
 
     def __init__(self):
-        config_file = open('vision/calibrate.json', 'r')
+        config_file = open('../vision/calibrate.json', 'r')
         config_json = load(config_file)
         config_file.close()
         self._width = max([point[0] for point in config_json['outline']]) - min([point[0] for point in config_json['outline']])
