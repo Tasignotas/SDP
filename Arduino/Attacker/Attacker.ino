@@ -77,34 +77,22 @@ void loop()
 
 void set_engine()
 {
-  char *max_speed_left;
-  char *accel_left;
-  char *max_speed_right;
-  char *accel_right;
+  char *left_speed;
+  char *right_speed;
   
-  max_speed_left = comm.next();
-  accel_left = comm.next();
-  max_speed_right = comm.next();
-  accel_right = comm.next();
+  left_speed = comm.next();
+  right_speed = comm.next();
   
-  if (max_speed_left != NULL && 50 <= atoi(max_speed_left) && atoi(max_speed_left) <= 1000)
+  if (left_speed != NULL && 50 <= atoi(left_speed) && atoi(left_speed) <= 1000)
   {
-    left_stepper.setMaxSpeed(atof(max_speed_left)); 
+    left_stepper.setMaxSpeed(atof(left_speed));
+    right_stepper.setAcceleration(atof(left_speed));
   }
   
-  if (accel_left != NULL && 50 <= atoi(max_speed_left) && atoi(max_speed_left) <= 1000)
+  if (right_speed != NULL && 50 <= atoi(left_speed) && atoi(left_speed) <= 1000)
   {
-    left_stepper.setAcceleration(atof(accel_left)); 
-  }
-  
-  if (max_speed_right != NULL && 50 <= atoi(max_speed_left) && atoi(max_speed_left) <= 1000)
-  {
-    right_stepper.setMaxSpeed(atof(max_speed_right)); 
-  }
-  
-  if (accel_right != NULL && 50 <= atoi(max_speed_left) && atoi(max_speed_left) <= 1000)
-  {
-    right_stepper.setAcceleration(atof(accel_right)); 
+    right_stepper.setMaxSpeed(atof(right_speed)); 
+    right_stepper.setAcceleration(atof(right_speed)); 
   }
 }
 
@@ -117,28 +105,41 @@ void run_engine()
   left_steps = comm.next();
   right_steps = comm.next();
   
-  if (left_steps != NULL)
+  if (left_steps != NULL && atoi(left_steps) >= 10)
   {
     left_stepper.move(atoi(left_steps)); 
   }
+  else if (left_steps != NULL && atoi(left_steps) < 10)
+  {
+    left_stepper.move(10); 
+  }
   
-  if (right_steps != NULL)
+  if (right_steps != NULL && atoi(right_steps) >= 10)
   {
     right_stepper.move(atoi(right_steps)); 
   }
+  else if (right_steps != NULL && atoi(right_steps) < 10)
+  {
+    right_stepper.move(10); 
+  }
+  
 }
 
 
 void run_kick()
 {
-  grabber.write(135);
-  delay(300);
-  grabber.write(150); 
+  grabber.attach(10);
+  grabber.write(0);
+  delay(250);
+  grabber.detach();
 }
 
 void run_catch()
 {
-  grabber.write(167);
+  grabber.attach(10);
+  grabber.write(180);
+  delay(250);
+  grabber.detach();
 }
 
 
