@@ -325,7 +325,6 @@ class GUI(object):
     def draw_robot(self, frame, position_dict, color):
         if position_dict['box']:
             cv2.polylines(frame, [np.array(position_dict['box'])], True, BGR_COMMON[color], 2)
-            print 'NP ARR', [np.array(position_dict['box'])]
 
         if position_dict['front']:
             p1 = (position_dict['front'][0][0], position_dict['front'][0][1])
