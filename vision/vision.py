@@ -270,12 +270,12 @@ class GUI(object):
 
         their_color = list(TEAM_COLORS - set([our_color]))[0]
 
-        # Draw information retrieved from extras
+        key_color_pairs = zip(['our_defender', 'their_defender', 'our_attacker', 'their_attacker'], [our_color, their_color]*2)
+
         self.draw_ball(frame, extras['ball'])
-        self.draw_robot(frame, extras['our_defender'], our_color)
-        self.draw_robot(frame, extras['our_attacker'], our_color)
-        self.draw_robot(frame, extras['their_defender'], their_color)
-        self.draw_robot(frame, extras['their_attacker'], their_color)
+
+        for key, color in key_color_pairs:
+            self.draw_robot(frame, extras[key], color)
 
         # Draw fps on the canvas
         if fps is not None:
