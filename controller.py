@@ -6,6 +6,7 @@ import vision.tools as tools
 from cv2 import waitKey
 import cv2
 import serial
+import time
 
 
 class Controller:
@@ -40,7 +41,7 @@ class Controller:
                 print "No Arduino detected!"
                 print "Continuing in NoComms Mode."
                 self.arduino = DummyArduino()
-            
+
 
         # Set up camera for frames
         self.camera = Camera(port=video_port)
@@ -68,12 +69,14 @@ class Controller:
         self.pitch = pitch
 
         self.attacker = Attacker_Controller()
-        self.defender = None #Defender_Controller()
+        self.defender = None    # Defender_Controller()
 
     def wow(self):
         """
         Ready your sword, here be dragons.
         """
+        counter = 1L
+        timer = time.clock()
         try:
             c = True
             while c != 27:  # the ESC key
@@ -108,8 +111,11 @@ class Controller:
                 c = waitKey(2) & 0xFF
 
                 actions = []
+                fps = float(counter) / (time.clock() - timer)
+                print fps
                 # Draw vision content and actions
-                self.GUI.draw(frame, positions, actions, extras, our_color=self.color, key=c, preprocess=pre_options)
+                self.GUI.draw(frame, positions, actions, extras, fps, our_color=self.color, key=c, preprocess=pre_options)
+                counter += 1
 
         except:
             if self.defender is not None:
@@ -241,7 +247,7 @@ class Attacker_Controller(Robot_Controller):
         comm.write('A_RUN_ENGINE %d %d\n' % (0, 0))
 
 class DummyArduino:
-    
+
     def write(self,string):
         pass
 

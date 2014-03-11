@@ -189,9 +189,9 @@ class Camera(object):
 
         Returns the frame if available, otherwise returns None.
         """
-        # status, frame = True, cv2.imread('vision/00000003.jpg')
-        status, frame = self.capture.read()
-        frame = self.fix_radial_distortion(frame)
+        status, frame = True, cv2.imread('img/i_all/00000003.jpg')
+        # status, frame = self.capture.read()
+        # frame = self.fix_radial_distortion(frame)
         if status:
             return frame[
                 self.crop_values[2]:self.crop_values[3],
@@ -248,7 +248,7 @@ class GUI(object):
     def cast_binary(self, x):
         return x == 1
 
-    def draw(self, frame, positions, actions, extras, our_color, key=None, preprocess=None):
+    def draw(self, frame, positions, actions, extras, fps, our_color, key=None, preprocess=None):
         if preprocess is not None:
             preprocess['normalize'] = self.cast_binary(
                 cv2.getTrackbarPos(self.NORMALIZE, self.VISION))
@@ -306,6 +306,9 @@ class GUI(object):
                     cv2.circle(frame, p1, 3, BGR_COMMON['white'], -1)
                     cv2.circle(frame, p2, 3, BGR_COMMON['white'], -1)
                     cv2.line(frame, p1, p2, BGR_COMMON['red'], 2)
+
+        if fps is not None:
+            self.draw_text(frame, 'FPS: %.4f' % fps, 0, 10)
 
         self.data_text(
             frame, "ball", positions['ball']['x'], positions['ball']['y'],
