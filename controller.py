@@ -28,8 +28,8 @@ class Controller:
             [int] pitch                     0 - main pitch, 1 - secondary pitch
             [string] our_side               the side we're on - 'left' or 'right'
             *[int] port                     The camera port to take the feed from
-            *[Robot_Controller] attacker    Robot controller object
-            *[Robot_Controller] defender    Robot controller object
+            *[Robot_Controller] attacker    Robot controller object - Attacker Robot has a RED power wire
+            *[Robot_Controller] defender    Robot controller object - Defender Robot has a YELLOW power wire
         """
         assert pitch in [0, 1]
         assert color in ['yellow', 'blue']
