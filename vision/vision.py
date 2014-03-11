@@ -254,7 +254,7 @@ class GUI(object):
     def cast_binary(self, x):
         return x == 1
 
-    def draw(self, frame, model_positions, actions, extras, fps, our_color, key=None, preprocess=None):
+    def draw(self, frame, model_positions, actions, extras, fps, grabbers, our_color, key=None, preprocess=None):
         """
         Draw information onto the GUI given positions from the vision and post processing.
 
@@ -351,3 +351,6 @@ class GUI(object):
     def draw_text(self, frame, text, x, y, color=BGR_COMMON['green'], thickness=1.3):
         if x is not None and y is not None:
             cv2.putText(frame, text, (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 0.3, color, thickness)
+
+    def draw_grabbers(self, grabbers):
+        pass
