@@ -14,7 +14,7 @@ class Controller:
     Primary source of robot control. Ties vision and planning together.
     """
 
-    def __init__(self, pitch, color, our_side, video_port=0, comm_port='/dev/ttyUSB0', nocomms=0):
+    def __init__(self, pitch, color, our_side, video_port=0, comm_port='/dev/ttyUSB0', comms=1):
         """
         Entry point for the SDP system.
 
@@ -32,15 +32,7 @@ class Controller:
         assert our_side in ['left', 'right']
 
         # Set up the Arduino communications
-        if nocomms:
-            self.arduino = DummyArduino()
-        else:
-            try:
-                self.arduino = serial.Serial(comm_port, 115200, timeout=1)
-            except:
-                print "No Arduino detected!"
-                print "Continuing in NoComms Mode."
-                self.arduino = DummyArduino()
+        self.arduino = Arduino(comm_port, 115200, 1,comms)
 
 
         # Set up camera for frames
@@ -247,10 +239,35 @@ class Attacker_Controller(Robot_Controller):
         comm.write('A_RUN_KICK\n')
         comm.write('A_RUN_ENGINE %d %d\n' % (0, 0))
 
-class DummyArduino:
+class Arduino:
+    
+    def __init__(self,port,rate,timeOut,comms):
+        self.serial = None
+        if comms >0:
+            self.comms = 1
+            try:
+                self.serial = serial.Serial(port,rate,timeout=timeOut)
+            except:
+                print "No Arduino detected!"
+                print "Continuing without comms."
+                self.comms = 0
+                #raise
+
+        else:
+            self.comms = 0
+        self.port = port
+        self.rate = rate
+        self.timeout = timeOut
+    
+    def flipComms(self):
+        if self.comms == 0 and self.serial == None:
+            self.serial = serial.Serial(self.port,self.rate,self.timeout)
+        self.comms = 1-self.comms
+            
 
     def write(self,string):
-        pass
+        if self.comms==1:
+            self.serial.write(string)
 
 
 if __name__ == '__main__':
