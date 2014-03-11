@@ -307,6 +307,7 @@ class GUI(object):
                     cv2.circle(frame, p2, 3, BGR_COMMON['white'], -1)
                     cv2.line(frame, p1, p2, BGR_COMMON['red'], 2)
 
+        # Draw fps on the canvas
         if fps is not None:
             self.draw_text(frame, 'FPS: %.4f' % fps, 0, 10)
 
