@@ -20,10 +20,7 @@ AccelStepper left_stepper(left_backward, left_forward);
 AccelStepper right_stepper(right_backward, right_forward);
 
 // Servo
-Servo catcher;
-
-// Solenoid
-int kicker = 2;
+Servo grabber;
 
 // Stepper Control Functions
 
@@ -46,9 +43,8 @@ void setup()
   
   comm.addCommand("A_SET_ENGINE", set_engine);
   comm.addCommand("A_RUN_ENGINE", run_engine);
-  comm.addCommand("A_RUN_KICKER", run_kicker); 
-  comm.addCommand("A_OPEN_CATCHER", open_catcher); 
-  comm.addCommand("A_CLOSE_CATCHER", close_catcher); 
+  comm.addCommand("A_RUN_CATCH", run_catch); 
+  comm.addCommand("A_RUN_KICK", run_kick); 
   comm.setDefaultHandler(invalid_command);
   
   left_stepper.setMaxSpeed(1000.0);
@@ -57,9 +53,8 @@ void setup()
   right_stepper.setMaxSpeed(1000.0);
   right_stepper.setAcceleration(1000.0);
   
-  catcher.attach(10);
-  pinMode(kicker, OUTPUT);
-  open_catcher();
+  grabber.attach(10);
+  run_kick();
 }
 
 
@@ -82,22 +77,34 @@ void loop()
 
 void set_engine()
 {
-  char *left_speed;
-  char *right_speed;
+  char *max_speed_left;
+  char *accel_left;
+  char *max_speed_right;
+  char *accel_right;
   
-  left_speed = comm.next();
-  right_speed = comm.next();
+  max_speed_left = comm.next();
+  accel_left = comm.next();
+  max_speed_right = comm.next();
+  accel_right = comm.next();
   
-  if (left_speed != NULL && 50 <= atoi(left_speed) && atoi(left_speed) <= 1000)
+  if (max_speed_left != NULL && 50 <= atoi(max_speed_left) && atoi(max_speed_left) <= 1000)
   {
-    left_stepper.setMaxSpeed(atof(left_speed)); 
-    left_stepper.setAcceleration(atof(left_speed)); 
+    left_stepper.setMaxSpeed(atof(max_speed_left)); 
   }
   
-  if (right_speed != NULL && 50 <= atoi(right_speed) && atoi(right_speed) <= 1000)
+  if (accel_left != NULL && 50 <= atoi(max_speed_left) && atoi(max_speed_left) <= 1000)
   {
-    right_stepper.setMaxSpeed(atof(right_speed)); 
-    right_stepper.setAcceleration(atof(right_speed)); 
+    left_stepper.setAcceleration(atof(accel_left)); 
+  }
+  
+  if (max_speed_right != NULL && 50 <= atoi(max_speed_left) && atoi(max_speed_left) <= 1000)
+  {
+    right_stepper.setMaxSpeed(atof(max_speed_right)); 
+  }
+  
+  if (accel_right != NULL && 50 <= atoi(max_speed_left) && atoi(max_speed_left) <= 1000)
+  {
+    right_stepper.setAcceleration(atof(accel_right)); 
   }
 }
 
@@ -122,28 +129,16 @@ void run_engine()
 }
 
 
-void run_kicker()
+void run_kick()
 {
-  open_catcher();
-  digitalWrite(kicker, HIGH);
-  delay(500);
-  digitalWrite(kicker, LOW);
+  grabber.write(135);
+  delay(300);
+  grabber.write(150); 
 }
 
-
-void close_catcher()
+void run_catch()
 {
-  catcher.write(60);
-  delay(300);
-  catcher.write(65);
-}
-
-
-void open_catcher()
-{
-  catcher.write(120);
-  delay(300);
-  catcher.write(115);
+  grabber.write(167);
 }
 
 

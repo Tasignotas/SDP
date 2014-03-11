@@ -55,7 +55,8 @@ void setup()
   right_stepper.setMaxSpeed(1000.0);
   right_stepper.setAcceleration(1000.0);
   
-  grabber.attach(9);
+  grabber.attach(10);
+  run_kick();
 }
 
 
@@ -130,15 +131,20 @@ void run_engine()
 }
 
 
-void run_catch()
-{
-  grabber.write(0); 
-}
-
-
 void run_kick()
 {
-  grabber.write(180); 
+  grabber.attach(10);
+  grabber.write(135);
+  delay(300);
+  grabber.write(149);
+  delay(300);
+  grabber.detach();
+}
+
+void run_catch()
+{
+  grabber.attach(10);
+  grabber.write(167);
 }
 
 
