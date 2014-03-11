@@ -1,5 +1,4 @@
-from planner import *
-
+from utilities import *
 
 class Strategy(object):
 
@@ -15,7 +14,7 @@ class Strategy(object):
     @current_state.setter
     def current_state(self, new_state):
         assert new_state in self.states
-        self.current_state = new_state
+        self._current_state = new_state
 
     def reset_current_state(self):
         self.current_state = self.states[0]
@@ -40,7 +39,7 @@ class DefaultDefenderDefence(Strategy):
                 displacement, angle = our_defender.get_direction_to_point(goal_front_x, our_goal.y)
                 return calculate_motor_speed(displacement, angle)
         if self.current_state == 'goal_line':
-            predicted_y = predict_y_intersection(goal_front_x, their_attacker)
+            predicted_y = predict_y_intersection(self.world, goal_front_x, their_attacker)
             if not (predicted_y == None):
                 displacement, angle = our_defender.get_direction_to_point(goal_front_x, predicted_y)
                 return calculate_motor_speed(displacement, angle, backwards_ok=True)
@@ -62,7 +61,7 @@ class DefaultDefenderAttack(Strategy):
                 return open_catcher()
             # If we don't need to move or rotate, we advance to grabbing:
             displacement, angle = our_defender.get_direction_to_point(ball.x, ball.y)
-            if our_defender.is_near_ball(ball):
+            if our_defender.can_catch_ball(ball):
                 self.current_state = 'grab_ball'
             else:
                 return calculate_motor_speed(displacement, angle, careful=True)
@@ -104,7 +103,7 @@ class DefaultAttackerDefend(Strategy):
         zone = self.world._pitch._zones[our_attacker.zone]
         min_x,max_x,_,_ = zone.boundingBox()
         border = (min_x + max_x)/2
-        predicted_y = predict_y_intersection(our_attacker.x, their_defender, True)
+        predicted_y = predict_y_intersection(self.world, our_attacker.x, their_defender, True)
         if not (predicted_y == None):
             displacement, angle = our_attacker.get_direction_to_point(border, predicted_y)
             if displacement > 30:
@@ -128,7 +127,7 @@ class DefaultAttackerAttack(Strategy):
                 return open_catcher()
             # If we don't need to move or rotate, we advance to grabbing:
             displacement, angle = our_attacker.get_direction_to_point(ball.x, ball.y)
-            if our_attacker.is_near_ball(ball):
+            if our_attacker.can_catch_ball(ball):
                 self.current_state = 'grab_ball'
             else:
                 return calculate_motor_speed(displacement, angle, careful=True)

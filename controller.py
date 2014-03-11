@@ -36,7 +36,7 @@ class Controller:
         assert our_side in ['left', 'right']
 
         # Set up the Arduino communications
-        self.arduino = Arduino(comm_port, 115200, 1,comms)
+        self.arduino = Arduino(comm_port, 115200, 1, comms)
 
 
         # Set up camera for frames
