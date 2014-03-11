@@ -176,6 +176,7 @@ class Defender_Controller(Robot_Controller):
         """
         Execute robot action.
         """
+        print action
         left_motor = action['left_motor']
         right_motor = action['right_motor']
         speed = int(action['speed'])
