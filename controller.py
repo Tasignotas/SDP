@@ -6,7 +6,11 @@ import vision.tools as tools
 from cv2 import waitKey
 import cv2
 import serial
+import warnings
 import time
+
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
 class Controller:
@@ -14,7 +18,7 @@ class Controller:
     Primary source of robot control. Ties vision and planning together.
     """
 
-    def __init__(self, pitch, color, our_side, video_port=0, comm_port='/dev/ttyUSB0', nocomms=0):
+    def __init__(self, pitch, color, our_side, video_port=0, comm_port='/dev/ttyUSB0', comms=1):
         """
         Entry point for the SDP system.
 
@@ -32,15 +36,7 @@ class Controller:
         assert our_side in ['left', 'right']
 
         # Set up the Arduino communications
-        if nocomms:
-            self.arduino = DummyArduino()
-        else:
-            try:
-                self.arduino = serial.Serial(comm_port, 115200, timeout=1)
-            except:
-                print "No Arduino detected!"
-                print "Continuing in NoComms Mode."
-                self.arduino = DummyArduino()
+        self.arduino = Arduino(comm_port, 115200, 1, comms)
 
 
         # Set up camera for frames
@@ -69,7 +65,7 @@ class Controller:
         self.pitch = pitch
 
         self.attacker = Attacker_Controller()
-        self.defender = None    # Defender_Controller()
+        self.defender = Defender_Controller()
 
     def wow(self):
         """
@@ -80,42 +76,50 @@ class Controller:
         try:
             c = True
             while c != 27:  # the ESC key
+
+
+
                 frame = self.camera.get_frame()
-
                 pre_options = self.preprocessing.options
-
                 # Apply preprocessing methods toggled in the UI
                 preprocessed = self.preprocessing.run(frame, pre_options)
                 frame = preprocessed['frame']
-
-                # if 'background_sub' in preprocessed:
-                #     cv2.imshow('bg sub', preprocessed['background_sub'])
-
+                if 'background_sub' in preprocessed:
+                    cv2.imshow('bg sub', preprocessed['background_sub'])
                 # Find object positions
-                positions, extras = self.vision.locate(frame)
+                # model_positions have their y coordinate inverted
 
-                positions = self.postprocessing.analyze(positions)
+                model_positions, regular_positions = self.vision.locate(frame)
+                model_positions = self.postprocessing.analyze(model_positions)
 
                 # Find appropriate action
-                self.planner.update_world(positions)
+                self.planner.update_world(model_positions)
                 attacker_actions = self.planner.plan('attacker')
                 defender_actions = self.planner.plan('defender')
 
                 if self.attacker is not None:
                     self.attacker.execute(self.arduino, attacker_actions)
-
                 if self.defender is not None:
                     self.defender.execute(self.arduino, defender_actions)
 
+                # Information about the grabbers from the world
+                grabbers = {
+                    'our_defender': self.planner._world.our_defender.catcher_area,
+                    'our_attacker': self.planner._world.our_attacker.catcher_area
+                }
+
+                # Information about states
+                attackerState = (self.planner.attacker_state, self.planner.attacker_strat_state)
+                defenderState = (self.planner.defender_state, self.planner.defender_strat_state)
+
                 # Use 'y', 'b', 'r' to change color.
                 c = waitKey(2) & 0xFF
-
                 actions = []
                 fps = float(counter) / (time.clock() - timer)
-                print fps
                 # Draw vision content and actions
-                self.GUI.draw(frame, positions, actions, extras, fps, our_color=self.color, key=c, preprocess=pre_options)
+                self.GUI.draw(frame, model_positions, actions, regular_positions, fps, attackerState, defenderState, grabbers, our_color=self.color, key=c, preprocess=pre_options)
                 counter += 1
+
 
         except:
             if self.defender is not None:
@@ -142,6 +146,7 @@ class Robot_Controller(object):
         """
         Connect to Brick and setup Motors/Sensors.
         """
+        self.current_speed = 0
 
     def shutdown(self, comm):
         # TO DO
@@ -163,35 +168,24 @@ class Defender_Controller(Robot_Controller):
         """
         Execute robot action.
         """
+        print action
         left_motor = action['left_motor']
         right_motor = action['right_motor']
-
-        # Set differential
-        if action['left_ratio'] and action['right_ratio']:
-            comm.write('D_SET_ENGINE %d %d\n' %
-                (action['left_ratio'], action['right_ratio']))
-
+        speed = int(action['speed'])
+        if not(speed == self.current_speed):
+            comm.write('D_SET_ENGINE %d %d\n' % (speed, speed))
+            self.current_speed = speed
         comm.write('D_RUN_ENGINE %d %d\n' % (int(left_motor), int(right_motor)))
-
-        if action['kicker'] != 0:#kicker opens catcher and kicks.
+        if action['kicker'] != 0:
             try:
                 comm.write('D_RUN_KICK\n')
             except StandardError:
                 pass
-        if action['catcher'] == 1:
-            try:
-                comm.write('D_RUN_KICK\n')
-            except StandardError:
-                pass
-        elif action['catcher'] == -1:
+        elif action['catcher'] != 0:
             try:
                 comm.write('D_RUN_CATCH\n')
             except StandardError:
                 pass
-
-        # Reset differential
-        if action['left_ratio'] and action['right_ratio']:
-            comm.write('D_SET_ENGINE %d %d\n' % (1000, 1000))
 
     def shutdown(self, comm):
         comm.write('D_RUN_KICK\n')
@@ -213,43 +207,57 @@ class Attacker_Controller(Robot_Controller):
         """
         Execute robot action.
         """
-        print "action",action
         left_motor = action['left_motor']
         right_motor = action['right_motor']
-        # Set differential
-        if ('left_ratio' in action) and ('right_ratio' in action) and action['right_ratio'] and action['left_ratio']:
-            comm.write('A_SET_ENGINE %d %d\n' %
-                (action['left_ratio'], action['right_ratio']))
+        speed = int(action['speed'])
+        if not(speed == self.current_speed):
+            comm.write('A_SET_ENGINE %d %d\n' % (speed, speed))
+            self.current_speed = speed
         comm.write('A_RUN_ENGINE %d %d\n' % (int(left_motor), int(right_motor)))
         if action['kicker'] != 0:
-            try:
-                comm.write('A_RUN_KICK %d\n' % (action['kicker']))
-            except StandardError:
-                pass
-
-        if action['catcher'] == 1:
             try:
                 comm.write('A_RUN_KICK\n')
             except StandardError:
                 pass
-        elif action['catcher'] == -1:
+        elif action['catcher'] != 0:
             try:
                 comm.write('A_RUN_CATCH\n')
             except StandardError:
                 pass
 
-        # Reset differential
-        if ('left_ratio' in action) and ('right_ratio' in action) and action['right_ratio'] and action['left_ratio']:
-            comm.write('A_SET_ENGINE %d %d\n' % (1000, 1000))
-
     def shutdown(self, comm):
         comm.write('A_RUN_KICK\n')
         comm.write('A_RUN_ENGINE %d %d\n' % (0, 0))
 
-class DummyArduino:
+class Arduino:
+
+    def __init__(self,port,rate,timeOut,comms):
+        self.serial = None
+        if comms >0:
+            self.comms = 1
+            try:
+                self.serial = serial.Serial(port,rate,timeout=timeOut)
+            except:
+                print "No Arduino detected!"
+                print "Continuing without comms."
+                self.comms = 0
+                #raise
+
+        else:
+            self.comms = 0
+        self.port = port
+        self.rate = rate
+        self.timeout = timeOut
+
+    def flipComms(self):
+        if self.comms == 0 and self.serial == None:
+            self.serial = serial.Serial(self.port,self.rate,self.timeout)
+        self.comms = 1-self.comms
+
 
     def write(self,string):
-        pass
+        if self.comms==1:
+            self.serial.write(string)
 
 
 if __name__ == '__main__':

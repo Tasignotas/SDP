@@ -80,7 +80,7 @@ class Vision:
                     name='Their Defender', calibration=calibration),   # defender
                 RobotTracker(
                     color=opponent_color, crop=zones[2], offset=zones[2][0], pitch=pitch,
-                    name='Their Attacker', calibrattion=calibration)
+                    name='Their Attacker', calibration=calibration)
             ]
 
         # Set up trackers
@@ -103,6 +103,12 @@ class Vision:
         # Run trackers as processes
         positions = self._run_trackers(frame)
 
+        # Wrap list of positions into a dictionary
+        keys = ['our_defender', 'our_attacker', 'their_defender', 'their_attacker', 'ball']
+        positions_dict = dict()
+        for i, key in enumerate(keys):
+            positions_dict[key] = positions[i]
+
         # Error check we got a frame
         height, width, channels = frame.shape if frame is not None else (None, None, None)
 
@@ -113,7 +119,7 @@ class Vision:
             'their_defender': self.to_info(positions[2], height),
             'ball': self.to_info(positions[4], height)
         }
-        return result, positions
+        return result, positions_dict
 
     def _run_trackers(self, frame):
         """
@@ -248,127 +254,148 @@ class GUI(object):
     def cast_binary(self, x):
         return x == 1
 
-    def draw(self, frame, positions, actions, extras, fps, our_color, key=None, preprocess=None):
+    def draw(self, frame, model_positions, actions, regular_positions, fps, aState, dState, grabbers, our_color, key=None, preprocess=None):
+        """
+        Draw information onto the GUI given positions from the vision and post processing.
+
+        NOTE: model_positions contains coordinates with y coordinate reversed!
+        """
+        # Get general information about the frame
+        frame_height, frame_width, channels = frame.shape
+
+        # Draw the calibration gui
+        self.calibration_gui.show(frame, key)
+        # Draw dividors for the zones
+        self.draw_zones(frame, frame_width, frame_height)
+
+        their_color = list(TEAM_COLORS - set([our_color]))[0]
+
+        key_color_pairs = zip(['our_defender', 'their_defender', 'our_attacker', 'their_attacker'], [our_color, their_color]*2)
+
+        self.draw_ball(frame, regular_positions['ball'])
+
+        for key, color in key_color_pairs:
+            self.draw_robot(frame, regular_positions[key], color)
+
+        # Draw fps on the canvas
+        if fps is not None:
+            self.draw_text(frame, 'FPS: %.1f' % fps, 0, 10, BGR_COMMON['green'], 1)
+
+        if model_positions and regular_positions:
+            for key in ['ball', 'our_defender', 'our_attacker', 'their_defender', 'their_attacker']:
+                if model_positions[key] and regular_positions[key]:
+                    self.data_text(
+                        frame, key, regular_positions[key]['y'],
+                        model_positions[key].x, model_positions[key].y,
+                        model_positions[key].angle, model_positions[key].velocity)
+                    self.draw_velocity(
+                        frame,
+                        model_positions[key].x, model_positions[key].y,
+                        model_positions[key].angle, model_positions[key].velocity)
+
         if preprocess is not None:
             preprocess['normalize'] = self.cast_binary(
                 cv2.getTrackbarPos(self.NORMALIZE, self.VISION))
             preprocess['background_sub'] = self.cast_binary(
                 cv2.getTrackbarPos(self.BG_SUB, self.VISION))
 
-        # Set values for trackbars
+        if grabbers:
+            self.draw_grabbers(frame, grabbers, frame_height)
 
-        self.calibration_gui.show(frame, key)
+        # Extend image downwards and draw states.
+        blank = np.zeros_like(frame)[:100,:,:]
+        frame_with_blank = np.vstack((frame,blank))
+        self.draw_states(frame_with_blank,aState,dState,(frame_width,frame_height))
 
-        height, width, channels = frame.shape
+        cv2.imshow(self.VISION, frame_with_blank)
+
+    def draw_zones(self, frame, width, height):
+        # Re-initialize zones in case they have not been initalized
         if self.zones is None:
             self.zones = tools.get_zones(width, height)
 
         for zone in self.zones:
             cv2.line(frame, (zone[1], 0), (zone[1], height), BGR_COMMON['red'], 1)
 
-        vec_positions = deepcopy(positions)
-        #print extras[4]
-        positions = {
-            'our_attacker': self.to_info(extras[1]),
-            'their_attacker': self.to_info(extras[3]),
-            'our_defender': self.to_info(extras[0]),
-            'their_defender': self.to_info(extras[2]),
-            'ball': self.to_info(extras[4])
-        }
-
-        their_color = list(TEAM_COLORS - set([our_color]))[0]
-
-        self.draw_ball(frame, positions['ball']['x'], positions['ball']['y'])
-
-        if extras is not None:
-            for x in extras[:4]:
-                if x['name'].split()[0] == 'Our':
-                    color_c = our_color
-                else:
-                    color_c = their_color
-
-                # Draw direction
-                if x['direction'] is not None:
-                    cv2.line(frame, x['direction'][0], x['direction'][1], BGR_COMMON['orange'], 2)
-
-                if x['box'] is not None:
-                    cv2.polylines(frame, [np.array(x['box'])], True, BGR_COMMON[color_c], 2)
-                    #for point in x['box']:
-                        #cv2.circle(frame, (point[0], point[1]), 1, BGR_COMMON['white'], -1)
-
-                if x['dot'] is not None:
-                    cv2.circle(
-                        frame, (int(x['dot'][0]), int(x['dot'][1])), 2, BGR_COMMON['black'], -1)
-
-                if x['front'] is not None:
-                    p1 = (x['front'][0][0], x['front'][0][1])
-                    p2 = (x['front'][1][0], x['front'][1][1])
-                    cv2.circle(frame, p1, 3, BGR_COMMON['white'], -1)
-                    cv2.circle(frame, p2, 3, BGR_COMMON['white'], -1)
-                    cv2.line(frame, p1, p2, BGR_COMMON['red'], 2)
-
-        # Draw fps on the canvas
-        if fps is not None:
-            self.draw_text(frame, 'FPS: %.4f' % fps, 0, 10)
-
-        self.data_text(
-            frame, "ball", positions['ball']['x'], positions['ball']['y'],
-            vec_positions['ball'].angle, vec_positions['ball'].velocity)
-
-        self.data_text(
-            frame, "our attacker", positions['our_attacker']['x'],
-            positions['our_attacker']['y'], positions['our_attacker']['angle'],
-            vec_positions['our_attacker'].velocity)
-
-        self.data_text(
-            frame, "their attacker", positions['their_attacker']['x'],
-            positions['their_attacker']['y'], positions['their_attacker']['angle'],
-            vec_positions['their_attacker'].velocity)
-
-        self.data_text(
-            frame, "our defender", positions['our_defender']['x'],
-            positions['our_defender']['y'], positions['our_defender']['angle'],
-            vec_positions['our_defender'].velocity)
-
-        self.data_text(
-            frame, "their defender", positions['their_defender']['x'],
-            positions['their_defender']['y'], positions['their_defender']['angle'],
-            vec_positions['their_defender'].velocity)
-
-        cv2.imshow(self.VISION, frame)
-
-    def draw_robot(self, frame, x, y, color, thickness=1):
-        if x is not None and y is not None:
-            cv2.circle(frame, (int(x), int(y)), 16, BGR_COMMON[color], thickness)
-
-    def draw_ball(self, frame, x, y):
-        if x is not None and y is not None:
-            cv2.circle(frame, (int(x), int(y)), 7, BGR_COMMON['red'], 2)
+    def draw_ball(self, frame, position_dict):
+        if position_dict and position_dict['x'] and position_dict['y']:
+            cv2.circle(frame, (int(position_dict['x']), int(position_dict['y'])), 7, BGR_COMMON['red'], 2)
 
     def draw_dot(self, frame, location):
         if location is not None:
             cv2.circle(frame, location, 2, BGR_COMMON['white'], 1)
 
-    def draw_box(self, frame, location):
-        if location is not None:
-            x, y, width, height = location
-            cv2.rectangle(frame, (int(x), int(y)), (x + width, y + height), BGR_COMMON['bright_green'], 1)
+    def draw_robot(self, frame, position_dict, color):
+        if position_dict['box']:
+            cv2.polylines(frame, [np.array(position_dict['box'])], True, BGR_COMMON[color], 2)
+
+        if position_dict['front']:
+            p1 = (position_dict['front'][0][0], position_dict['front'][0][1])
+            p2 = (position_dict['front'][1][0], position_dict['front'][1][1])
+            cv2.circle(frame, p1, 3, BGR_COMMON['white'], -1)
+            cv2.circle(frame, p2, 3, BGR_COMMON['white'], -1)
+            cv2.line(frame, p1, p2, BGR_COMMON['red'], 2)
+
+        if position_dict['dot']:
+            cv2.circle(
+                frame, (int(position_dict['dot'][0]), int(position_dict['dot'][1])), 4, BGR_COMMON['black'], -1)
+
+        if position_dict['direction']:
+            cv2.line(frame, position_dict['direction'][0], position_dict['direction'][1], BGR_COMMON['orange'], 2)
 
     def draw_line(self, frame, points):
         if points is not None:
             cv2.line(frame, points[0], points[1], BGR_COMMON['red'], 2)
 
-    def data_text(self, frame, text, x, y, angle, velocity):
-        if x is not None and y is not None:
-            self.draw_text(frame, text, x, y)
-            self.draw_text(frame, 'x: %.2f' % x, x, y + 10)
-            self.draw_text(frame, 'y: %.2f' % y, x, y + 20)
+    def data_text(self, frame, text, text_y, x, y, angle, velocity):
+        if x is not None and y is not None and text_y is not None:
+            self.draw_text(frame, text, x, text_y)
+            self.draw_text(frame, 'x: %.2f' % x, x, text_y + 10)
+            self.draw_text(frame, 'y: %.2f' % y, x, text_y + 20)
 
             if angle is not None:
-                self.draw_text(frame, 'angle: %.2f' % angle, x, y + 30)
+                self.draw_text(frame, 'angle: %.2f' % angle, x, text_y + 30)
 
             if velocity is not None:
-                self.draw_text(frame, 'velocity: %.2f' % velocity, x, y + 40)
+                self.draw_text(frame, 'velocity: %.2f' % velocity, x, text_y + 40)
 
-    def draw_text(self, frame, text, x, y, color=BGR_COMMON['white']):
-        cv2.putText(frame, text, (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 0.3, color, 1.3)
+    def draw_text(self, frame, text, x, y, color=BGR_COMMON['green'], thickness=1.3, size=0.3,):
+        if x is not None and y is not None:
+            cv2.putText(frame, text, (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, size , color, thickness)
+
+    def draw_grabbers(self, frame, grabbers, height):
+        def_grabber = grabbers['our_defender'][0]
+        att_grabber = grabbers['our_attacker'][0]
+
+        def_grabber = [(x, height - y) for x, y in def_grabber]
+        att_grabber = [(x, height - y) for x, y in att_grabber]
+
+        def_grabber = [(int(x) if x > -1 else 0, int(y) if y > -1 else 0) for x, y in def_grabber]
+        att_grabber = [(int(x) if x > -1 else 0, int(y) if y > -1 else 0) for x, y in att_grabber]
+
+        def_grabber[2], def_grabber[3] = def_grabber[3], def_grabber[2]
+        att_grabber[2], att_grabber[3] = att_grabber[3], att_grabber[2]
+
+        cv2.polylines(frame, [np.array(def_grabber)], True, BGR_COMMON['red'], 1)
+        cv2.polylines(frame, [np.array(att_grabber)], True, BGR_COMMON['red'], 1)
+
+    def draw_velocity(self,frame,x,y,angle,vel,scale=10):
+        if not(None in [frame,x,y,angle,vel]) and vel is not 0:
+            frame_height,_,_ = frame.shape
+            r = vel*scale
+            y = frame_height-y
+            start_point = (x,y)
+            end_point = (x+r*np.cos(angle),y-r*np.sin(angle))
+            print (start_point,end_point)
+            self.draw_line(frame,(start_point,end_point))
+
+    def draw_states(self,frame,aState,dState,frame_offset):
+        frame_width,frame_height = frame_offset
+
+        self.draw_text(frame,"Attacker State:",(frame_width/4)-20,frame_height+20,size=0.6)
+        self.draw_text(frame, aState[0],(frame_width/4)-20,frame_height+35,size=0.6)
+        self.draw_text(frame, aState[1],(frame_width/4)-20,frame_height+50,size=0.6)
+
+        self.draw_text(frame,"Defender State:",(frame_width/4)*2+20,frame_height+20,size=0.6)
+        self.draw_text(frame, dState[0],(frame_width/4)*2+20,frame_height+35,size=0.6)
+        self.draw_text(frame, dState[1],(frame_width/4)*2+20,frame_height+50,size=0.6)
