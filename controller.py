@@ -42,12 +42,14 @@ class Controller:
         # Set up camera for frames
         self.camera = Camera(port=video_port)
         frame = self.camera.get_frame()
+        center_point = self.camera.get_adjusted_center(frame)
 
         # Set up vision
         self.calibration = tools.get_colors(pitch)
         self.vision = Vision(
             pitch=pitch, color=color, our_side=our_side,
-            frame_shape=frame.shape, calibration=self.calibration)
+            frame_shape=frame.shape, frame_center=center_point,
+            calibration=self.calibration)
 
         # Set up postprocessing for vision
         self.postprocessing = Postprocessing()
@@ -89,7 +91,7 @@ class Controller:
                 # Find object positions
                 # model_positions have their y coordinate inverted
 
-                model_positions, regular_positions = self.vision.locate(frame)
+                model_positions, regular_positions, adjusted_positions= self.vision.locate(frame)
                 model_positions = self.postprocessing.analyze(model_positions)
 
                 # Find appropriate action
@@ -117,7 +119,7 @@ class Controller:
                 actions = []
                 fps = float(counter) / (time.clock() - timer)
                 # Draw vision content and actions
-                self.GUI.draw(frame, model_positions, actions, regular_positions, fps, attackerState, defenderState, grabbers, our_color=self.color, key=c, preprocess=pre_options)
+                self.GUI.draw(frame, model_positions, actions, adjusted_positions, fps, attackerState, defenderState, grabbers, our_color=self.color, key=c, preprocess=pre_options)
                 counter += 1
 
 

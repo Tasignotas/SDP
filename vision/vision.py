@@ -25,7 +25,7 @@ class Vision:
     Locate objects on the pitch.
     """
 
-    def __init__(self, pitch, color, our_side, frame_shape, calibration):
+    def __init__(self, pitch, color, our_side, frame_shape, frame_center, calibration):
         """
         Initialize the vision system.
 
@@ -37,6 +37,7 @@ class Vision:
         self.pitch = pitch
         self.color = color
         self.our_side = our_side
+        self.frame_center = frame_center
 
         height, width, channels = frame_shape
 
@@ -105,21 +106,50 @@ class Vision:
 
         # Wrap list of positions into a dictionary
         keys = ['our_defender', 'our_attacker', 'their_defender', 'their_attacker', 'ball']
-        positions_dict = dict()
+        regular_positions = dict()
         for i, key in enumerate(keys):
-            positions_dict[key] = positions[i]
+            regular_positions[key] = positions[i]
 
         # Error check we got a frame
         height, width, channels = frame.shape if frame is not None else (None, None, None)
 
-        result = {
+        model_positions = {
             'our_attacker': self.to_info(positions[1], height),
             'their_attacker': self.to_info(positions[3], height),
             'our_defender': self.to_info(positions[0], height),
             'their_defender': self.to_info(positions[2], height),
             'ball': self.to_info(positions[4], height)
         }
-        return result, positions_dict
+
+        adjusted_positions = self.get_adjusted_positions(regular_positions)
+
+        return model_positions, regular_positions, adjusted_positions
+
+    def get_adjusted_positions(self, regular_positions):
+        robots = ['our_attacker', 'their_attacker', 'our_defender', 'their_defender']
+        plane_height = 250.0
+        robot_height = 20.0
+        coefficient = robot_height/plane_height
+
+        positions = deepcopy(regular_positions)
+
+        try:
+            for robot in robots:
+                # Process each corner of the plate
+                for i in range(4):
+                    x = positions[robot]['box'][i][0]
+                    y = positions[robot]['box'][i][1]
+
+                    dist_x = float(x - self.frame_center[0])
+                    dist_y = float(y - self.frame_center[1])
+
+                    delta_x = dist_x * coefficient
+                    delta_y = dist_y * coefficient
+
+                    positions[robot]['box'][i] = (int(x-delta_x), int(y-delta_y))
+        except:
+            pass
+        return positions
 
     def _run_trackers(self, frame):
         """
@@ -207,6 +237,9 @@ class Camera(object):
     def fix_radial_distortion(self, frame):
         return cv2.undistort(
             frame, self.c_matrix, self.dist, None, self.nc_matrix)
+
+    def get_adjusted_center(self, frame):
+        return (320-self.crop_values[0], 240-self.crop_values[2])
 
 
 class GUI(object):
@@ -306,6 +339,9 @@ class GUI(object):
         blank = np.zeros_like(frame)[:100,:,:]
         frame_with_blank = np.vstack((frame,blank))
         self.draw_states(frame_with_blank,aState,dState,(frame_width,frame_height))
+
+        # Draw center of uncroppped frame (test code)
+        cv2.circle(frame_with_blank, (266,147), 1, BGR_COMMON['black'], 1)
 
         cv2.imshow(self.VISION, frame_with_blank)
 
