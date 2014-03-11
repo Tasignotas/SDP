@@ -305,8 +305,7 @@ class GUI(object):
         # Extend image downwards and draw states.
         blank = np.zeros_like(frame)[:100,:,:]
         frame_with_blank = np.vstack((frame,blank))
-        self.draw_text(frame_with_blank,"Attacker State: " + aState,(frame_width/4),frame_height+20,size=0.6)
-        self.draw_text(frame_with_blank,"Defender State: " + dState,(frame_width/4),frame_height+60,size=0.6)
+        self.draw_states(frame_with_blank,aState,dState,(frame_width,frame_height))
 
         cv2.imshow(self.VISION, frame_with_blank)
 
@@ -387,3 +386,13 @@ class GUI(object):
             print (start_point,end_point)
             self.draw_line(frame,(start_point,end_point))
 
+    def draw_states(self,frame,aState,dState,frame_offset):
+        frame_width,frame_height = frame_offset
+
+        self.draw_text(frame,"Attacker State:",(frame_width/4)-20,frame_height+20,size=0.6)
+        self.draw_text(frame, aState[0],(frame_width/4)-20,frame_height+35,size=0.6)
+        self.draw_text(frame, aState[1],(frame_width/4)-20,frame_height+50,size=0.6)
+
+        self.draw_text(frame,"Defender State:",(frame_width/4)*2+20,frame_height+20,size=0.6)
+        self.draw_text(frame, dState[0],(frame_width/4)*2+20,frame_height+35,size=0.6)
+        self.draw_text(frame, dState[1],(frame_width/4)*2+20,frame_height+50,size=0.6)
