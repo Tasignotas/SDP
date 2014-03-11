@@ -96,7 +96,7 @@ class Controller:
                 # Find appropriate action
                 self.planner.update_world(positions)
                 attacker_actions = self.planner.plan('attacker')
-                #defender_actions = self.planner.plan('defender')
+                defender_actions = self.planner.plan('defender')
 
                 if self.attacker is not None:
                     self.attacker.execute(self.arduino, attacker_actions)
@@ -137,7 +137,7 @@ class Robot_Controller(object):
         Connect to Brick and setup Motors/Sensors.
         """
 
-    def shutdown(self):
+    def shutdown(self, comm):
         # TO DO
             pass
 
@@ -169,17 +169,17 @@ class Defender_Controller(Robot_Controller):
 
         if action['kicker'] != 0:#kicker opens catcher and kicks.
             try:
-                comm.write('D_RUN_KICKER\n')
+                comm.write('D_RUN_KICK\n')
             except StandardError:
                 pass
         if action['catcher'] == 1:
             try:
-                comm.write('D_OPEN_CATCHER\n')
+                comm.write('D_RUN_KICK\n')
             except StandardError:
                 pass
-        else:
+        elif action['catcher'] == -1:
             try:
-                comm.write('D_CLOSE_CATCHER\n')
+                comm.write('D_RUN_CATCH\n')
             except StandardError:
                 pass
 
@@ -188,6 +188,7 @@ class Defender_Controller(Robot_Controller):
             comm.write('D_SET_ENGINE %d %d\n' % (1000, 1000))
 
     def shutdown(self, comm):
+        comm.write('D_RUN_KICK\n')
         comm.write('D_RUN_ENGINE %d %d\n' % (0, 0))
 
 
@@ -216,18 +217,18 @@ class Attacker_Controller(Robot_Controller):
         comm.write('A_RUN_ENGINE %d %d\n' % (int(left_motor), int(right_motor)))
         if action['kicker'] != 0:
             try:
-                comm.write('A_RUN_KICKER %d\n' % (action['kicker']))
+                comm.write('A_RUN_KICK %d\n' % (action['kicker']))
             except StandardError:
                 pass
 
         if action['catcher'] == 1:
             try:
-                comm.write('A_OPEN_CATCHER\n')
+                comm.write('A_RUN_KICK\n')
             except StandardError:
                 pass
         elif action['catcher'] == -1:
             try:
-                comm.write('A_CLOSE_CATCHER\n')
+                comm.write('A_RUN_CATCH\n')
             except StandardError:
                 pass
 
@@ -236,7 +237,7 @@ class Attacker_Controller(Robot_Controller):
             comm.write('A_SET_ENGINE %d %d\n' % (1000, 1000))
 
     def shutdown(self, comm):
-        comm.write('A_OPEN_CATCHER\n')
+        comm.write('A_RUN_KICK\n')
         comm.write('A_RUN_ENGINE %d %d\n' % (0, 0))
 
 class DummyArduino:
