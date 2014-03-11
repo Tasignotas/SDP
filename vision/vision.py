@@ -254,7 +254,7 @@ class GUI(object):
     def cast_binary(self, x):
         return x == 1
 
-    def draw(self, frame, model_positions, actions, extras, fps, aState, dState, grabbers, our_color, key=None, preprocess=None):
+    def draw(self, frame, model_positions, actions, regular_positions, fps, aState, dState, grabbers, our_color, key=None, preprocess=None):
         """
         Draw information onto the GUI given positions from the vision and post processing.
 
@@ -272,20 +272,20 @@ class GUI(object):
 
         key_color_pairs = zip(['our_defender', 'their_defender', 'our_attacker', 'their_attacker'], [our_color, their_color]*2)
 
-        self.draw_ball(frame, extras['ball'])
+        self.draw_ball(frame, regular_positions['ball'])
 
         for key, color in key_color_pairs:
-            self.draw_robot(frame, extras[key], color)
+            self.draw_robot(frame, regular_positions[key], color)
 
         # Draw fps on the canvas
         if fps is not None:
             self.draw_text(frame, 'FPS: %.1f' % fps, 0, 10, BGR_COMMON['green'], 1)
 
-        if model_positions and extras:
+        if model_positions and regular_positions:
             for key in ['ball', 'our_defender', 'our_attacker', 'their_defender', 'their_attacker']:
-                if model_positions[key] and extras[key]:
+                if model_positions[key] and regular_positions[key]:
                     self.data_text(
-                        frame, key, extras[key]['y'],
+                        frame, key, regular_positions[key]['y'],
                         model_positions[key].x, model_positions[key].y,
                         model_positions[key].angle, model_positions[key].velocity)
                     self.draw_velocity(
