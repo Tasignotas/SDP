@@ -370,6 +370,9 @@ class GUI(object):
         def_grabber = [(int(x) if x > -1 else 0, int(y) if y > -1 else 0) for x, y in def_grabber]
         att_grabber = [(int(x) if x > -1 else 0, int(y) if y > -1 else 0) for x, y in att_grabber]
 
-        cv2.polylines(frame, [np.array(def_grabber)], True, BGR_COMMON['red'], 2)
-        cv2.polylines(frame, [np.array(att_grabber)], True, BGR_COMMON['red'], 2)
+        def_grabber[2], def_grabber[3] = def_grabber[3], def_grabber[2]
+        att_grabber[2], att_grabber[3] = att_grabber[3], att_grabber[2]
+
+        cv2.polylines(frame, [np.array(def_grabber)], True, BGR_COMMON['red'], 1)
+        cv2.polylines(frame, [np.array(att_grabber)], True, BGR_COMMON['red'], 1)
 
