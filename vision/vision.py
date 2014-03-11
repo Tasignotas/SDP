@@ -288,6 +288,10 @@ class GUI(object):
                         frame, key, extras[key]['y'],
                         model_positions[key].x, model_positions[key].y,
                         model_positions[key].angle, model_positions[key].velocity)
+                    self.draw_velocity(
+                        frame,
+                        model_positions[key].x, model_positions[key].y,
+                        model_positions[key].angle, model_positions[key].velocity)
 
         if preprocess is not None:
             preprocess['normalize'] = self.cast_binary(
@@ -372,4 +376,14 @@ class GUI(object):
 
         cv2.polylines(frame, [np.array(def_grabber)], True, BGR_COMMON['red'], 2)
         cv2.polylines(frame, [np.array(att_grabber)], True, BGR_COMMON['red'], 2)
+
+    def draw_velocity(self,frame,x,y,angle,vel,scale=10):
+        if not(None in [frame,x,y,angle,vel]) and vel is not 0:
+            frame_height,_,_ = frame.shape
+            r = vel*scale
+            y = frame_height-y
+            start_point = (x,y)
+            end_point = (x+r*np.cos(angle),y-r*np.sin(angle))
+            print (start_point,end_point)
+            self.draw_line(frame,(start_point,end_point))
 
