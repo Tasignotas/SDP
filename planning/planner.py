@@ -139,13 +139,13 @@ class Planner:
                 return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0, 'catcher' : 0, 'speed' : general_speed}
 
     def grab_ball(self):
-        return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0, 'catcher' : -1, 'speed' : 1000}
+        return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0, 'catcher' : 1, 'speed' : 1000}
 
     def kick_ball(self):
         return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 1, 'catcher' : 0, 'speed' : 1000}
 
     def open_catcher(self):
-        return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 0, 'catcher' : 1, 'speed' : 1000}
+        return {'left_motor' : 0, 'right_motor' : 0, 'kicker' : 1, 'catcher' : 0, 'speed' : 1000}
 
     def has_matched(self, robot, x=None, y=None, angle=None):
         dist_matched = True
