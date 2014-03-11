@@ -15,6 +15,20 @@ class Planner:
         self._attacker_attack_strat = DefaultAttackerAttack(self._world)
         self._defender_state = 'defence'
         self._attacker_state = 'defence'
+    
+    @property
+    def attacker_strat_state(self):
+        if self.attacker_state == 'defence':
+            return self._attacker_defence_strat.current_state
+        else:
+            return self._attacker_attack_strat.current_state
+
+    @property
+    def defender_strat_state(self):
+        if self.defender_state == 'defence':
+            return self._defender_defence_strat.current_state
+        else:
+            return self._defender_attack_strat.current_state
 
     @property
     def attacker_state(self):

@@ -109,16 +109,8 @@ class Controller:
                 }
 
                 # Information about states
-                attackerState = self.planner.attacker_state
-                defenderState = self.planner.defender_state
-                if attackerState == 'defence':
-                    attackerState = (attackerState,self.planner._attacker_defence_strat.current_state)
-                else:
-                    attackerState = (attackerState,self.planner._defender_attack_strat.current_state)
-                if defenderState == 'defence':
-                    defenderState = (defenderState,self.planner._defender_defence_strat.current_state)
-                else:
-                    defenderState = (defenderState,self.planner._defender_attack_strat.current_state)
+                attackerState = (self.planner.attacker_state, self.planner.attacker_strat_state)
+                defenderState = (self.planner.defender_state, self.planner.defender_strat_state)
 
                 # Use 'y', 'b', 'r' to change color.
                 c = waitKey(2) & 0xFF
