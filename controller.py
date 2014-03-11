@@ -102,13 +102,18 @@ class Controller:
                 if self.defender is not None:
                     self.defender.execute(self.arduino, defender_actions)
 
+                # Information about the grabbers from the world
+                grabbers = {
+                    'our_defender': self.planner._world.our_defender.catcher_area,
+                    'our_attacker': self.planner._world.our_attacker.catcher_area
+                }
 
                 # Use 'y', 'b', 'r' to change color.
                 c = waitKey(2) & 0xFF
                 actions = []
                 fps = float(counter) / (time.clock() - timer)
                 # Draw vision content and actions
-                self.GUI.draw(frame, model_positions, actions, regular_positions, fps, our_color=self.color, key=c, preprocess=pre_options)
+                self.GUI.draw(frame, model_positions, actions, regular_positions, fps, grabbers, our_color=self.color, key=c, preprocess=pre_options)
                 counter += 1
 
 
@@ -220,7 +225,7 @@ class Attacker_Controller(Robot_Controller):
         comm.write('A_RUN_ENGINE %d %d\n' % (0, 0))
 
 class Arduino:
-    
+
     def __init__(self,port,rate,timeOut,comms):
         self.serial = None
         if comms >0:
@@ -238,12 +243,12 @@ class Arduino:
         self.port = port
         self.rate = rate
         self.timeout = timeOut
-    
+
     def flipComms(self):
         if self.comms == 0 and self.serial == None:
             self.serial = serial.Serial(self.port,self.rate,self.timeout)
         self.comms = 1-self.comms
-            
+
 
     def write(self,string):
         if self.comms==1:
