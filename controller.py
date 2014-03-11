@@ -13,7 +13,7 @@ class Controller:
     Primary source of robot control. Ties vision and planning together.
     """
 
-    def __init__(self, pitch, color, our_side, video_port=0, comm_port='/dev/ttyUSB0'):
+    def __init__(self, pitch, color, our_side, video_port=0, comm_port='/dev/ttyUSB0', nocomms=0):
         """
         Entry point for the SDP system.
 
@@ -31,7 +31,16 @@ class Controller:
         assert our_side in ['left', 'right']
 
         # Set up the Arduino communications
-        self.arduino = serial.Serial(comm_port, 9600, timeout=1)
+        if nocomms:
+            self.arduino = DummyArduino()
+        else:
+            try:
+                self.arduino = serial.Serial(comm_port, 9600, timeout=1)
+            except:
+                print "No Arduino detected!"
+                print "Continuing in NoComms Mode."
+                self.arduino = DummyArduino()
+            
 
         # Set up camera for frames
         self.camera = Camera(port=video_port)
@@ -230,6 +239,11 @@ class Attacker_Controller(Robot_Controller):
         comm.write('A_OPEN_CATCHER\n')
         comm.write('A_RUN_ENGINE %d %d\n' % (0, 0))
 
+class DummyArduino:
+    
+    def write(self,string):
+        pass
+
 
 if __name__ == '__main__':
     import argparse
@@ -241,3 +255,4 @@ if __name__ == '__main__':
     # print args
     c = Controller(
         pitch=int(args.pitch), color=args.color, our_side=args.side).wow()  # Such controller
+
