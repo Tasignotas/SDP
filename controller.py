@@ -28,8 +28,10 @@ class Controller:
             [int] pitch                     0 - main pitch, 1 - secondary pitch
             [string] our_side               the side we're on - 'left' or 'right'
             *[int] port                     The camera port to take the feed from
-            *[Robot_Controller] attacker    Robot controller object - Attacker Robot has a RED power wire
-            *[Robot_Controller] defender    Robot controller object - Defender Robot has a YELLOW power wire
+            *[Robot_Controller] attacker    Robot controller object - Attacker Robot has a RED
+                                            power wire
+            *[Robot_Controller] defender    Robot controller object - Defender Robot has a YELLOW
+                                            power wire
         """
         assert pitch in [0, 1]
         assert color in ['yellow', 'blue']
@@ -37,7 +39,6 @@ class Controller:
 
         # Set up the Arduino communications
         self.arduino = Arduino(comm_port, 115200, 1, comms)
-
 
         # Set up camera for frames
         self.camera = Camera(port=video_port)
@@ -61,7 +62,6 @@ class Controller:
         self.GUI = GUI(calibration=self.calibration, arduino=self.arduino)
 
         self.color = color
-        
         self.side = our_side
 
         self.preprocessing = Preprocessing()
@@ -80,8 +80,6 @@ class Controller:
         try:
             c = True
             while c != 27:  # the ESC key
-
-
 
                 frame = self.camera.get_frame()
                 pre_options = self.preprocessing.options
@@ -122,9 +120,11 @@ class Controller:
                 fps = float(counter) / (time.clock() - timer)
                 # Draw vision content and actions
 
-                self.GUI.draw(frame, model_positions, actions, regular_positions, fps, attackerState, defenderState, attacker_actions, defender_actions, grabbers, our_color=self.color, our_side=self.side, key=c, preprocess=pre_options)
+                self.GUI.draw(
+                    frame, model_positions, actions, regular_positions, fps, attackerState,
+                    defenderState, attacker_actions, defender_actions, grabbers,
+                    our_color=self.color, our_side=self.side, key=c, preprocess=pre_options)
                 counter += 1
-
 
         except:
             if self.defender is not None:
@@ -234,9 +234,10 @@ class Attacker_Controller(Robot_Controller):
         comm.write('A_RUN_KICK\n')
         comm.write('A_RUN_ENGINE %d %d\n' % (0, 0))
 
+
 class Arduino:
 
-    def __init__(self,port,rate,timeOut,comms):
+    def __init__(self, port, rate, timeOut, comms):
         self.serial = None
         self.comms = comms
         self.port = port
@@ -244,12 +245,12 @@ class Arduino:
         self.timeout = timeOut
         self.setComms(comms)
 
-    def setComms(self,comms):
-        if comms >0:
+    def setComms(self, comms):
+        if comms > 0:
             self.comms = 1
-            if self.serial == None:
+            if self.serial is None:
                 try:
-                    self.serial = serial.Serial(self.port,self.rate,timeout=self.timeout)
+                    self.serial = serial.Serial(self.port, self.rate, timeout=self.timeout)
                 except:
                     print "No Arduino detected!"
                     print "Continuing without comms."
@@ -261,12 +262,9 @@ class Arduino:
             #self.write('D_RUN_KICK\n')
             self.write('D_RUN_ENGINE %d %d\n' % (0, 0))
             self.comms = 0
-            
 
-
-
-    def write(self,string):
-        if self.comms==1:
+    def write(self, string):
+        if self.comms == 1:
             self.serial.write(string)
 
 
@@ -276,13 +274,13 @@ if __name__ == '__main__':
     parser.add_argument("pitch", help="[0] Main pitch, [1] Secondary pitch")
     parser.add_argument("side", help="The side of our defender ['left', 'right'] allowed.")
     parser.add_argument("color", help="The color of our team - ['yellow', 'blue'] allowed.")
-    parser.add_argument("-n","--nocomms", help="Disables sending commands to the robot.",action="store_true")
+    parser.add_argument(
+        "-n", "--nocomms", help="Disables sending commands to the robot.", action="store_true")
     args = parser.parse_args()
     # print args
     if args.nocomms:
         c = Controller(
-            pitch=int(args.pitch), color=args.color, our_side=args.side,comms=0).wow()  # Such controller
+            pitch=int(args.pitch), color=args.color, our_side=args.side, comms=0).wow()
     else:
         c = Controller(
             pitch=int(args.pitch), color=args.color, our_side=args.side).wow()
-
