@@ -398,7 +398,9 @@ class GUI(object):
 
     def draw_ball(self, frame, position_dict):
         if position_dict and position_dict['x'] and position_dict['y']:
-            cv2.circle(frame, (int(position_dict['x']), int(position_dict['y'])), 7, BGR_COMMON['red'], 2)
+            frame_height,frame_width,_ = frame.shape
+            self.draw_line(frame,((int(position_dict['x']),0),(int(position_dict['x']),frame_height)),1)
+            self.draw_line(frame,((0,int(position_dict['y'])),(frame_width,int(position_dict['y']))),1)
 
     def draw_dot(self, frame, location):
         if location is not None:
@@ -422,9 +424,9 @@ class GUI(object):
         if position_dict['direction']:
             cv2.line(frame, position_dict['direction'][0], position_dict['direction'][1], BGR_COMMON['orange'], 2)
 
-    def draw_line(self, frame, points):
+    def draw_line(self, frame, points,thickness=2):
         if points is not None:
-            cv2.line(frame, points[0], points[1], BGR_COMMON['red'], 2)
+            cv2.line(frame, points[0], points[1], BGR_COMMON['red'], thickness)
 
     def data_text(self, frame, frame_offset, our_side, text, x, y, angle, velocity):
         if x is not None and y is not None:
