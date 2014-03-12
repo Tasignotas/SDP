@@ -1,5 +1,5 @@
 import unittest
-from planning.models import Vector
+from planning.models import Vector, World
 from planning.planner import *
 from planning.utilities import *
 from numpy.testing import assert_almost_equal

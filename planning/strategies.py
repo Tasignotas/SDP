@@ -152,3 +152,14 @@ class DefaultAttackerAttack(Strategy):
             self.current_state = 'defence_block'
             our_attacker.catcher = 'open'
             return kick_ball()
+
+
+class AttackerScoreDynamic(Strategy):
+
+    STATES = ['GRABBED', 'POSITION', 'CONFUSE', 'SHOOT']
+
+    def __init__(self, world):
+        super(AttackerScoreDynamic, self).__init__(world, self.STATES)
+
+    def generate(self):
+        pass
