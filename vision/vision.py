@@ -148,8 +148,7 @@ class Vision:
         return (int(x-delta_x), int(y-delta_y))
 
 
-    def get_adjusted_positions(self, input_positions):
-        positions = deepcopy(input_positions)
+    def get_adjusted_positions(self, positions):
         try:
             for robot in range(4):
                 # Adjust each corner of the plate
@@ -157,7 +156,6 @@ class Vision:
                     x = positions[robot]['box'][i][0]
                     y = positions[robot]['box'][i][1]
                     positions[robot]['box'][i] = self.get_adjusted_point((x,y))
-
 
                 new_direction = []
                 for i in range(2):
@@ -181,9 +179,16 @@ class Vision:
                                                         )
                                                 )
 
+                # Adjust the center point of the plate
+                x = positions[robot]['x']
+                y = positions[robot]['y']
+                new_point = self.get_adjusted_point((x,y))
+                positions[robot]['x'] = new_point[0]
+                positions[robot]['y'] = new_point[1]
         except:
-            # Robot has not been found
-            pass        
+            # At least one robot has not been found
+            pass   
+
         return positions
 
     def _run_trackers(self, frame):
