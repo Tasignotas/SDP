@@ -377,7 +377,7 @@ class GUI(object):
         self.draw_states(frame_with_blank,aState,dState,(frame_width,frame_height))
 
         # Draw center of uncroppped frame (test code)
-        cv2.circle(frame_with_blank, (266,147), 1, BGR_COMMON['black'], 1)
+        # cv2.circle(frame_with_blank, (266,147), 1, BGR_COMMON['black'], 1)
 
         cv2.imshow(self.VISION, frame_with_blank)
 
