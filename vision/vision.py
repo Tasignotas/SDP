@@ -21,6 +21,7 @@ PROCESSING_DEBUG = False
 
 Center = namedtuple('Center', 'x y')
 
+
 class Vision:
     """
     Locate objects on the pitch.
@@ -147,7 +148,6 @@ class Vision:
 
         return (int(x-delta_x), int(y-delta_y))
 
-
     def get_adjusted_positions(self, positions):
         try:
             for robot in range(4):
@@ -155,39 +155,35 @@ class Vision:
                 for i in range(4):
                     x = positions[robot]['box'][i][0]
                     y = positions[robot]['box'][i][1]
-                    positions[robot]['box'][i] = self.get_adjusted_point((x,y))
+                    positions[robot]['box'][i] = self.get_adjusted_point((x, y))
 
                 new_direction = []
                 for i in range(2):
                     # Adjust front line
                     x = positions[robot]['front'][i][0]
                     y = positions[robot]['front'][i][1]
-                    positions[robot]['front'][i] = self.get_adjusted_point((x,y))
+                    positions[robot]['front'][i] = self.get_adjusted_point((x, y))
 
                     # Adjust direction line
                     x = positions[robot]['direction'][i][0]
                     y = positions[robot]['direction'][i][1]
-                    adj_point = self.get_adjusted_point((x,y))
+                    adj_point = self.get_adjusted_point((x, y))
                     new_direction.append(adj_point)
 
                 # Change the namedtuples used for storing direction points
-                positions[robot]['direction'] = (Center(x=new_direction[0][0], 
-                                                        y=new_direction[0][1]
-                                                        ),
-                                                 Center(x=new_direction[1][0],
-                                                        y=new_direction[1][1]
-                                                        )
-                                                )
+                positions[robot]['direction'] = (
+                    Center(new_direction[0][0], new_direction[0][1]),
+                    Center(new_direction[1][0], new_direction[1][1]))
 
                 # Adjust the center point of the plate
                 x = positions[robot]['x']
                 y = positions[robot]['y']
-                new_point = self.get_adjusted_point((x,y))
+                new_point = self.get_adjusted_point((x, y))
                 positions[robot]['x'] = new_point[0]
                 positions[robot]['y'] = new_point[1]
         except:
             # At least one robot has not been found
-            pass   
+            pass
 
         return positions
 
@@ -301,7 +297,8 @@ class GUI(object):
 
         cv2.createTrackbar(self.BG_SUB, self.VISION, 0, 1, self.nothing)
         cv2.createTrackbar(self.NORMALIZE, self.VISION, 0, 1, self.nothing)
-        cv2.createTrackbar(self.COMMS, self.VISION, self.arduino.comms, 1,lambda x:  self.arduino.setComms(x))
+        cv2.createTrackbar(
+            self.COMMS, self.VISION, self.arduino.comms, 1, lambda x:  self.arduino.setComms(x))
 
     def to_info(self, args):
         """
@@ -330,8 +327,9 @@ class GUI(object):
     def cast_binary(self, x):
         return x == 1
 
-    def draw(self, frame, model_positions, actions, regular_positions, fps, 
-             aState, dState, a_action,d_action, grabbers, our_color, our_side, key=None, preprocess=None):
+    def draw(self, frame, model_positions, actions, regular_positions, fps,
+             aState, dState, a_action, d_action, grabbers, our_color, our_side,
+             key=None, preprocess=None):
         """
         Draw information onto the GUI given positions from the vision and post processing.
 
@@ -347,7 +345,9 @@ class GUI(object):
 
         their_color = list(TEAM_COLORS - set([our_color]))[0]
 
-        key_color_pairs = zip(['our_defender', 'their_defender', 'our_attacker', 'their_attacker'], [our_color, their_color]*2)
+        key_color_pairs = zip(
+            ['our_defender', 'their_defender', 'our_attacker', 'their_attacker'],
+            [our_color, their_color]*2)
 
         self.draw_ball(frame, regular_positions['ball'])
 
@@ -357,8 +357,6 @@ class GUI(object):
         # Draw fps on the canvas
         if fps is not None:
             self.draw_text(frame, 'FPS: %.1f' % fps, 0, 10, BGR_COMMON['green'], 1)
-
-
 
         if preprocess is not None:
             preprocess['normalize'] = self.cast_binary(
@@ -370,19 +368,19 @@ class GUI(object):
             self.draw_grabbers(frame, grabbers, frame_height)
 
         # Extend image downwards and draw states.
-        blank = np.zeros_like(frame)[:200,:,:]
-        frame_with_blank = np.vstack((frame,blank))
-        self.draw_states(frame_with_blank,aState,dState,(frame_width,frame_height))
+        blank = np.zeros_like(frame)[:200, :, :]
+        frame_with_blank = np.vstack((frame, blank))
+        self.draw_states(frame_with_blank, aState, dState, (frame_width, frame_height))
 
         if model_positions and regular_positions:
             for key in ['ball', 'our_defender', 'our_attacker', 'their_defender', 'their_attacker']:
                 if model_positions[key] and regular_positions[key]:
                     self.data_text(
-                        frame_with_blank, (frame_width, frame_height), our_side, key, 
+                        frame_with_blank, (frame_width, frame_height), our_side, key,
                         model_positions[key].x, model_positions[key].y,
-                        model_positions[key].angle, model_positions[key].velocity,a_action,d_action)
+                        model_positions[key].angle, model_positions[key].velocity, a_action, d_action)
                     self.draw_velocity(
-                        frame_with_blank, (frame_width,frame_height),
+                        frame_with_blank, (frame_width, frame_height),
                         model_positions[key].x, model_positions[key].y,
                         model_positions[key].angle, model_positions[key].velocity)
 
@@ -401,9 +399,11 @@ class GUI(object):
 
     def draw_ball(self, frame, position_dict):
         if position_dict and position_dict['x'] and position_dict['y']:
-            frame_height,frame_width,_ = frame.shape
-            self.draw_line(frame,((int(position_dict['x']),0),(int(position_dict['x']),frame_height)),1)
-            self.draw_line(frame,((0,int(position_dict['y'])),(frame_width,int(position_dict['y']))),1)
+            frame_height, frame_width, _ = frame.shape
+            self.draw_line(
+                frame, ((int(position_dict['x']), 0), (int(position_dict['x']), frame_height)), 1)
+            self.draw_line(
+                frame, ((0, int(position_dict['y'])), (frame_width, int(position_dict['y']))), 1)
 
     def draw_dot(self, frame, location):
         if location is not None:
@@ -422,19 +422,22 @@ class GUI(object):
 
         if position_dict['dot']:
             cv2.circle(
-                frame, (int(position_dict['dot'][0]), int(position_dict['dot'][1])), 4, BGR_COMMON['black'], -1)
+                frame, (int(position_dict['dot'][0]), int(position_dict['dot'][1])),
+                4, BGR_COMMON['black'], -1)
 
         if position_dict['direction']:
-            cv2.line(frame, position_dict['direction'][0], position_dict['direction'][1], BGR_COMMON['orange'], 2)
+            cv2.line(
+                frame, position_dict['direction'][0], position_dict['direction'][1],
+                BGR_COMMON['orange'], 2)
 
-    def draw_line(self, frame, points,thickness=2):
+    def draw_line(self, frame, points, thickness=2):
         if points is not None:
             cv2.line(frame, points[0], points[1], BGR_COMMON['red'], thickness)
 
+    def data_text(self, frame, frame_offset, our_side, text, x, y, angle, velocity, a_action, d_action):
 
-    def data_text(self, frame, frame_offset, our_side, text, x, y, angle, velocity,a_action,d_action):
         if x is not None and y is not None:
-            frame_width,frame_height = frame_offset
+            frame_width, frame_height = frame_offset
             if text == "ball":
                 y_offset = frame_height + 130
                 draw_x = 30
@@ -442,18 +445,18 @@ class GUI(object):
                 x_main = lambda zz: (frame_width/4)*zz
                 x_offset = 30
                 y_offset = frame_height+20
-                
-                if text=="our_defender":
+
+                if text == "our_defender":
                     draw_x = x_main(0) + x_offset
-                elif text=="our_attacker":
+                elif text == "our_attacker":
                     draw_x = x_main(2) + x_offset
-                elif text=="their_defender":
+                elif text == "their_defender":
                     draw_x = x_main(3) + x_offset
                 else:
                     draw_x = x_main(1) + x_offset
 
                 if our_side == "right":
-                    draw_x = frame_width-draw_x -80
+                    draw_x = frame_width-draw_x - 80
 
             self.draw_text(frame, text, draw_x, y_offset)
             self.draw_text(frame, 'x: %.2f' % x, draw_x, y_offset + 10)
@@ -464,16 +467,15 @@ class GUI(object):
 
             if velocity is not None:
                 self.draw_text(frame, 'velocity: %.2f' % velocity, draw_x, y_offset + 40)
-        if text == 'our_attacker':        
-            self.draw_actions(frame,a_action,draw_x, y_offset+50)
+        if text == 'our_attacker':
+            self.draw_actions(frame, a_action, draw_x, y_offset+50)
         elif text == 'our_defender':
-            self.draw_actions(frame,d_action,draw_x,y_offset+50)
-
-
+            self.draw_actions(frame, d_action, draw_x, y_offset+50)
 
     def draw_text(self, frame, text, x, y, color=BGR_COMMON['green'], thickness=1.3, size=0.3,):
         if x is not None and y is not None:
-            cv2.putText(frame, text, (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, size , color, thickness)
+            cv2.putText(
+                frame, text, (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, size, color, thickness)
 
     def draw_grabbers(self, frame, grabbers, height):
         def_grabber = grabbers['our_defender'][0]
@@ -491,33 +493,35 @@ class GUI(object):
         cv2.polylines(frame, [np.array(def_grabber)], True, BGR_COMMON['red'], 1)
         cv2.polylines(frame, [np.array(att_grabber)], True, BGR_COMMON['red'], 1)
 
-    def draw_velocity(self,frame,frame_offset,x,y,angle,vel,scale=10):
-        if not(None in [frame,x,y,angle,vel]) and vel is not 0:
-            frame_width,frame_height = frame_offset
+    def draw_velocity(self, frame, frame_offset, x, y, angle, vel, scale=10):
+        if not(None in [frame, x, y, angle, vel]) and vel is not 0:
+            frame_width, frame_height = frame_offset
             r = vel*scale
-            y = frame_height-y
-            start_point = (x,y)
-            end_point = (x+r*np.cos(angle),y-r*np.sin(angle))
-            self.draw_line(frame,(start_point,end_point))
+            y = frame_height - y
+            start_point = (x, y)
+            end_point = (x + r * np.cos(angle), y - r * np.sin(angle))
+            self.draw_line(frame, (start_point, end_point))
 
-    def draw_states(self,frame,aState,dState,frame_offset):
-        frame_width,frame_height = frame_offset
+    def draw_states(self, frame, aState, dState, frame_offset):
+        frame_width, frame_height = frame_offset
         x_main = lambda zz: (frame_width/4)*zz
         x_offset = 20
         y_offset = frame_height+140
 
-        self.draw_text(frame,"Attacker State:",x_main(1)-x_offset,y_offset,size=0.6)
-        self.draw_text(frame, aState[0],x_main(1)-x_offset,y_offset+15,size=0.6)
-        self.draw_text(frame, aState[1],x_main(1)-x_offset,y_offset+30,size=0.6)
+        self.draw_text(frame, "Attacker State:", x_main(1) - x_offset, y_offset, size=0.6)
+        self.draw_text(frame, aState[0], x_main(1) - x_offset, y_offset + 15, size=0.6)
+        self.draw_text(frame, aState[1], x_main(1) - x_offset, y_offset + 30, size=0.6)
 
-        self.draw_text(frame,"Defender State:",x_main(2)+x_offset,y_offset,size=0.6)
-        self.draw_text(frame, dState[0],x_main(2)+x_offset,y_offset+15,size=0.6)
-        self.draw_text(frame, dState[1],x_main(2)+x_offset,y_offset+30,size=0.6)
+        self.draw_text(frame, "Defender State:", x_main(2) + x_offset, y_offset, size=0.6)
+        self.draw_text(frame, dState[0], x_main(2) + x_offset, y_offset + 15, size=0.6)
+        self.draw_text(frame, dState[1], x_main(2)+x_offset, y_offset + 30, size=0.6)
 
-    def draw_actions(self,frame,action,x,y):
-
-        self.draw_text(frame, "Left Motor: " + str(action['left_motor']) , x, y+5,color=BGR_COMMON['white'])
-        self.draw_text(frame, "Right Motor: " + str(action['right_motor']) , x, y+15,color=BGR_COMMON['white'])
-        self.draw_text(frame, "Speed: " + str(action['speed']) , x, y+25,color=BGR_COMMON['white'])
-        self.draw_text(frame, "Kicker: " + str(action['kicker']) , x, y+35,color=BGR_COMMON['white'])
-        self.draw_text(frame, "Catcher: " + str(action['catcher']) , x, y+45,color=BGR_COMMON['white'])
+    def draw_actions(self, frame, action, x, y):
+        self.draw_text(
+            frame, "Left Motor: " + str(action['left_motor']), x, y+5, color=BGR_COMMON['white'])
+        self.draw_text(
+            frame, "Right Motor: " + str(action['right_motor']), x, y+15, color=BGR_COMMON['white'])
+        self.draw_text(
+            frame, "Speed: " + str(action['speed']), x, y + 25, color=BGR_COMMON['white'])
+        self.draw_text(frame, "Kicker: " + str(action['kicker']), x, y + 35, color=BGR_COMMON['white'])
+        self.draw_text(frame, "Catcher: " + str(action['catcher']), x, y + 45, color=BGR_COMMON['white'])
