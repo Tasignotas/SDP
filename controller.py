@@ -61,6 +61,8 @@ class Controller:
         self.GUI = GUI(calibration=self.calibration)
 
         self.color = color
+        
+        self.side = our_side
 
         self.preprocessing = Preprocessing()
 
@@ -119,7 +121,7 @@ class Controller:
                 actions = []
                 fps = float(counter) / (time.clock() - timer)
                 # Draw vision content and actions
-                self.GUI.draw(frame, model_positions, actions, regular_positions, fps, attackerState, defenderState, grabbers, our_color=self.color, key=c, preprocess=pre_options)
+                self.GUI.draw(frame, model_positions, actions, regular_positions, fps, attackerState, defenderState, grabbers, our_color=self.color, our_side=self.side, key=c, preprocess=pre_options)
                 counter += 1
 
 

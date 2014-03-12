@@ -328,7 +328,7 @@ class GUI(object):
         return x == 1
 
     def draw(self, frame, model_positions, actions, regular_positions, fps, 
-             aState, dState, grabbers, our_color, key=None, preprocess=None):
+             aState, dState, grabbers, our_color, our_side, key=None, preprocess=None):
         """
         Draw information onto the GUI given positions from the vision and post processing.
 
@@ -375,7 +375,7 @@ class GUI(object):
             for key in ['ball', 'our_defender', 'our_attacker', 'their_defender', 'their_attacker']:
                 if model_positions[key] and regular_positions[key]:
                     self.data_text(
-                        frame_with_blank, (frame_width, frame_height), key, 
+                        frame_with_blank, (frame_width, frame_height), our_side, key, 
                         model_positions[key].x, model_positions[key].y,
                         model_positions[key].angle, model_positions[key].velocity)
                     self.draw_velocity(
@@ -426,7 +426,7 @@ class GUI(object):
         if points is not None:
             cv2.line(frame, points[0], points[1], BGR_COMMON['red'], 2)
 
-    def data_text(self, frame, frame_offset, text, x, y, angle, velocity):
+    def data_text(self, frame, frame_offset, our_side, text, x, y, angle, velocity):
         if x is not None and y is not None:
             frame_width,frame_height = frame_offset
             if text == "ball":
@@ -436,15 +436,18 @@ class GUI(object):
                 x_main = lambda zz: (frame_width/4)*zz
                 x_offset = 30
                 y_offset = frame_height+20
-            
-                if x < x_main(1):
+                
+                if text=="our_defender":
                     draw_x = x_main(0) + x_offset
-                elif x < x_main(2):
-                    draw_x = x_main(1) + x_offset
-                elif x < x_main(3):
+                elif text=="our_attacker":
                     draw_x = x_main(2) + x_offset
-                else:
+                elif text=="their_defender":
                     draw_x = x_main(3) + x_offset
+                else:
+                    draw_x = x_main(1) + x_offset
+
+                if our_side == "right":
+                    draw_x = frame_width-draw_x
 
             self.draw_text(frame, text, draw_x, y_offset)
             self.draw_text(frame, 'x: %.2f' % x, draw_x, y_offset + 10)
