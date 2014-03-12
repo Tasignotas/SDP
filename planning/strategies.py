@@ -163,13 +163,38 @@ class AttackerScoreDynamic(Strategy):
         2) Move to aim into one corner of the goal.
         3) Re-rotate and aim into the other corner
         4) Shoot
+
+    Effectivness:
+        * Only effective if their attacker is not standing on the white line
+          close to us. They need to be at least 40px (the side facing us) from
+          the division line between defender and attacker.
     """
     GRABBED, POSITION,  = 'GRABBED', 'POSITION'
     CONFUSE1, CONFUSE2, SHOOT = 'CONFUSE1', 'CONFUSE2', 'SHOOT'
     STATES = [GRABBED, POSITION, CONFUSE1, CONFUSE2, SHOOT]
 
+    # Map states into functions
+    NEXT_ACTION_MAP = {
+        GRABBED: self.position,
+        POSITION: self.confuse_one,
+        CONFUSE1: self.confuse_two,
+        CONFUSE2: self.shoot
+    }
+
     def __init__(self, world):
         super(AttackerScoreDynamic, self).__init__(world, self.STATES)
 
     def generate(self):
+        return self.NEXT_ACTION_MAP[self.current_state]()
+
+    def position(self):
+        pass
+
+    def confuse_one(self):
+        pass
+
+    def confuse_two(self):
+        pass
+
+    def shoot(self):
         pass
