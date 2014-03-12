@@ -169,26 +169,52 @@ class AttackerScoreDynamic(Strategy):
           close to us. They need to be at least 40px (the side facing us) from
           the division line between defender and attacker.
     """
-    GRABBED, POSITION,  = 'GRABBED', 'POSITION'
+    GRABBED, POSITION = 'GRABBED', 'POSITION'
     CONFUSE1, CONFUSE2, SHOOT = 'CONFUSE1', 'CONFUSE2', 'SHOOT'
     STATES = [GRABBED, POSITION, CONFUSE1, CONFUSE2, SHOOT]
 
-    # Map states into functions
-    NEXT_ACTION_MAP = {
-        GRABBED: self.position,
-        POSITION: self.confuse_one,
-        CONFUSE1: self.confuse_two,
-        CONFUSE2: self.shoot
-    }
+    SHOOTING_X_OFFSET = 30
 
     def __init__(self, world):
         super(AttackerScoreDynamic, self).__init__(world, self.STATES)
+        # Map states into functions
+        self.NEXT_ACTION_MAP = {
+            self.GRABBED: self.position,
+            self.POSITION: self.confuse_one,
+            self.CONFUSE1: self.confuse_two,
+            self.CONFUSE2: self.shoot
+        }
+
+        self.our_attacker = self.world.our_attacker
+
+        # Find the position to shoot from and cache it
+        self.shooting_pos = self._get_shooting_coordinates(self.our_attacker)
 
     def generate(self):
+        """
+        Pick an action based on current state.
+        """
         return self.NEXT_ACTION_MAP[self.current_state]()
 
     def position(self):
-        pass
+        ideal_x, ideal_y = self.shooting_pos
+
+    def _get_shooting_coordinates(self, robot):
+        zone_index = robot.zone
+        zone_poly = self.world.pitch.zones[zone_index][0]
+
+        # Find the x coordinate of where we need to go
+        # Find which function to use, min for us on the right, max otherwise
+        f = max if zone_index == 2 else min
+        x = int(f(zone_poly, key=lambda z: z[0])[0])
+
+        # Offset x to be a wee bit inside our zone
+        x = x - self.SHOOTING_X_OFFSET if zone_index == 2 else x + self.SHOOTING_X_OFFSET
+
+        # y is simply middle of the pitch
+        y = self.world.pitch.height / 2
+
+        return (x, y)
 
     def confuse_one(self):
         pass
