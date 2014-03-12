@@ -450,7 +450,7 @@ class GUI(object):
                     draw_x = x_main(1) + x_offset
 
                 if our_side == "right":
-                    draw_x = frame_width-draw_x
+                    draw_x = frame_width-draw_x -80
 
             self.draw_text(frame, text, draw_x, y_offset)
             self.draw_text(frame, 'x: %.2f' % x, draw_x, y_offset + 10)
