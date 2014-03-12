@@ -328,7 +328,7 @@ class GUI(object):
         return x == 1
 
     def draw(self, frame, model_positions, actions, regular_positions, fps, 
-             aState, dState, grabbers, our_color, key=None, preprocess=None):
+             aState, dState, a_action,d_action, grabbers, our_color, key=None, preprocess=None):
         """
         Draw information onto the GUI given positions from the vision and post processing.
 
@@ -377,7 +377,7 @@ class GUI(object):
                     self.data_text(
                         frame_with_blank, (frame_width, frame_height), key, 
                         model_positions[key].x, model_positions[key].y,
-                        model_positions[key].angle, model_positions[key].velocity)
+                        model_positions[key].angle, model_positions[key].velocity,a_action,d_action)
                     self.draw_velocity(
                         frame_with_blank, (frame_width,frame_height),
                         model_positions[key].x, model_positions[key].y,
@@ -426,11 +426,11 @@ class GUI(object):
         if points is not None:
             cv2.line(frame, points[0], points[1], BGR_COMMON['red'], 2)
 
-    def data_text(self, frame, frame_offset, text, x, y, angle, velocity):
+    def data_text(self, frame, frame_offset, text, x, y, angle, velocity,a_action,d_action):
         if x is not None and y is not None:
             frame_width,frame_height = frame_offset
             if text == "ball":
-                y_offset = frame_height + 120
+                y_offset = frame_height + 130
                 draw_x = 30
             else:
                 x_main = lambda zz: (frame_width/4)*zz
@@ -455,6 +455,12 @@ class GUI(object):
 
             if velocity is not None:
                 self.draw_text(frame, 'velocity: %.2f' % velocity, draw_x, y_offset + 40)
+        if text == 'our_attacker':        
+            self.draw_actions(frame,a_action,draw_x, y_offset+50)
+        elif text == 'our_defender':
+            self.draw_actions(frame,d_action,draw_x,y_offset+50)
+
+
 
     def draw_text(self, frame, text, x, y, color=BGR_COMMON['green'], thickness=1.3, size=0.3,):
         if x is not None and y is not None:
@@ -489,7 +495,7 @@ class GUI(object):
         frame_width,frame_height = frame_offset
         x_main = lambda zz: (frame_width/4)*zz
         x_offset = 20
-        y_offset = frame_height+120
+        y_offset = frame_height+140
 
         self.draw_text(frame,"Attacker State:",x_main(1)-x_offset,y_offset,size=0.6)
         self.draw_text(frame, aState[0],x_main(1)-x_offset,y_offset+15,size=0.6)
@@ -498,3 +504,11 @@ class GUI(object):
         self.draw_text(frame,"Defender State:",x_main(2)+x_offset,y_offset,size=0.6)
         self.draw_text(frame, dState[0],x_main(2)+x_offset,y_offset+15,size=0.6)
         self.draw_text(frame, dState[1],x_main(2)+x_offset,y_offset+30,size=0.6)
+
+    def draw_actions(self,frame,action,x,y):
+
+        self.draw_text(frame, "Left Motor: " + str(action['left_motor']) , x, y+5,color=BGR_COMMON['white'])
+        self.draw_text(frame, "Right Motor: " + str(action['right_motor']) , x, y+15,color=BGR_COMMON['white'])
+        self.draw_text(frame, "Speed: " + str(action['speed']) , x, y+25,color=BGR_COMMON['white'])
+        self.draw_text(frame, "Kicker: " + str(action['kicker']) , x, y+35,color=BGR_COMMON['white'])
+        self.draw_text(frame, "Catcher: " + str(action['catcher']) , x, y+45,color=BGR_COMMON['white'])

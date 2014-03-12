@@ -119,7 +119,7 @@ class Controller:
                 actions = []
                 fps = float(counter) / (time.clock() - timer)
                 # Draw vision content and actions
-                self.GUI.draw(frame, model_positions, actions, regular_positions, fps, attackerState, defenderState, grabbers, our_color=self.color, key=c, preprocess=pre_options)
+                self.GUI.draw(frame, model_positions, actions, regular_positions, fps, attackerState, defenderState, attacker_actions, defender_actions, grabbers, our_color=self.color, key=c, preprocess=pre_options)
                 counter += 1
 
 
@@ -170,7 +170,7 @@ class Defender_Controller(Robot_Controller):
         """
         Execute robot action.
         """
-        print action
+        #print action
         left_motor = action['left_motor']
         right_motor = action['right_motor']
         speed = int(action['speed'])
