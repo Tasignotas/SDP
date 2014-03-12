@@ -355,17 +355,7 @@ class GUI(object):
         if fps is not None:
             self.draw_text(frame, 'FPS: %.1f' % fps, 0, 10, BGR_COMMON['green'], 1)
 
-        if model_positions and regular_positions:
-            for key in ['ball', 'our_defender', 'our_attacker', 'their_defender', 'their_attacker']:
-                if model_positions[key] and regular_positions[key]:
-                    self.data_text(
-                        frame, key, regular_positions[key]['y'],
-                        model_positions[key].x, model_positions[key].y,
-                        model_positions[key].angle, model_positions[key].velocity)
-                    self.draw_velocity(
-                        frame,
-                        model_positions[key].x, model_positions[key].y,
-                        model_positions[key].angle, model_positions[key].velocity)
+
 
         if preprocess is not None:
             preprocess['normalize'] = self.cast_binary(
@@ -377,9 +367,21 @@ class GUI(object):
             self.draw_grabbers(frame, grabbers, frame_height)
 
         # Extend image downwards and draw states.
-        blank = np.zeros_like(frame)[:100,:,:]
+        blank = np.zeros_like(frame)[:200,:,:]
         frame_with_blank = np.vstack((frame,blank))
         self.draw_states(frame_with_blank,aState,dState,(frame_width,frame_height))
+
+        if model_positions and regular_positions:
+            for key in ['ball', 'our_defender', 'our_attacker', 'their_defender', 'their_attacker']:
+                if model_positions[key] and regular_positions[key]:
+                    self.data_text(
+                        frame_with_blank, (frame_width, frame_height), key, 
+                        model_positions[key].x, model_positions[key].y,
+                        model_positions[key].angle, model_positions[key].velocity)
+                    self.draw_velocity(
+                        frame_with_blank, (frame_width,frame_height),
+                        model_positions[key].x, model_positions[key].y,
+                        model_positions[key].angle, model_positions[key].velocity)
 
         # Draw center of uncroppped frame (test code)
         # cv2.circle(frame_with_blank, (266,147), 1, BGR_COMMON['black'], 1)
@@ -424,17 +426,35 @@ class GUI(object):
         if points is not None:
             cv2.line(frame, points[0], points[1], BGR_COMMON['red'], 2)
 
-    def data_text(self, frame, text, text_y, x, y, angle, velocity):
-        if x is not None and y is not None and text_y is not None:
-            self.draw_text(frame, text, x, text_y)
-            self.draw_text(frame, 'x: %.2f' % x, x, text_y + 10)
-            self.draw_text(frame, 'y: %.2f' % y, x, text_y + 20)
+    def data_text(self, frame, frame_offset, text, x, y, angle, velocity):
+        if x is not None and y is not None:
+            frame_width,frame_height = frame_offset
+            if text == "ball":
+                y_offset = frame_height + 120
+                draw_x = 30
+            else:
+                x_main = lambda zz: (frame_width/4)*zz
+                x_offset = 30
+                y_offset = frame_height+20
+            
+                if x < x_main(1):
+                    draw_x = x_main(0) + x_offset
+                elif x < x_main(2):
+                    draw_x = x_main(1) + x_offset
+                elif x < x_main(3):
+                    draw_x = x_main(2) + x_offset
+                else:
+                    draw_x = x_main(3) + x_offset
+
+            self.draw_text(frame, text, draw_x, y_offset)
+            self.draw_text(frame, 'x: %.2f' % x, draw_x, y_offset + 10)
+            self.draw_text(frame, 'y: %.2f' % y, draw_x, y_offset + 20)
 
             if angle is not None:
-                self.draw_text(frame, 'angle: %.2f' % angle, x, text_y + 30)
+                self.draw_text(frame, 'angle: %.2f' % angle, draw_x, y_offset + 30)
 
             if velocity is not None:
-                self.draw_text(frame, 'velocity: %.2f' % velocity, x, text_y + 40)
+                self.draw_text(frame, 'velocity: %.2f' % velocity, draw_x, y_offset + 40)
 
     def draw_text(self, frame, text, x, y, color=BGR_COMMON['green'], thickness=1.3, size=0.3,):
         if x is not None and y is not None:
@@ -456,23 +476,25 @@ class GUI(object):
         cv2.polylines(frame, [np.array(def_grabber)], True, BGR_COMMON['red'], 1)
         cv2.polylines(frame, [np.array(att_grabber)], True, BGR_COMMON['red'], 1)
 
-    def draw_velocity(self,frame,x,y,angle,vel,scale=10):
+    def draw_velocity(self,frame,frame_offset,x,y,angle,vel,scale=10):
         if not(None in [frame,x,y,angle,vel]) and vel is not 0:
-            frame_height,_,_ = frame.shape
+            frame_width,frame_height = frame_offset
             r = vel*scale
             y = frame_height-y
             start_point = (x,y)
             end_point = (x+r*np.cos(angle),y-r*np.sin(angle))
-            print (start_point,end_point)
             self.draw_line(frame,(start_point,end_point))
 
     def draw_states(self,frame,aState,dState,frame_offset):
         frame_width,frame_height = frame_offset
+        x_main = lambda zz: (frame_width/4)*zz
+        x_offset = 20
+        y_offset = frame_height+120
 
-        self.draw_text(frame,"Attacker State:",(frame_width/4)-20,frame_height+20,size=0.6)
-        self.draw_text(frame, aState[0],(frame_width/4)-20,frame_height+35,size=0.6)
-        self.draw_text(frame, aState[1],(frame_width/4)-20,frame_height+50,size=0.6)
+        self.draw_text(frame,"Attacker State:",x_main(1)-x_offset,y_offset,size=0.6)
+        self.draw_text(frame, aState[0],x_main(1)-x_offset,y_offset+15,size=0.6)
+        self.draw_text(frame, aState[1],x_main(1)-x_offset,y_offset+30,size=0.6)
 
-        self.draw_text(frame,"Defender State:",(frame_width/4)*2+20,frame_height+20,size=0.6)
-        self.draw_text(frame, dState[0],(frame_width/4)*2+20,frame_height+35,size=0.6)
-        self.draw_text(frame, dState[1],(frame_width/4)*2+20,frame_height+50,size=0.6)
+        self.draw_text(frame,"Defender State:",x_main(2)+x_offset,y_offset,size=0.6)
+        self.draw_text(frame, dState[0],x_main(2)+x_offset,y_offset+15,size=0.6)
+        self.draw_text(frame, dState[1],x_main(2)+x_offset,y_offset+30,size=0.6)
