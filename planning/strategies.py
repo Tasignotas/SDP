@@ -155,8 +155,18 @@ class DefaultAttackerAttack(Strategy):
 
 
 class AttackerScoreDynamic(Strategy):
+    """
+    Goal scoring tactic. Assumes it will be executed when the robot has grabbed the ball.
 
-    STATES = ['GRABBED', 'POSITION', 'CONFUSE', 'SHOOT']
+    Outline:
+        1) Position the robot closer to the border line.
+        2) Move to aim into one corner of the goal.
+        3) Re-rotate and aim into the other corner
+        4) Shoot
+    """
+    GRABBED, POSITION,  = 'GRABBED', 'POSITION'
+    CONFUSE1, CONFUSE2, SHOOT = 'CONFUSE1', 'CONFUSE2', 'SHOOT'
+    STATES = [GRABBED, POSITION, CONFUSE1, CONFUSE2, SHOOT]
 
     def __init__(self, world):
         super(AttackerScoreDynamic, self).__init__(world, self.STATES)
