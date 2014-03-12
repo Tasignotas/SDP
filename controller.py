@@ -239,18 +239,17 @@ class Arduino:
     def __init__(self,port,rate,timeOut,comms):
         self.serial = None
         self.comms = comms
-        self.setComms(comms)
         self.port = port
         self.rate = rate
         self.timeout = timeOut
+        self.setComms(comms)
 
     def setComms(self,comms):
-
         if comms >0:
             self.comms = 1
             if self.serial == None:
                 try:
-                    self.serial = serial.Serial(port,rate,timeout=timeOut)
+                    self.serial = serial.Serial(self.port,self.rate,timeout=self.timeout)
                 except:
                     print "No Arduino detected!"
                     print "Continuing without comms."
