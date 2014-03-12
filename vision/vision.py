@@ -328,7 +328,7 @@ class GUI(object):
         return x == 1
 
     def draw(self, frame, model_positions, actions, regular_positions, fps, 
-             aState, dState, a_action,d_action, grabbers, our_color, key=None, preprocess=None):
+             aState, dState, a_action,d_action, grabbers, our_color, our_side, key=None, preprocess=None):
         """
         Draw information onto the GUI given positions from the vision and post processing.
 
@@ -375,7 +375,7 @@ class GUI(object):
             for key in ['ball', 'our_defender', 'our_attacker', 'their_defender', 'their_attacker']:
                 if model_positions[key] and regular_positions[key]:
                     self.data_text(
-                        frame_with_blank, (frame_width, frame_height), key, 
+                        frame_with_blank, (frame_width, frame_height), our_side, key, 
                         model_positions[key].x, model_positions[key].y,
                         model_positions[key].angle, model_positions[key].velocity,a_action,d_action)
                     self.draw_velocity(
@@ -398,7 +398,9 @@ class GUI(object):
 
     def draw_ball(self, frame, position_dict):
         if position_dict and position_dict['x'] and position_dict['y']:
-            cv2.circle(frame, (int(position_dict['x']), int(position_dict['y'])), 7, BGR_COMMON['red'], 2)
+            frame_height,frame_width,_ = frame.shape
+            self.draw_line(frame,((int(position_dict['x']),0),(int(position_dict['x']),frame_height)),1)
+            self.draw_line(frame,((0,int(position_dict['y'])),(frame_width,int(position_dict['y']))),1)
 
     def draw_dot(self, frame, location):
         if location is not None:
@@ -422,11 +424,12 @@ class GUI(object):
         if position_dict['direction']:
             cv2.line(frame, position_dict['direction'][0], position_dict['direction'][1], BGR_COMMON['orange'], 2)
 
-    def draw_line(self, frame, points):
+    def draw_line(self, frame, points,thickness=2):
         if points is not None:
-            cv2.line(frame, points[0], points[1], BGR_COMMON['red'], 2)
+            cv2.line(frame, points[0], points[1], BGR_COMMON['red'], thickness)
 
-    def data_text(self, frame, frame_offset, text, x, y, angle, velocity,a_action,d_action):
+
+    def data_text(self, frame, frame_offset, our_side, text, x, y, angle, velocity,a_action,d_action):
         if x is not None and y is not None:
             frame_width,frame_height = frame_offset
             if text == "ball":
@@ -436,15 +439,18 @@ class GUI(object):
                 x_main = lambda zz: (frame_width/4)*zz
                 x_offset = 30
                 y_offset = frame_height+20
-            
-                if x < x_main(1):
+                
+                if text=="our_defender":
                     draw_x = x_main(0) + x_offset
-                elif x < x_main(2):
-                    draw_x = x_main(1) + x_offset
-                elif x < x_main(3):
+                elif text=="our_attacker":
                     draw_x = x_main(2) + x_offset
-                else:
+                elif text=="their_defender":
                     draw_x = x_main(3) + x_offset
+                else:
+                    draw_x = x_main(1) + x_offset
+
+                if our_side == "right":
+                    draw_x = frame_width-draw_x
 
             self.draw_text(frame, text, draw_x, y_offset)
             self.draw_text(frame, 'x: %.2f' % x, draw_x, y_offset + 10)
