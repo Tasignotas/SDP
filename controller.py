@@ -268,8 +268,13 @@ if __name__ == '__main__':
     parser.add_argument("pitch", help="[0] Main pitch, [1] Secondary pitch")
     parser.add_argument("side", help="The side of our defender ['left', 'right'] allowed.")
     parser.add_argument("color", help="The color of our team - ['yellow', 'blue'] allowed.")
+    parser.add_argument("-n","--nocomms", help="Disables sending commands to the robot.",action="store_true")
     args = parser.parse_args()
     # print args
-    c = Controller(
-        pitch=int(args.pitch), color=args.color, our_side=args.side).wow()  # Such controller
+    if args.nocomms:
+        c = Controller(
+            pitch=int(args.pitch), color=args.color, our_side=args.side,comms=0).wow()  # Such controller
+    else:
+        c = Controller(
+            pitch=int(args.pitch), color=args.color, our_side=args.side).wow()
 
