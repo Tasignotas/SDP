@@ -253,7 +253,12 @@ class Arduino:
 
     def flipComms(self):
         if self.comms == 0 and self.serial == None:
-            self.serial = serial.Serial(self.port,self.rate,self.timeout)
+            try:
+                self.serial = serial.Serial(self.port,self.rate,self.timeout)
+            except:
+                print "No Arduino detected!"
+                print "Continuing without comms."
+                self.comms=1
         self.comms = 1-self.comms
 
 
