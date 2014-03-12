@@ -19,6 +19,7 @@ PITCHES = [0, 1]
 
 PROCESSING_DEBUG = False
 
+Center = namedtuple('Center', 'x y')
 
 class Vision:
     """
@@ -125,30 +126,64 @@ class Vision:
 
         return model_positions, regular_positions, adjusted_positions
 
-    def get_adjusted_positions(self, regular_positions):
-        robots = ['our_attacker', 'their_attacker', 'our_defender', 'their_defender']
+    def get_adjusted_point(self, point):
+        """
+        Given a point on the plane, calculate the adjusted point, by taking into account
+        the height of the robot, the height of the camera and the distance of the point
+        from the center of the lens.
+        """
         plane_height = 250.0
         robot_height = 20.0
         coefficient = robot_height/plane_height
+        x = point[0]
+        y = point[1]
 
+        dist_x = float(x - self.frame_center[0])
+        dist_y = float(y - self.frame_center[1])
+
+        delta_x = dist_x * coefficient
+        delta_y = dist_y * coefficient
+
+        return (int(x-delta_x), int(y-delta_y))
+
+
+    def get_adjusted_positions(self, regular_positions):
+        robots = ['our_attacker', 'their_attacker', 'our_defender', 'their_defender']
         positions = deepcopy(regular_positions)
 
         try:
             for robot in robots:
-                # Process each corner of the plate
+                # Adjust each corner of the plate
                 for i in range(4):
                     x = positions[robot]['box'][i][0]
                     y = positions[robot]['box'][i][1]
+                    positions[robot]['box'][i] = self.get_adjusted_point((x,y))
 
-                    dist_x = float(x - self.frame_center[0])
-                    dist_y = float(y - self.frame_center[1])
 
-                    delta_x = dist_x * coefficient
-                    delta_y = dist_y * coefficient
+                new_direction = []
+                for i in range(2):
+                    # Adjust front line
+                    x = positions[robot]['front'][i][0]
+                    y = positions[robot]['front'][i][1]
+                    positions[robot]['front'][i] = self.get_adjusted_point((x,y))
 
-                    positions[robot]['box'][i] = (int(x-delta_x), int(y-delta_y))
+                    # Adjust direction line
+                    x = positions[robot]['direction'][i][0]
+                    y = positions[robot]['direction'][i][1]
+                    adj_point = self.get_adjusted_point((x,y))
+                    new_direction.append(adj_point)
+
+                # Change the namedtuples used for storing direction points
+                positions[robot]['direction'] = (Center(x=new_direction[0][0], 
+                                                        y=new_direction[0][1]
+                                                        ),
+                                                 Center(x=new_direction[1][0],
+                                                        y=new_direction[1][1]
+                                                        )
+                                                )
+
         except:
-            pass
+            pass        
         return positions
 
     def _run_trackers(self, frame):
@@ -287,7 +322,8 @@ class GUI(object):
     def cast_binary(self, x):
         return x == 1
 
-    def draw(self, frame, model_positions, actions, regular_positions, fps, aState, dState, grabbers, our_color, key=None, preprocess=None):
+    def draw(self, frame, model_positions, actions, regular_positions, adjusted_positions, 
+             fps, aState, dState, grabbers, our_color, key=None, preprocess=None):
         """
         Draw information onto the GUI given positions from the vision and post processing.
 
@@ -309,6 +345,7 @@ class GUI(object):
 
         for key, color in key_color_pairs:
             self.draw_robot(frame, regular_positions[key], color)
+            self.draw_robot(frame, adjusted_positions[key], color)
 
         # Draw fps on the canvas
         if fps is not None:
