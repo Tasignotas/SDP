@@ -104,6 +104,8 @@ class Vision:
         """
         # Run trackers as processes
         positions = self._run_trackers(frame)
+        # Correct for perspective
+        positions = self.get_adjusted_positions(positions)
 
         # Wrap list of positions into a dictionary
         keys = ['our_defender', 'our_attacker', 'their_defender', 'their_attacker', 'ball']
@@ -122,9 +124,7 @@ class Vision:
             'ball': self.to_info(positions[4], height)
         }
 
-        adjusted_positions = self.get_adjusted_positions(regular_positions)
-
-        return model_positions, regular_positions, adjusted_positions
+        return model_positions, regular_positions
 
     def get_adjusted_point(self, point):
         """
@@ -135,6 +135,7 @@ class Vision:
         plane_height = 250.0
         robot_height = 20.0
         coefficient = robot_height/plane_height
+
         x = point[0]
         y = point[1]
 
@@ -147,12 +148,10 @@ class Vision:
         return (int(x-delta_x), int(y-delta_y))
 
 
-    def get_adjusted_positions(self, regular_positions):
-        robots = ['our_attacker', 'their_attacker', 'our_defender', 'their_defender']
-        positions = deepcopy(regular_positions)
-
+    def get_adjusted_positions(self, input_positions):
+        positions = deepcopy(input_positions)
         try:
-            for robot in robots:
+            for robot in range(4):
                 # Adjust each corner of the plate
                 for i in range(4):
                     x = positions[robot]['box'][i][0]
@@ -183,6 +182,7 @@ class Vision:
                                                 )
 
         except:
+            # Robot has not been found
             pass        
         return positions
 
@@ -322,8 +322,8 @@ class GUI(object):
     def cast_binary(self, x):
         return x == 1
 
-    def draw(self, frame, model_positions, actions, regular_positions, adjusted_positions, 
-             fps, aState, dState, grabbers, our_color, key=None, preprocess=None):
+    def draw(self, frame, model_positions, actions, regular_positions, fps, 
+             aState, dState, grabbers, our_color, key=None, preprocess=None):
         """
         Draw information onto the GUI given positions from the vision and post processing.
 
@@ -345,7 +345,6 @@ class GUI(object):
 
         for key, color in key_color_pairs:
             self.draw_robot(frame, regular_positions[key], color)
-            self.draw_robot(frame, adjusted_positions[key], color)
 
         # Draw fps on the canvas
         if fps is not None:
