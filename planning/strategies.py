@@ -168,6 +168,28 @@ class AttackerScoreDynamic(Strategy):
         * Only effective if their attacker is not standing on the white line
           close to us. They need to be at least 40px (the side facing us) from
           the division line between defender and attacker.
+        * If opponent's grabber is extended we may not get any leavway for scoring.
+          This assumes that they effectively predict direction and optimize for
+          maximum blocking area.
+
+    Maths:
+        * When the opponent is defending ideally, we have about 15 degrees leaveway to
+          score
+        * Each ~5 pixels away from the ideal position we lose 2 degrees
+            - Imprecision of 15px results in highly unprobable score in CONFUSE1.
+            - Probability of scoring increases in CONFUSE2
+        * Size of their grabber in extended position is not factored in
+
+    TODO:
+        * Finish implementing
+        * After CONFUSE1, check if we have a clear shot at the goal and shoot
+            - Defender's velocity should be taken into consideration
+                - if velocity high, we are better off pulling off the CONFUSE2 part
+                - if low, best to try to shoot as opponent's vision/delay may not pickup the trick
+        * Attempt to pick sides based on their robot velocity as well
+        * Contigency
+            - If both CONFUSE1 and CONFUSE2 fail, we may switch strategies or resort to a shot
+              either UP or DOWN, based on their position.
     """
     GRABBED, POSITION = 'GRABBED', 'POSITION'
     CONFUSE1, CONFUSE2, SHOOT = 'CONFUSE1', 'CONFUSE2', 'SHOOT'
