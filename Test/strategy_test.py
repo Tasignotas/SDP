@@ -132,3 +132,27 @@ class AttackerScoreDynamicTestCase(unittest.TestCase):
         strategy = AttackerScoreDynamic(self.world_left)
         actions = strategy.generate()
         self.assertEqual(strategy.POSITION, strategy.current_state)
+
+    def test_progress_to_target(self):
+        """
+        Approach the target in steps of 10 and verify that the state changes.
+        """
+        target_x, target_y = self.strategy_left._get_shooting_coordinates(
+            self.world_left.our_attacker)
+
+        expected_iterations = math.ceil(target_x / 10.0)
+        max_iterations = 60
+
+        for x in range(max_iterations):
+            robot = self.get_aimed_robot(
+                x * 10, target_y + 1, target_x, target_y, self.world_left.our_attacker.zone)
+
+            self.place_robot(self.world_left, self.world_left.our_attacker.zone, robot)
+
+            strategy = AttackerScoreDynamic(self.world_left)
+            actions = strategy.generate()
+
+            if strategy.current_state == strategy.POSITION:
+                break
+
+        self.assertEqual(expected_iterations, x)
