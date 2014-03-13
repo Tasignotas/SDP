@@ -173,6 +173,8 @@ class AttackerScoreDynamic(Strategy):
     CONFUSE1, CONFUSE2, SHOOT = 'CONFUSE1', 'CONFUSE2', 'SHOOT'
     STATES = [GRABBED, POSITION, CONFUSE1, CONFUSE2, SHOOT]
 
+    UP, DOWN = 'UP', 'DOWN'
+
     SHOOTING_X_OFFSET = 30
 
     def __init__(self, world):
@@ -186,9 +188,13 @@ class AttackerScoreDynamic(Strategy):
         }
 
         self.our_attacker = self.world.our_attacker
+        self.their_defender = self.world.their_defender
 
         # Find the position to shoot from and cache it
         self.shooting_pos = self._get_shooting_coordinates(self.our_attacker)
+
+        # Remember which side we picked first
+        self.fake_shoot_side = None
 
     def generate(self):
         """
@@ -197,9 +203,54 @@ class AttackerScoreDynamic(Strategy):
         return self.NEXT_ACTION_MAP[self.current_state]()
 
     def position(self):
+        """
+        Position the robot in the middle close to the goal. Angle does not matter.
+        """
         ideal_x, ideal_y = self.shooting_pos
+        distance, angle = self.our_attacker.get_direction_to_point(ideal_x, ideal_y)
+
+        if has_matched(self.our_attacker, x=ideal_x, y=ideal_y):
+            # We've reached the POSITION state.
+            self.current_state = self.POSITION
+            return self.confuse_one()
+
+        # We still need to drive
+        return calculate_motor_speed(distance, angle)
+
+    def confuse_one(self):
+        """
+        Pick a side and aim at it.
+        """
+        # Initialize fake shoot side if not available
+        if self.fake_shoot_side is None:
+            self.fake_shoot_side = self._get_fake_shoot_side(self.their_defender)
+
+        target_x = self.world.their_goal.x
+        target_y = self._get_goal_corner_y(self.fake_shoot_side)
+
+        angle = self.our_attacker.get_rotation_to_point(target_x, target_y)
+
+        if has_matched(self.our_attacker, angle=angle):
+            # We've finished CONFUSE1
+            self.current_state = self.CONFUSE1
+            return self.confuse_two()
+
+        # Rotate on the spot
+        return calculate_motor_speed(None, angle)
+
+    def confuse_two(self):
+        """
+        Rotate to the other side and make them go 'Wow, much rotate'.
+        """
+        pass
+
+    def shoot(self):
+        pass
 
     def _get_shooting_coordinates(self, robot):
+        """
+        Retrive the coordinates to which we need to move before we set up the confuse shot.
+        """
         zone_index = robot.zone
         zone_poly = self.world.pitch.zones[zone_index][0]
 
@@ -216,11 +267,20 @@ class AttackerScoreDynamic(Strategy):
 
         return (x, y)
 
-    def confuse_one(self):
-        pass
+    def _get_fake_shoot_side(self, robot):
+        """
+        Compare the location of their robot with the middle to pick the first side
+        """
+        y = robot.y
+        middle = self.world.pitch.height / 2
+        return self.DOWN if y < middle else self.UP
 
-    def confuse_two(self):
-        pass
-
-    def shoot(self):
-        pass
+    def _get_goal_corner_y(self, side):
+        """
+        Get the coordinates of where to aim / shoot.
+        """
+        assert side in [self.UP, self.DOWN]
+        if side == self.UP:
+            # y coordinate of the goal is DOWN, offset by the width
+            return self.world.their_goal.y + self.world.their_goal.width
+        return self.world.their_goal.y
