@@ -271,7 +271,7 @@ class AttackerScoreDynamic(Strategy):
         other_side = self._get_other_side(self.fake_shoot_side)
         # Determine targets
         target_x = self.world.their_goal.x
-        target_y = self._get_shooting_coordinates(other_side)
+        target_y = self._get_goal_corner_y(other_side)
 
         angle = self.our_attacker.get_rotation_to_point(target_x, target_y)
 
@@ -315,6 +315,7 @@ class AttackerScoreDynamic(Strategy):
         """
         y = robot.y
         middle = self.world.pitch.height / 2
+        print 'MIDDLE', middle
         return self.DOWN if y < middle else self.UP
 
     def _get_other_side(self, side):
