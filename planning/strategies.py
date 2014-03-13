@@ -268,10 +268,26 @@ class AttackerScoreDynamic(Strategy):
         """
         Rotate to the other side and make them go 'Wow, much rotate'.
         """
-        pass
+        other_side = self._get_other_side(self.fake_shoot_side)
+        # Determine targets
+        target_x = self.world.their_goal.x
+        target_y = self._get_shooting_coordinates(other_side)
+
+        angle = self.our_attacker.get_rotation_to_point(target_x, target_y)
+
+        if has_matched(self.our_attacker, angle=angle):
+            # We've finished CONFUSE2
+            self.current_state = self.SHOOT
+            return self.shoot()
+
+        # Rotate on the spot
+        return calculate_motor_speed(None, angle)
 
     def shoot(self):
-        pass
+        """
+        Kick.
+        """
+        return kick_ball()
 
     def _get_shooting_coordinates(self, robot):
         """
@@ -302,6 +318,9 @@ class AttackerScoreDynamic(Strategy):
         return self.DOWN if y < middle else self.UP
 
     def _get_other_side(self, side):
+        """
+        Determine the other side to rotate to based on the CONFUSE1 side.
+        """
         assert side in self.GOAL_SIDES
         return self.UP if side == self.DOWN else self.DOWN
 
