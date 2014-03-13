@@ -197,7 +197,7 @@ class AttackerScoreDynamic(Strategy):
 
     UP, DOWN = 'UP', 'DOWN'
 
-    SHOOTING_X_OFFSET = 30
+    SHOOTING_X_OFFSET = 20
 
     def __init__(self, world):
         super(AttackerScoreDynamic, self).__init__(world, self.STATES)
@@ -254,7 +254,7 @@ class AttackerScoreDynamic(Strategy):
 
         if has_matched(self.our_attacker, angle=angle):
             # We've finished CONFUSE1
-            self.current_state = self.CONFUSE1
+            self.current_state = self.CONFUSE2
             return self.confuse_two()
 
         # Rotate on the spot
