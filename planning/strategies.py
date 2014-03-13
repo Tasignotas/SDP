@@ -301,6 +301,10 @@ class AttackerScoreDynamic(Strategy):
         middle = self.world.pitch.height / 2
         return self.DOWN if y < middle else self.UP
 
+    def _get_other_side(self, side):
+        assert side in self.GOAL_SIDES
+        return self.UP if side == self.DOWN else self.DOWN
+
     def _get_goal_corner_y(self, side):
         """
         Get the coordinates of where to aim / shoot.

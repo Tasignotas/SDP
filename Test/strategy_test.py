@@ -81,6 +81,18 @@ class AttackerScoreDynamicTestCase(unittest.TestCase):
         expected_side = self.strategy_left.UP
         self.assertEqual(expected_side, side)
 
+    # Test getting the other side to aim to in CONFUSE 2
+
+    def test_getting_other_side_up(self):
+        side = self.strategy_left._get_other_side(self.strategy_left.UP)
+        expected_side = self.strategy_left.DOWN
+        self.assertEqual(expected_side, side)
+
+    def test_getting_other_side_down(self):
+        side = self.strategy_left._get_other_side(self.strategy_left.DOWN)
+        expected_side = self.strategy_left.UP
+        self.assertEqual(expected_side, side)
+
     # Test states
 
     def test_initially_moving_to_middle(self):
