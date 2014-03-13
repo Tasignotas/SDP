@@ -196,6 +196,7 @@ class AttackerScoreDynamic(Strategy):
     STATES = [GRABBED, POSITION, CONFUSE1, CONFUSE2, SHOOT]
 
     UP, DOWN = 'UP', 'DOWN'
+    GOAL_SIDES = [UP, DOWN]
 
     SHOOTING_X_OFFSET = 20
 
@@ -301,7 +302,7 @@ class AttackerScoreDynamic(Strategy):
         """
         Get the coordinates of where to aim / shoot.
         """
-        assert side in [self.UP, self.DOWN]
+        assert side in self.GOAL_SIDES
         if side == self.UP:
             # y coordinate of the goal is DOWN, offset by the width
             return self.world.their_goal.y + self.world.their_goal.width
