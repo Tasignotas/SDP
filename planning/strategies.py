@@ -228,6 +228,7 @@ class AttackerScoreDynamic(Strategy):
     def position(self):
         """
         Position the robot in the middle close to the goal. Angle does not matter.
+        Executed initially when we've grabbed the ball and want to move.
         """
         ideal_x, ideal_y = self.shooting_pos
         distance, angle = self.our_attacker.get_direction_to_point(ideal_x, ideal_y)
@@ -242,7 +243,7 @@ class AttackerScoreDynamic(Strategy):
 
     def confuse_one(self):
         """
-        Pick a side and aim at it.
+        Pick a side and aim at it. Executed when we've reached the POSITION state.
         """
         # Initialize fake shoot side if not available
         if self.fake_shoot_side is None:
@@ -254,6 +255,8 @@ class AttackerScoreDynamic(Strategy):
         angle = self.our_attacker.get_rotation_to_point(target_x, target_y)
 
         if has_matched(self.our_attacker, angle=angle):
+            # TODO: Shoot if we have a clear shot and the oppononet's velocity is favourable for us
+
             # We've finished CONFUSE1
             self.current_state = self.CONFUSE2
             return self.confuse_two()
