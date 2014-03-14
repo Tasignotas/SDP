@@ -123,7 +123,7 @@ void run_kick()
   grabber.attach(10);
   grabber.write(0);
   delay(250);
-  grabber.detach();
+  grabber.write(112);
 }
 
 void run_catch()
