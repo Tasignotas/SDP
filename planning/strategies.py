@@ -22,12 +22,12 @@ class Strategy(object):
 
 class DefaultDefenderDefence(Strategy):
 
-    ALIGN, DEFEND_GOAL = 'UNALIGNED', 'ALIGNED', 'DEFEND_GOAL'
-    STATES = [UNALIGNED, ALIGN, DEFEND_GOAL]
+    UNALIGNED, ALIGNED, DEFEND_GOAL = 'UNALIGNED', 'ALIGNED', 'DEFEND_GOAL'
+    STATES = [UNALIGNED, ALIGNED, DEFEND_GOAL]
     LEFT = 'left'
 
     def __init__(self, world):
-        super(DefaultDefenderDefence, self).__init__(world, STATES)
+        super(DefaultDefenderDefence, self).__init__(world, self.STATES)
 
         self.NEXT_ACTION_MAP = {
             self.UNALIGNED: self.align,
@@ -35,10 +35,10 @@ class DefaultDefenderDefence(Strategy):
         }
         # Find the point we want to align to.
         self.our_goal = self.world.our_goal
-        if self.world._our_side == LEFT:
-            self.goal_front_x = our_goal.x + 35
+        if self.world._our_side == self.LEFT:
+            self.goal_front_x = self.world.our_goal.x + 35
         else:
-            self.goal_front_x = our_goal.x - 35
+            self.goal_front_x = self.world.our_goal.x - 35
 
     def generate(self):
         return self.NEXT_ACTION_MAP[self.current_state]()
@@ -70,10 +70,11 @@ class DefaultDefenderDefence(Strategy):
 
         if has_matched(our_defender, x=self.goal_front_x, y=self.our_goal.y):
             # We're there. Advance the states and formulate next action.
-            self.current_state = DEFEND_GOAL
+            self.current_state = self.DEFEND_GOAL
             return self.defend_goal()
 
-        displacement, angle = our_defender.get_direction_to_point(goal_front_x, our_goal.y)
+        displacement, angle = our_defender.get_direction_to_point(
+            self.goal_front_x, self.our_goal.y)
         return calculate_motor_speed(displacement, angle)
 
     def defend_goal(self):
@@ -361,7 +362,6 @@ class AttackerScoreDynamic(Strategy):
         """
         y = robot.y
         middle = self.world.pitch.height / 2
-        print 'MIDDLE', middle
         return self.DOWN if y < middle else self.UP
 
     def _get_other_side(self, side):

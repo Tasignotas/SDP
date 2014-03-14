@@ -1,6 +1,6 @@
 import unittest
 from planning.models import World, Robot
-from planning.strategies import AttackerScoreDynamic
+from planning.strategies import AttackerScoreDynamic, DefaultDefenderDefence
 import math
 from planning import utilities
 
@@ -224,3 +224,17 @@ class AttackerScoreDynamicTestCase(unittest.TestCase):
     #     print actions
     #     self.assertTrue(actions['left_motor'] > 0)
     #     self.assertTrue(actions['right_motor'] < 0)
+
+
+class DefaultDefenderDefenceTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.world_left = World('left')
+        self.strategy_left = DefaultDefenderDefence(self.world_left)
+
+    def test_initializes_properly(self):
+        self.assertFalse(self.strategy_left is None)
+
+    def test_default_action_generated(self):
+        actions = self.strategy_left.generate()
+        self.assertFalse(actions is None)
