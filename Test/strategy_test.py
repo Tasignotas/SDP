@@ -213,3 +213,5 @@ class DefaultDefenderDefenceTestCase(unittest.TestCase):
 
         actions = strategy.generate()
         self.assertFalse(actions is None)
+
+
