@@ -22,45 +22,27 @@ class Strategy(object):
 
 class DefaultDefenderDefence(Strategy):
 
-    ALIGN, DEFEND_GOAL = 'UNALIGNED', 'ALIGNED', 'DEFEND_GOAL'
-    STATES = [UNALIGNED, ALIGN, DEFEND_GOAL]
-    LEFT = 'left'
+    UNALIGNED, ALIGNED, DEFEND_GOAL = 'UNALIGNED', 'ALIGNED', 'DEFEND_GOAL'
+    STATES = [UNALIGNED, ALIGNED, DEFEND_GOAL]
+    LEFT, RIGHT = 'left', 'right'
+    SIDES = [LEFT, RIGHT]
+
+    GOAL_ALIGN_OFFSET = 35
 
     def __init__(self, world):
-        super(DefaultDefenderDefence, self).__init__(world, STATES)
+        super(DefaultDefenderDefence, self).__init__(world, self.STATES)
 
         self.NEXT_ACTION_MAP = {
             self.UNALIGNED: self.align,
             self.ALIGNED: self.defend_goal,
         }
-        # Find the point we want to align to.
+
         self.our_goal = self.world.our_goal
-        if self.world._our_side == LEFT:
-            self.goal_front_x = our_goal.x + 35
-        else:
-            self.goal_front_x = our_goal.x - 35
+        # Find the point we want to align to.
+        self.goal_front_x = self.get_alignment_position(self.world._our_side)
 
     def generate(self):
         return self.NEXT_ACTION_MAP[self.current_state]()
-
-        # our_defender = self.world.our_defender
-        # their_attacker = self.world.their_attacker
-        # our_goal = self.world.our_goal
-        # goal_front_x = our_goal.x + 35 if self.world._our_side == LEFT else our_goal.x - 35
-        # # If the robot is not on the goal line:
-        # if self.current_state == ALIGN:
-        #     # Need to go to the front of the goal line
-        #     if has_matched(our_defender, x=goal_front_x, y=our_goal.y):
-        #         self.current_state = DEFEND_GOAL
-        #     else:
-        #         displacement, angle = our_defender.get_direction_to_point(goal_front_x, our_goal.y)
-        #         return calculate_motor_speed(displacement, angle)
-        # if self.current_state == DEFEND_GOAL:
-        #     predicted_y = predict_y_intersection(self.world, goal_front_x, their_attacker)
-        #     if not (predicted_y == None):
-        #         displacement, angle = our_defender.get_direction_to_point(goal_front_x, predicted_y)
-        #         return calculate_motor_speed(displacement, angle, backwards_ok=True)
-        #     return calculate_motor_speed(0, 0)
 
     def align(self):
         """
@@ -70,25 +52,37 @@ class DefaultDefenderDefence(Strategy):
 
         if has_matched(our_defender, x=self.goal_front_x, y=self.our_goal.y):
             # We're there. Advance the states and formulate next action.
-            self.current_state = DEFEND_GOAL
+            self.current_state = self.DEFEND_GOAL
             return self.defend_goal()
 
-        displacement, angle = our_defender.get_direction_to_point(goal_front_x, our_goal.y)
+        displacement, angle = our_defender.get_direction_to_point(
+            self.goal_front_x, self.our_goal.y)
         return calculate_motor_speed(displacement, angle)
 
     def defend_goal(self):
         """
-        Run around blocking shots.
+        Run around, blocking shots.
         """
         # Predict where they are aiming.
         their_attacker = self.world.their_attacker
+        our_defender = self.world.our_defender
         predicted_y = predict_y_intersection(self.world, self.goal_front_x, their_attacker)
 
         if predicted_y is not None:
-            displacement, angle = our_defender.get_direction_to_point(goal_front_x, predicted_y)
+            displacement, angle = our_defender.get_direction_to_point(
+                self.goal_front_x, predicted_y)
             return calculate_motor_speed(displacement, angle, backwards_ok=True)
 
         return calculate_motor_speed(0, 0)
+
+    def get_alignment_position(self, side):
+        """
+        Given the side, find the x coordinate of where we need to align to initially.
+        """
+        assert side in self.SIDES
+        if side == self.LEFT:
+            return self.world.our_goal.x + self.GOAL_ALIGN_OFFSET
+        return self.world.our_goal.x - self.GOAL_ALIGN_OFFSET
 
 
 class DefaultDefenderAttack(Strategy):
@@ -361,7 +355,6 @@ class AttackerScoreDynamic(Strategy):
         """
         y = robot.y
         middle = self.world.pitch.height / 2
-        print 'MIDDLE', middle
         return self.DOWN if y < middle else self.UP
 
     def _get_other_side(self, side):

@@ -1,17 +1,11 @@
 import unittest
 from planning.models import World, Robot
-from planning.strategies import AttackerScoreDynamic
+from planning.strategies import AttackerScoreDynamic, DefaultDefenderDefence
 import math
 from planning import utilities
 
 
-class AttackerScoreDynamicTestCase(unittest.TestCase):
-
-    def setUp(self):
-        self.world_left = World('left')
-        self.strategy_left = AttackerScoreDynamic(self.world_left)
-        self.world_right = World('right')
-        self.strategy_right = AttackerScoreDynamic(self.world_right)
+class StrategyTestCase(unittest.TestCase):
 
     def place_robot(self, world, position, robot):
         world._robots[position] = robot
@@ -24,6 +18,15 @@ class AttackerScoreDynamicTestCase(unittest.TestCase):
         theta = robot.get_rotation_to_point(angle_x, angle_y)
         theta = theta if theta > 0 else 2 * math.pi + theta
         return Robot(zone, robot.x, robot.y, theta, robot.velocity)
+
+
+class AttackerScoreDynamicTestCase(StrategyTestCase):
+
+    def setUp(self):
+        self.world_left = World('left')
+        self.strategy_left = AttackerScoreDynamic(self.world_left)
+        self.world_right = World('right')
+        self.strategy_right = AttackerScoreDynamic(self.world_right)
 
     def test_strategy_initializes(self):
         self.assertFalse(None, self.strategy_left)
@@ -193,34 +196,25 @@ class AttackerScoreDynamicTestCase(unittest.TestCase):
         self.assertTrue(actions['left_motor'] < 0)
         self.assertTrue(actions['right_motor'] > 0)
 
-    # def test_confuse1_rotation_down(self):
-    #     target_x, target_y = self.strategy_left.shooting_pos
 
-    #     def_x = self.world_left.their_goal.x
-    #     def_y = self.world_left.their_goal.y + 150
+class DefaultDefenderDefenceTestCase(StrategyTestCase):
 
-    #     attacker = Robot(
-    #         self.world_left.our_attacker.zone, target_x, target_y, 0, 0)
+    def setUp(self):
+        self.world_left = World('left')
+        self.strategy_left = DefaultDefenderDefence(self.world_left)
 
-    #     defender = Robot(
-    #         self.world_left.their_defender.zone, def_x, def_y, math.pi / 2, 0)
+    def test_initializes_properly(self):
+        self.assertFalse(self.strategy_left is None)
 
-    #     print 'A', attacker
-    #     print 'D', defender
+    def test_default_action_generated(self):
+        actions = self.strategy_left.generate()
+        self.assertFalse(actions is None)
 
-    #     world = World('left')
-    #     self.place_robot(world, attacker.zone, attacker)
-    #     self.place_robot(world, defender.zone, defender)
+    def test_defend_goal_action_generated(self):
+        strategy = DefaultDefenderDefence(self.world_left)
+        strategy.current_state = strategy.ALIGNED
 
-    #     strategy = AttackerScoreDynamic(world)
+        actions = strategy.generate()
+        self.assertFalse(actions is None)
 
-    #     strategy.fake_shoot_side = strategy.DOWN
-    #     strategy.current_state = strategy.POSITION
 
-    #     print strategy.fake_shoot_side
-
-    #     actions = strategy.generate()
-
-    #     print actions
-    #     self.assertTrue(actions['left_motor'] > 0)
-    #     self.assertTrue(actions['right_motor'] < 0)

@@ -48,9 +48,6 @@ class TestVector(unittest.TestCase):
         self.assertRaises(ValueError, Vector, 2, 5, -0.5, 2)
         self.assertRaises(ValueError, Vector, 2, 5, 7, 2)
         self.assertRaises(ValueError, Vector, 2, 5, 2*pi, 3)
-        #Incorrect velocity:
-        self.assertRaises(ValueError, Vector, 2, 5, 0, -1)
-
 
     def test_wrong_assignment(self):
         '''
