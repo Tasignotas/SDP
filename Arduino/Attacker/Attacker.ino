@@ -16,8 +16,8 @@ SerialCommand comm;
 // Steppers
 AF_Stepper left_motor(48, 1);
 AF_Stepper right_motor(48, 2);
-AccelStepper left_stepper(left_backward, left_forward);
-AccelStepper right_stepper(right_backward, right_forward);
+AccelStepper left_stepper(left_forward, left_backward);
+AccelStepper right_stepper(right_forward, right_backward);
 
 // Servo
 Servo grabber;
@@ -120,18 +120,14 @@ void run_engine()
 
 void run_kick()
 {
-  grabber.attach(10);
   grabber.write(0);
-  delay(250);
-  grabber.write(112);
+  delay(450); // 0.15 sec/60 degrees * 3
+  grabber.write(116);
 }
 
 void run_catch()
 {
-  grabber.attach(10);
-  grabber.write(180);
-  delay(250);
-  grabber.detach();
+  grabber.write(132);
 }
 
 
