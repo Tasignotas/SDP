@@ -22,32 +22,73 @@ class Strategy(object):
 
 class DefaultDefenderDefence(Strategy):
 
-    ALIGN, DEFEND_GOAL = 'ALIGN', 'DEFEND_GOAL'
-    STATES = [ALIGN, DEFEND_GOAL]
+    ALIGN, DEFEND_GOAL = 'UNALIGNED', 'ALIGNED', 'DEFEND_GOAL'
+    STATES = [UNALIGNED, ALIGN, DEFEND_GOAL]
     LEFT = 'left'
 
     def __init__(self, world):
         super(DefaultDefenderDefence, self).__init__(world, STATES)
 
+        self.NEXT_ACTION_MAP = {
+            self.UNALIGNED: self.align,
+            self.ALIGNED: self.defend_goal,
+        }
+        # Find the point we want to align to.
+        self.our_goal = self.world.our_goal
+        if self.world._our_side == LEFT:
+            self.goal_front_x = our_goal.x + 35
+        else:
+            self.goal_front_x = our_goal.x - 35
+
     def generate(self):
+        return self.NEXT_ACTION_MAP[self.current_state]()
+
+        # our_defender = self.world.our_defender
+        # their_attacker = self.world.their_attacker
+        # our_goal = self.world.our_goal
+        # goal_front_x = our_goal.x + 35 if self.world._our_side == LEFT else our_goal.x - 35
+        # # If the robot is not on the goal line:
+        # if self.current_state == ALIGN:
+        #     # Need to go to the front of the goal line
+        #     if has_matched(our_defender, x=goal_front_x, y=our_goal.y):
+        #         self.current_state = DEFEND_GOAL
+        #     else:
+        #         displacement, angle = our_defender.get_direction_to_point(goal_front_x, our_goal.y)
+        #         return calculate_motor_speed(displacement, angle)
+        # if self.current_state == DEFEND_GOAL:
+        #     predicted_y = predict_y_intersection(self.world, goal_front_x, their_attacker)
+        #     if not (predicted_y == None):
+        #         displacement, angle = our_defender.get_direction_to_point(goal_front_x, predicted_y)
+        #         return calculate_motor_speed(displacement, angle, backwards_ok=True)
+        #     return calculate_motor_speed(0, 0)
+
+    def align(self):
+        """
+        Align yourself with the center of our goal.
+        """
         our_defender = self.world.our_defender
+
+        if has_matched(our_defender, x=self.goal_front_x, y=self.our_goal.y):
+            # We're there. Advance the states and formulate next action.
+            self.current_state = DEFEND_GOAL
+            return self.defend_goal()
+
+        displacement, angle = our_defender.get_direction_to_point(goal_front_x, our_goal.y)
+        return calculate_motor_speed(displacement, angle)
+
+    def defend_goal(self):
+        """
+        Run around blocking shots.
+        """
+        # Predict where they are aiming.
         their_attacker = self.world.their_attacker
-        our_goal = self.world.our_goal
-        goal_front_x = our_goal.x + 35 if self.world._our_side == LEFT else our_goal.x - 35
-        # If the robot is not on the goal line:
-        if self.current_state == ALIGN:
-            # Need to go to the front of the goal line
-            if has_matched(our_defender, x=goal_front_x, y=our_goal.y):
-                self.current_state = DEFEND_GOAL
-            else:
-                displacement, angle = our_defender.get_direction_to_point(goal_front_x, our_goal.y)
-                return calculate_motor_speed(displacement, angle)
-        if self.current_state == DEFEND_GOAL:
-            predicted_y = predict_y_intersection(self.world, goal_front_x, their_attacker)
-            if not (predicted_y == None):
-                displacement, angle = our_defender.get_direction_to_point(goal_front_x, predicted_y)
-                return calculate_motor_speed(displacement, angle, backwards_ok=True)
-            return calculate_motor_speed(0, 0)
+        predicted_y = predict_y_intersection(self.world, self.goal_front_x, their_attacker)
+
+        if predicted_y is not None:
+            displacement, angle = our_defender.get_direction_to_point(goal_front_x, predicted_y)
+            return calculate_motor_speed(displacement, angle, backwards_ok=True)
+
+        return calculate_motor_speed(0, 0)
 
 
 class DefaultDefenderAttack(Strategy):
