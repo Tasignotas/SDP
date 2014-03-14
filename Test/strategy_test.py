@@ -193,38 +193,6 @@ class AttackerScoreDynamicTestCase(unittest.TestCase):
         self.assertTrue(actions['left_motor'] < 0)
         self.assertTrue(actions['right_motor'] > 0)
 
-    # def test_confuse1_rotation_down(self):
-    #     target_x, target_y = self.strategy_left.shooting_pos
-
-    #     def_x = self.world_left.their_goal.x
-    #     def_y = self.world_left.their_goal.y + 150
-
-    #     attacker = Robot(
-    #         self.world_left.our_attacker.zone, target_x, target_y, 0, 0)
-
-    #     defender = Robot(
-    #         self.world_left.their_defender.zone, def_x, def_y, math.pi / 2, 0)
-
-    #     print 'A', attacker
-    #     print 'D', defender
-
-    #     world = World('left')
-    #     self.place_robot(world, attacker.zone, attacker)
-    #     self.place_robot(world, defender.zone, defender)
-
-    #     strategy = AttackerScoreDynamic(world)
-
-    #     strategy.fake_shoot_side = strategy.DOWN
-    #     strategy.current_state = strategy.POSITION
-
-    #     print strategy.fake_shoot_side
-
-    #     actions = strategy.generate()
-
-    #     print actions
-    #     self.assertTrue(actions['left_motor'] > 0)
-    #     self.assertTrue(actions['right_motor'] < 0)
-
 
 class DefaultDefenderDefenceTestCase(unittest.TestCase):
 
