@@ -28,8 +28,10 @@ class Controller:
             [int] pitch                     0 - main pitch, 1 - secondary pitch
             [string] our_side               the side we're on - 'left' or 'right'
             *[int] port                     The camera port to take the feed from
-            *[Robot_Controller] attacker    Robot controller object - Attacker Robot has a RED power wire
-            *[Robot_Controller] defender    Robot controller object - Defender Robot has a YELLOW power wire
+            *[Robot_Controller] attacker    Robot controller object - Attacker Robot has a RED
+                                            power wire
+            *[Robot_Controller] defender    Robot controller object - Defender Robot has a YELLOW
+                                            power wire
         """
         assert pitch in [0, 1]
         assert color in ['yellow', 'blue']
@@ -38,16 +40,17 @@ class Controller:
         # Set up the Arduino communications
         self.arduino = Arduino(comm_port, 115200, 1, comms)
 
-
         # Set up camera for frames
         self.camera = Camera(port=video_port)
         frame = self.camera.get_frame()
+        center_point = self.camera.get_adjusted_center(frame)
 
         # Set up vision
         self.calibration = tools.get_colors(pitch)
         self.vision = Vision(
             pitch=pitch, color=color, our_side=our_side,
-            frame_shape=frame.shape, calibration=self.calibration)
+            frame_shape=frame.shape, frame_center=center_point,
+            calibration=self.calibration)
 
         # Set up postprocessing for vision
         self.postprocessing = Postprocessing()
@@ -56,9 +59,10 @@ class Controller:
         self.planner = Planner(our_side=our_side)
 
         # Set up GUI
-        self.GUI = GUI(calibration=self.calibration)
+        self.GUI = GUI(calibration=self.calibration, arduino=self.arduino)
 
         self.color = color
+        self.side = our_side
 
         self.preprocessing = Preprocessing()
 
@@ -76,8 +80,6 @@ class Controller:
         try:
             c = True
             while c != 27:  # the ESC key
-
-
 
                 frame = self.camera.get_frame()
                 pre_options = self.preprocessing.options
@@ -117,9 +119,12 @@ class Controller:
                 actions = []
                 fps = float(counter) / (time.clock() - timer)
                 # Draw vision content and actions
-                self.GUI.draw(frame, model_positions, actions, regular_positions, fps, attackerState, defenderState, grabbers, our_color=self.color, key=c, preprocess=pre_options)
-                counter += 1
 
+                self.GUI.draw(
+                    frame, model_positions, actions, regular_positions, fps, attackerState,
+                    defenderState, attacker_actions, defender_actions, grabbers,
+                    our_color=self.color, our_side=self.side, key=c, preprocess=pre_options)
+                counter += 1
 
         except:
             if self.defender is not None:
@@ -168,7 +173,7 @@ class Defender_Controller(Robot_Controller):
         """
         Execute robot action.
         """
-        print action
+        #print action
         left_motor = action['left_motor']
         right_motor = action['right_motor']
         speed = int(action['speed'])
@@ -229,34 +234,37 @@ class Attacker_Controller(Robot_Controller):
         comm.write('A_RUN_KICK\n')
         comm.write('A_RUN_ENGINE %d %d\n' % (0, 0))
 
+
 class Arduino:
 
-    def __init__(self,port,rate,timeOut,comms):
+    def __init__(self, port, rate, timeOut, comms):
         self.serial = None
-        if comms >0:
-            self.comms = 1
-            try:
-                self.serial = serial.Serial(port,rate,timeout=timeOut)
-            except:
-                print "No Arduino detected!"
-                print "Continuing without comms."
-                self.comms = 0
-                #raise
-
-        else:
-            self.comms = 0
+        self.comms = comms
         self.port = port
         self.rate = rate
         self.timeout = timeOut
+        self.setComms(comms)
 
-    def flipComms(self):
-        if self.comms == 0 and self.serial == None:
-            self.serial = serial.Serial(self.port,self.rate,self.timeout)
-        self.comms = 1-self.comms
+    def setComms(self, comms):
+        if comms > 0:
+            self.comms = 1
+            if self.serial is None:
+                try:
+                    self.serial = serial.Serial(self.port, self.rate, timeout=self.timeout)
+                except:
+                    print "No Arduino detected!"
+                    print "Continuing without comms."
+                    self.comms = 0
+                    #raise
+        else:
+            #self.write('A_RUN_KICK\n')
+            self.write('A_RUN_ENGINE %d %d\n' % (0, 0))
+            #self.write('D_RUN_KICK\n')
+            self.write('D_RUN_ENGINE %d %d\n' % (0, 0))
+            self.comms = 0
 
-
-    def write(self,string):
-        if self.comms==1:
+    def write(self, string):
+        if self.comms == 1:
             self.serial.write(string)
 
 
@@ -266,8 +274,13 @@ if __name__ == '__main__':
     parser.add_argument("pitch", help="[0] Main pitch, [1] Secondary pitch")
     parser.add_argument("side", help="The side of our defender ['left', 'right'] allowed.")
     parser.add_argument("color", help="The color of our team - ['yellow', 'blue'] allowed.")
+    parser.add_argument(
+        "-n", "--nocomms", help="Disables sending commands to the robot.", action="store_true")
     args = parser.parse_args()
     # print args
-    c = Controller(
-        pitch=int(args.pitch), color=args.color, our_side=args.side).wow()  # Such controller
-
+    if args.nocomms:
+        c = Controller(
+            pitch=int(args.pitch), color=args.color, our_side=args.side, comms=0).wow()
+    else:
+        c = Controller(
+            pitch=int(args.pitch), color=args.color, our_side=args.side).wow()

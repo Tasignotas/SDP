@@ -3,6 +3,7 @@ from collisions import *
 from strategies import *
 from utilities import *
 
+
 class Planner:
 
     def __init__(self, our_side):
@@ -15,7 +16,7 @@ class Planner:
         self._attacker_attack_strat = DefaultAttackerAttack(self._world)
         self._defender_state = 'defence'
         self._attacker_state = 'defence'
-    
+
     @property
     def attacker_strat_state(self):
         if self.attacker_state == 'defence':
