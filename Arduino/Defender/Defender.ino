@@ -105,22 +105,14 @@ void run_engine()
   left_steps = comm.next();
   right_steps = comm.next();
   
-  if (left_steps != NULL && atoi(left_steps) >= 10)
+  if (left_steps != NULL)
   {
     left_stepper.move(atoi(left_steps)); 
   }
-  else if (left_steps != NULL && atoi(left_steps) < 10)
-  {
-    left_stepper.move(10); 
-  }
   
-  if (right_steps != NULL && atoi(right_steps) >= 10)
+  if (right_steps != NULL)
   {
     right_stepper.move(atoi(right_steps)); 
-  }
-  else if (right_steps != NULL && atoi(right_steps) < 10)
-  {
-    right_stepper.move(10); 
   }
   
 }
