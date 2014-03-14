@@ -59,7 +59,7 @@ class Vector(Coordinate):
 
     def __init__(self, x, y, angle, velocity):
         super(Vector, self).__init__(x, y)
-        if angle == None or velocity == None or angle < 0 or angle >= (2*pi) or velocity < 0:
+        if angle == None or velocity == None or angle < 0 or angle >= (2*pi):
             raise ValueError('Can not initialise attributes of Vector to None')
         else:
             self._angle = angle
