@@ -122,12 +122,12 @@ void run_kick()
 {
   grabber.write(0);
   delay(450); // 0.15 sec/60 degrees * 3
-  grabber.write(111);
+  grabber.write(38);
 }
 
 void run_catch()
 {
-  grabber.write(121);
+  grabber.write(47);
 }
 
 
