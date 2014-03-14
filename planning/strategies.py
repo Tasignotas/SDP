@@ -64,10 +64,12 @@ class DefaultDefenderDefence(Strategy):
         """
         # Predict where they are aiming.
         their_attacker = self.world.their_attacker
+        our_defender = self.world.our_defender
         predicted_y = predict_y_intersection(self.world, self.goal_front_x, their_attacker)
 
         if predicted_y is not None:
-            displacement, angle = our_defender.get_direction_to_point(goal_front_x, predicted_y)
+            displacement, angle = our_defender.get_direction_to_point(
+                self.goal_front_x, predicted_y)
             return calculate_motor_speed(displacement, angle, backwards_ok=True)
 
         return calculate_motor_speed(0, 0)
