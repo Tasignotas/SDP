@@ -5,13 +5,7 @@ import math
 from planning import utilities
 
 
-class AttackerScoreDynamicTestCase(unittest.TestCase):
-
-    def setUp(self):
-        self.world_left = World('left')
-        self.strategy_left = AttackerScoreDynamic(self.world_left)
-        self.world_right = World('right')
-        self.strategy_right = AttackerScoreDynamic(self.world_right)
+class StrategyTestCase(unittest.TestCase):
 
     def place_robot(self, world, position, robot):
         world._robots[position] = robot
@@ -24,6 +18,15 @@ class AttackerScoreDynamicTestCase(unittest.TestCase):
         theta = robot.get_rotation_to_point(angle_x, angle_y)
         theta = theta if theta > 0 else 2 * math.pi + theta
         return Robot(zone, robot.x, robot.y, theta, robot.velocity)
+
+
+class AttackerScoreDynamicTestCase(StrategyTestCase):
+
+    def setUp(self):
+        self.world_left = World('left')
+        self.strategy_left = AttackerScoreDynamic(self.world_left)
+        self.world_right = World('right')
+        self.strategy_right = AttackerScoreDynamic(self.world_right)
 
     def test_strategy_initializes(self):
         self.assertFalse(None, self.strategy_left)
@@ -194,7 +197,7 @@ class AttackerScoreDynamicTestCase(unittest.TestCase):
         self.assertTrue(actions['right_motor'] > 0)
 
 
-class DefaultDefenderDefenceTestCase(unittest.TestCase):
+class DefaultDefenderDefenceTestCase(StrategyTestCase):
 
     def setUp(self):
         self.world_left = World('left')
