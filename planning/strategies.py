@@ -22,28 +22,33 @@ class Strategy(object):
 
 class DefaultDefenderDefence(Strategy):
 
+    ALIGN, DEFEND_GOAL = 'ALIGN', 'DEFEND_GOAL'
+    STATES = [ALIGN, DEFEND_GOAL]
+    LEFT = 'left'
+
     def __init__(self, world):
-        super(DefaultDefenderDefence, self).__init__(world, ['somewhere', 'goal_line'])
+        super(DefaultDefenderDefence, self).__init__(world, STATES)
 
     def generate(self):
         our_defender = self.world.our_defender
         their_attacker = self.world.their_attacker
         our_goal = self.world.our_goal
-        goal_front_x = our_goal.x + 35 if self.world._our_side == 'left' else our_goal.x - 35
+        goal_front_x = our_goal.x + 35 if self.world._our_side == LEFT else our_goal.x - 35
         # If the robot is not on the goal line:
-        if self.current_state == 'somewhere':
+        if self.current_state == ALIGN:
             # Need to go to the front of the goal line
             if has_matched(our_defender, x=goal_front_x, y=our_goal.y):
-                self.current_state = 'goal_line'
+                self.current_state = DEFEND_GOAL
             else:
                 displacement, angle = our_defender.get_direction_to_point(goal_front_x, our_goal.y)
                 return calculate_motor_speed(displacement, angle)
-        if self.current_state == 'goal_line':
+        if self.current_state == DEFEND_GOAL:
             predicted_y = predict_y_intersection(self.world, goal_front_x, their_attacker)
             if not (predicted_y == None):
                 displacement, angle = our_defender.get_direction_to_point(goal_front_x, predicted_y)
                 return calculate_motor_speed(displacement, angle, backwards_ok=True)
             return calculate_motor_speed(0, 0)
+
 
 class DefaultDefenderAttack(Strategy):
 
