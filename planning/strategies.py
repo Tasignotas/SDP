@@ -24,7 +24,10 @@ class DefaultDefenderDefence(Strategy):
 
     UNALIGNED, ALIGNED, DEFEND_GOAL = 'UNALIGNED', 'ALIGNED', 'DEFEND_GOAL'
     STATES = [UNALIGNED, ALIGNED, DEFEND_GOAL]
-    LEFT = 'left'
+    LEFT, RIGHT = 'left', 'right'
+    SIDES = [LEFT, RIGHT]
+
+    GOAL_ALIGN_OFFSET = 35
 
     def __init__(self, world):
         super(DefaultDefenderDefence, self).__init__(world, self.STATES)
@@ -33,12 +36,10 @@ class DefaultDefenderDefence(Strategy):
             self.UNALIGNED: self.align,
             self.ALIGNED: self.defend_goal,
         }
-        # Find the point we want to align to.
+
         self.our_goal = self.world.our_goal
-        if self.world._our_side == self.LEFT:
-            self.goal_front_x = self.world.our_goal.x + 35
-        else:
-            self.goal_front_x = self.world.our_goal.x - 35
+        # Find the point we want to align to.
+        self.goal_front_x = self.get_alignment_position(self.world._our_side)
 
     def generate(self):
         return self.NEXT_ACTION_MAP[self.current_state]()
@@ -60,7 +61,7 @@ class DefaultDefenderDefence(Strategy):
 
     def defend_goal(self):
         """
-        Run around blocking shots.
+        Run around, blocking shots.
         """
         # Predict where they are aiming.
         their_attacker = self.world.their_attacker
@@ -73,6 +74,15 @@ class DefaultDefenderDefence(Strategy):
             return calculate_motor_speed(displacement, angle, backwards_ok=True)
 
         return calculate_motor_speed(0, 0)
+
+    def get_alignment_position(self, side):
+        """
+        Given the side, find the x coordinate of where we need to align to initially.
+        """
+        assert side in self.SIDES
+        if side == self.LEFT:
+            return self.world.our_goal.x + self.GOAL_ALIGN_OFFSET
+        return self.world.our_goal.x - self.GOAL_ALIGN_OFFSET
 
 
 class DefaultDefenderAttack(Strategy):
