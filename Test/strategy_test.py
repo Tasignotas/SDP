@@ -206,3 +206,10 @@ class DefaultDefenderDefenceTestCase(unittest.TestCase):
     def test_default_action_generated(self):
         actions = self.strategy_left.generate()
         self.assertFalse(actions is None)
+
+    def test_defend_goal_action_generated(self):
+        strategy = DefaultDefenderDefence(self.world_left)
+        strategy.current_state = strategy.ALIGNED
+
+        actions = strategy.generate()
+        self.assertFalse(actions is None)
