@@ -176,7 +176,7 @@ class AttackerScoreDynamicTestCase(StrategyTestCase):
         target_x, target_y = self.strategy_left.shooting_pos
 
         aim_x = self.world_left.their_goal.x
-        aim_y = self.world_left.their_goal.y + self.world_left.their_goal.height / 2
+        aim_y = self.world_left.their_goal.y + self.world_left.their_goal.height / 2 + self.strategy_left.GOAL_CORNER_OFFSET
 
         attacker = self.get_aimed_robot(
             target_x, target_y, aim_x, aim_y,
