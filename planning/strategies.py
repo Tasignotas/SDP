@@ -31,7 +31,7 @@ class DefaultDefenderDefence(Strategy):
     LEFT, RIGHT = 'left', 'right'
     SIDES = [LEFT, RIGHT]
 
-    GOAL_ALIGN_OFFSET = 35
+    GOAL_ALIGN_OFFSET = 55
 
     def __init__(self, world):
         super(DefaultDefenderDefence, self).__init__(world, self.STATES)
@@ -39,6 +39,7 @@ class DefaultDefenderDefence(Strategy):
         self.NEXT_ACTION_MAP = {
             self.UNALIGNED: self.align,
             self.ALIGNED: self.defend_goal,
+            self.DEFEND_GOAL: self.defend_goal
         }
 
         self.our_goal = self.world.our_goal
@@ -126,7 +127,7 @@ class DefaultDefenderAttack(Strategy):
                     self.current_state = 'pass'
                 else:
                     return calculate_motor_speed(None, angle, careful=True)
-        if our_defender.state == 'pass':
+        if self.current_state == 'pass':
             self.reset_current_state()
             our_defender.catcher = 'open'
             return kick_ball()
@@ -320,7 +321,7 @@ class AttackerScoreDynamic(Strategy):
     GOAL_SIDES = [UP, DOWN]
 
     SHOOTING_X_OFFSET = 85
-    GOAL_CORNER_OFFSET = 35
+    GOAL_CORNER_OFFSET = 55
 
     def __init__(self, world):
         super(AttackerScoreDynamic, self).__init__(world, self.STATES)
@@ -476,7 +477,7 @@ class AttackerScoreDynamic(Strategy):
         assert side in self.GOAL_SIDES
         if side == self.UP:
             # y coordinate of the goal is DOWN, offset by the width
-            return self.world.their_goal.y + self.world.their_goal.width / 2 - self.GOAL_CORNER_OFFSET
+            return self.world.their_goal.y + self.world.their_goal.width / 2 - int(self.GOAL_CORNER_OFFSET * 1.5)
         return self.world.their_goal.y - self.world.their_goal.width / 2 + self.GOAL_CORNER_OFFSET + 20
 
 '''
