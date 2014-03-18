@@ -480,6 +480,31 @@ class AttackerScoreDynamic(Strategy):
             return self.world.their_goal.y + self.world.their_goal.width / 2 - int(self.GOAL_CORNER_OFFSET * 1.5)
         return self.world.their_goal.y - self.world.their_goal.width / 2 + self.GOAL_CORNER_OFFSET + 20
 
+
+class AttackerDriveBy(Strategy):
+    """
+    Strategy where we drive forward and backwards, rotate and shoot.
+
+    Idea:
+        1) Move to a location either in the UP or DOWN section
+        2) Drive backwards to a location opposite to the previous
+        3) Rotate to face the goal
+        4) Shoot
+    """
+
+    GRABBED, ALIGN_CENTER = 'GRABBED', 'ALIGN_CENTER'
+    DRIVE1, DRIVE2, ALIGN_GOAL, SHOOT = 'DRIVE1', 'DRIVE2', 'ALIGN_GOAL', 'SHOOT'
+    STATES = [GRABBED, ALIGN_CENTER, DRIVE1, DRIVE2, ALIGN_GOAL, SHOOT]
+
+    def __init__(self, world):
+        super(AttackerDriveBy, self).__init__(world, self.STATES)
+
+        self.NEXT_ACTION_MAP = {
+            GRABBED: self.align_center,
+            # ALIGN_CENTER:
+        }
+
+
 '''
 class DefenderPassDynamic(Strategy):
     Such strategy, much difficulty, but wow. Have to get used to how this works later.
