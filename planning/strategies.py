@@ -288,7 +288,7 @@ class AttackerScoreDynamic(Strategy):
     UP, DOWN = 'UP', 'DOWN'
     GOAL_SIDES = [UP, DOWN]
 
-    SHOOTING_X_OFFSET = 40
+    SHOOTING_X_OFFSET = 70
     GOAL_CORNER_OFFSET = 50
 
     def __init__(self, world):

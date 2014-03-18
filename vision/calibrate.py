@@ -65,7 +65,7 @@ class Configure:
 		cv2.destroyAllWindows()
 
 		# Write out the data
-		self.dump('calibrate.json', self.data)
+		self.dump('calibrations/calibrate.json', self.data)
 
 	def reshape(self):
 		return np.array(self.data[self.drawing], np.int32).reshape((-1,1,2))
@@ -111,7 +111,7 @@ class Configure:
 			cv2.circle(self.image, (x-1, y-1), 2, color, -1)
 			self.data[self.drawing].append((x,y))
 
-	def dump(self, filename='calibrate.json', data={}):
+	def dump(self, filename='calibrations/calibrate.json', data={}):
 		tools.write_json(filename, data)
 
 
