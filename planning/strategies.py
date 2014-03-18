@@ -1,4 +1,5 @@
 from utilities import *
+import math
 
 class Strategy(object):
 
@@ -19,6 +20,9 @@ class Strategy(object):
     def reset_current_state(self):
         self.current_state = self.states[0]
 
+    def is_last_state(self):
+        return self._current_state == self.states[-1]
+
 
 class DefaultDefenderDefence(Strategy):
 
@@ -27,7 +31,7 @@ class DefaultDefenderDefence(Strategy):
     LEFT, RIGHT = 'left', 'right'
     SIDES = [LEFT, RIGHT]
 
-    GOAL_ALIGN_OFFSET = 35
+    GOAL_ALIGN_OFFSET = 55
 
     def __init__(self, world):
         super(DefaultDefenderDefence, self).__init__(world, self.STATES)
@@ -35,6 +39,7 @@ class DefaultDefenderDefence(Strategy):
         self.NEXT_ACTION_MAP = {
             self.UNALIGNED: self.align,
             self.ALIGNED: self.defend_goal,
+            self.DEFEND_GOAL: self.defend_goal
         }
 
         self.our_goal = self.world.our_goal
@@ -122,7 +127,7 @@ class DefaultDefenderAttack(Strategy):
                     self.current_state = 'pass'
                 else:
                     return calculate_motor_speed(None, angle, careful=True)
-        if our_defender.state == 'pass':
+        if self.current_state == 'pass':
             self.reset_current_state()
             our_defender.catcher = 'open'
             return kick_ball()
@@ -151,47 +156,122 @@ class DefaultAttackerDefend(Strategy):
         return calculate_motor_speed(0, 0)
 
 
-class DefaultAttackerAttack(Strategy):
+class AttackerGrabGeneral(Strategy):
+
+    PREPARE, APROACHING, GRAB, GRABBED = 'PREPARE', 'APROACHING', 'GRAB', 'GRABBED'
+    STATES = [PREPARE, APROACHING, GRAB, GRABBED]
 
     def __init__(self, world):
-        super(DefaultAttackerAttack, self).__init__(world, ['go_to_ball', 'grab_ball', 'rotate_to_goal', 'shoot'])
+        super(AttackerGrabGeneral, self).__init__(world, self.STATES)
+
+        self.NEXT_ACTION_MAP = {
+            self.PREPARE: self.prepare,
+            self.APROACHING: self.approach,
+            self.GRAB: self.grab,
+            self.GRABBED: self.finish
+        }
+
+        self.grabber_open = False
+
+    def generate(self):
+        return self.NEXT_ACTION_MAP[self.current_state]()
+
+    def prepare(self):
+        if not self.grabber_open:
+            self.grabber_open = True
+            return open_catcher()
+
+        self.current_state = self.APROACHING
+        return self.approach()
+
+    def approach(self):
+        our_attacker = self.world.our_attacker
+        ball = self.world.ball
+
+        if our_attacker.can_catch_ball(ball):
+            self.current_state = self.GRAB
+            return self.grab()
+
+        # Get alignment to the ball and move
+        displacement, angle = our_attacker.get_direction_to_point(ball.x, ball.y)
+        return calculate_motor_speed(displacement, angle)
+
+    def grab(self):
+        self.grabber_open = False
+        self.current_state = self.GRABBED
+        return grab_ball()
+
+    def finish(self):
+        return calculate_motor_speed(0, 0)
+
+
+# class DefaultAttackerAttack(Strategy):
+
+#     def __init__(self, world):
+#         super(DefaultAttackerAttack, self).__init__(world, ['go_to_ball', 'grab_ball', 'rotate_to_goal', 'shoot'])
+
+#     def generate(self):
+#         our_attacker = self.world.our_attacker
+#         their_goal = self.world.their_goal
+#         ball = self.world.ball
+#         if self.current_state == 'go_to_ball':
+#             # We open our catcher:
+#             # if our_attacker.catcher == 'closed':
+#             #     our_attacker.catcher = 'open'
+#             #     return open_catcher()
+#             # If we don't need to move or rotate, we advance to grabbing:
+#             displacement, angle = our_attacker.get_direction_to_point(ball.x, ball.y)
+#             if our_attacker.can_catch_ball(ball):
+#                 self.current_state = 'grab_ball'
+#             else:
+#                 return calculate_motor_speed(displacement, angle, careful=True)
+#         if self.current_state == 'grab_ball':
+#             if our_attacker.has_ball(ball):
+#                 self.current_state = 'rotate_to_goal'
+#             else:
+#                 our_attacker.catcher = 'closed'
+#                 return grab_ball()
+#         if self.current_state == 'rotate_to_goal':
+#             if not(our_attacker.has_ball(ball)):
+#                 self.current_state = 'go_to_ball'
+#                 our_attacker.catcher = 'open'
+#                 return open_catcher()
+#             else:
+#                 _, angle = our_attacker.get_direction_to_point(their_goal.x, their_goal.y)
+#                 if has_matched(our_attacker, angle=angle):
+#                     self.current_state = 'shoot'
+#                 else:
+#                     return calculate_motor_speed(None, angle)
+#         if self.current_state == 'shoot':
+#             # self.current_state = 'defence_block'
+#             our_attacker.catcher = 'open'
+#             return kick_ball()
+
+
+class AttackerGrab(Strategy):
+
+    def __init__(self, world):
+        super(AttackerGrab, self).__init__(world, ['GO_TO_BALL', 'GRAB_BALL', 'GRABBED'])
 
     def generate(self):
         our_attacker = self.world.our_attacker
-        their_goal = self.world.their_goal
         ball = self.world.ball
-        if self.current_state == 'go_to_ball':
-            # We open our catcher:
-            if our_attacker.catcher == 'closed':
-                our_attacker.catcher = 'open'
-                return open_catcher()
-            # If we don't need to move or rotate, we advance to grabbing:
+        print self.current_state
+        if self.current_state == 'GO_TO_BALL':
             displacement, angle = our_attacker.get_direction_to_point(ball.x, ball.y)
             if our_attacker.can_catch_ball(ball):
-                self.current_state = 'grab_ball'
+                self.current_state = 'GRAB_BALL'
             else:
                 return calculate_motor_speed(displacement, angle, careful=True)
-        if self.current_state == 'grab_ball':
+        if self.current_state == 'GRAB_BALL':
             if our_attacker.has_ball(ball):
-                self.current_state = 'rotate_to_goal'
+                self.current_state = 'GRABBED'
             else:
                 our_attacker.catcher = 'closed'
                 return grab_ball()
-        if self.current_state == 'rotate_to_goal':
-            if not(our_attacker.has_ball(ball)):
-                self.current_state = 'go_to_ball'
-                our_attacker.catcher = 'open'
-                return open_catcher()
-            else:
-                _, angle = our_attacker.get_direction_to_point(their_goal.x, their_goal.y)
-                if has_matched(our_attacker, angle=angle):
-                    self.current_state = 'shoot'
-                else:
-                    return calculate_motor_speed(None, angle)
-        if self.current_state == 'shoot':
-            self.current_state = 'defence_block'
-            our_attacker.catcher = 'open'
-            return kick_ball()
+        if self.current_state == 'GRABBED':
+            pass
+        return grab_ball()
 
 
 class AttackerScoreDynamic(Strategy):
@@ -235,10 +315,13 @@ class AttackerScoreDynamic(Strategy):
     CONFUSE1, CONFUSE2, SHOOT = 'CONFUSE1', 'CONFUSE2', 'SHOOT'
     STATES = [GRABBED, POSITION, CONFUSE1, CONFUSE2, SHOOT]
 
+    PRECISE_BALL_ANGLE_THRESHOLD = math.pi / 25
+
     UP, DOWN = 'UP', 'DOWN'
     GOAL_SIDES = [UP, DOWN]
 
-    SHOOTING_X_OFFSET = 20
+    SHOOTING_X_OFFSET = 85
+    GOAL_CORNER_OFFSET = 55
 
     def __init__(self, world):
         super(AttackerScoreDynamic, self).__init__(world, self.STATES)
@@ -247,7 +330,8 @@ class AttackerScoreDynamic(Strategy):
             self.GRABBED: self.position,
             self.POSITION: self.confuse_one,
             self.CONFUSE1: self.confuse_two,
-            self.CONFUSE2: self.shoot
+            self.CONFUSE2: self.shoot,
+            self.SHOOT: self.shoot
         }
 
         self.our_attacker = self.world.our_attacker
@@ -263,6 +347,7 @@ class AttackerScoreDynamic(Strategy):
         """
         Pick an action based on current state.
         """
+        print 'BALL', self.world.ball
         return self.NEXT_ACTION_MAP[self.current_state]()
 
     def position(self):
@@ -292,14 +377,27 @@ class AttackerScoreDynamic(Strategy):
         target_x = self.world.their_goal.x
         target_y = self._get_goal_corner_y(self.fake_shoot_side)
 
-        angle = self.our_attacker.get_rotation_to_point(target_x, target_y)
+        print 'SIDE:', self.fake_shoot_side
+
+        print 'TARGET_Y', target_y
+        print 'STATE:', self.current_state
+
+        distance, angle = self.our_attacker.get_direction_to_point(target_x, target_y)
+
+        print 'DIRECTION TO POINT', distance, angle
 
         if has_matched(self.our_attacker, angle=angle):
             # TODO: Shoot if we have a clear shot and the oppononet's velocity is favourable for us
+            y = self.their_defender.y
+            middle = self.world.pitch.height / 2
 
-            # We've finished CONFUSE1
-            self.current_state = self.CONFUSE2
-            return self.confuse_two()
+            opp_robot_side = self._get_fake_shoot_side(self.their_defender)
+            if opp_robot_side != self.fake_shoot_side:
+                # We've finished CONFUSE1
+                self.current_state = self.CONFUSE1
+                return self.confuse_two()
+            else:
+                return calculate_motor_speed(0, 0)
 
         # Rotate on the spot
         return calculate_motor_speed(None, angle)
@@ -309,24 +407,32 @@ class AttackerScoreDynamic(Strategy):
         Rotate to the other side and make them go 'Wow, much rotate'.
         """
         other_side = self._get_other_side(self.fake_shoot_side)
+        print 'OTHER SIDE:', other_side
         # Determine targets
         target_x = self.world.their_goal.x
         target_y = self._get_goal_corner_y(other_side)
 
+        print 'OTHER SIDE TARGET Y', target_y
+
         angle = self.our_attacker.get_rotation_to_point(target_x, target_y)
 
-        if has_matched(self.our_attacker, angle=angle):
+        print 'OTHER SIDE ANGLE:', angle
+
+        if has_matched(self.our_attacker, angle=angle, threshold=self.PRECISE_BALL_ANGLE_THRESHOLD):
             # We've finished CONFUSE2
             self.current_state = self.SHOOT
             return self.shoot()
+            # pass
+            pass
 
         # Rotate on the spot
-        return calculate_motor_speed(None, angle)
+        return calculate_motor_speed(None, angle, careful=True)
 
     def shoot(self):
         """
         Kick.
         """
+        self.current_state = self.SHOOT
         return kick_ball()
 
     def _get_shooting_coordinates(self, robot):
@@ -355,7 +461,7 @@ class AttackerScoreDynamic(Strategy):
         """
         y = robot.y
         middle = self.world.pitch.height / 2
-        return self.DOWN if y < middle else self.UP
+        return self.UP if y < middle else self.DOWN
 
     def _get_other_side(self, side):
         """
@@ -371,5 +477,120 @@ class AttackerScoreDynamic(Strategy):
         assert side in self.GOAL_SIDES
         if side == self.UP:
             # y coordinate of the goal is DOWN, offset by the width
-            return self.world.their_goal.y + self.world.their_goal.width
-        return self.world.their_goal.y
+            return self.world.their_goal.y + self.world.their_goal.width / 2 - int(self.GOAL_CORNER_OFFSET * 1.5)
+        return self.world.their_goal.y - self.world.their_goal.width / 2 + self.GOAL_CORNER_OFFSET + 20
+
+'''
+class DefenderPassDynamic(Strategy):
+    Such strategy, much difficulty, but wow. Have to get used to how this works later.
+
+    def __init__(self, world):
+        super(DefenderPassDynamic, self).__init__(world, self.STATES)
+        # Map states into functions
+        self.NEXT_ACTION_MAP = {
+            self.GRABBED: self.position,
+            self.POSITION: self.confuse_one,
+            self.CONFUSE1: self.passing,
+            self.PASS: self.passing
+        }
+
+        self.grabbed = False
+
+        self.our_defender = self.world.our_defender
+        self.our_attacker = self.world.our_attacker
+        self.their_attacker = self.world.their_attacker
+
+        # Find the position to shoot from and cache it
+        self.passing_pos = self._get_passing_coordinates(self.our_defender)
+
+        # Remember which side we picked first
+        self.fake_shoot_side = None
+
+    def generate(self):
+        """
+        Pick an action based on current state.
+        """
+        print 'BALL', self.world.ball
+        return self.NEXT_ACTION_MAP[self.current_state]()
+
+    def position(self):
+        """
+        Position the robot in the middle close to the goal. Angle does not matter.
+        Executed initially when we've grabbed the ball and want to move.
+        """
+        ideal_x, ideal_y = self.passing_pos
+        distance, angle = self.our_defender.get_direction_to_point(ideal_x, ideal_y)
+
+        if not self.grabbed:
+            self.grabbed = True
+            return grab_ball()
+
+        if has_matched(self.our_attacker, x=ideal_x, y=ideal_y):
+            # We've reached the POSITION state.
+            self.current_state = self.POSITION
+            return self.confuse_one()
+
+        # We still need to drive
+        return calculate_motor_speed(distance, angle)
+
+
+    def confuse_one(self):
+        """
+        Pick a side and aim at it. Executed when we've reached the POSITION state.
+        """
+        # Initialize fake shoot side if not available
+        if self.fake_shoot_side is None:
+            self.fake_shoot_side = self._get_fake_shoot_side(self.their_defender)
+
+        target_x = self.world.their_goal.x
+        target_y = self._get_goal_corner_y(self.fake_shoot_side)
+
+        print 'SIDE:', self.fake_shoot_side
+
+        print 'TARGET_Y', target_y
+        print 'STATE:', self.current_state
+
+        distance, angle = self.our_attacker.get_direction_to_point(target_x, target_y)
+
+        print 'DIRECTION TO POINT', distance, angle
+
+        if has_matched(self.our_attacker, angle=angle):
+            # TODO: Shoot if we have a clear shot and the oppononet's velocity is favourable for us
+            y = self.their_defender.y
+            middle = self.world.pitch.height / 2
+
+            opp_robot_side = self._get_fake_shoot_side(self.their_defender)
+            if opp_robot_side != self.fake_shoot_side:
+                # We've finished CONFUSE1
+                self.current_state = self.CONFUSE1
+                return self.confuse_two()
+            else:
+                return calculate_motor_speed(0, 0)
+
+        # Rotate on the spot
+        return calculate_motor_speed(None, angle)
+
+
+    def shoot(self):
+        """
+        Kick.
+        """
+        self.current_state = self.PASS
+        return kick_ball()
+
+
+    def _get_passing_coordinates(self, robot):
+        """
+        Retrive coordinates of middle of the zone before we set up the confuse shot.
+        """
+        zone_index = robot.zone
+        zone_poly = self.world.pitch.zones[zone_index][0]
+
+        # Find the x coordinate which is in the middle of the zone
+        x = int(((max(zone_poly, key=lambda z: z[0])[0])+(min(zone_poly, key=lambda z: z[0])[0]))/2)
+
+        # y is simply middle of the pitch
+        y = self.world.pitch.height / 2
+
+        return (x, y)
+'''

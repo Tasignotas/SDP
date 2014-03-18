@@ -54,13 +54,17 @@ def open_catcher():
     return {'left_motor': 0, 'right_motor': 0, 'kicker': 1, 'catcher': 0, 'speed': 1000}
 
 
-def has_matched(robot, x=None, y=None, angle=None):
+def has_matched(robot, x=None, y=None, angle=None, threshold=ANGLE_MATCH_THRESHOLD):
     dist_matched = True
     angle_matched = True
     if not(x is None and y is None):
         dist_matched = hypot(robot.x - x, robot.y - y) < DISTANCE_MATCH_THRESHOLD
     if not(angle is None):
-        angle_matched = abs(angle) < ANGLE_MATCH_THRESHOLD
+        angle_matched = abs(angle) < threshold
+
+    print 'HAS MATCHED:', dist_matched, angle_matched
+    print 'HAS MATCHED ANGLE:', angle, threshold
+
     return dist_matched and angle_matched
 
 
@@ -69,7 +73,7 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
     Simplistic view of calculating the speed: no modes or trying to be careful
     '''
     moving_backwards = False
-    general_speed = 95 if careful else 300
+    general_speed = 100 if careful else 300
     angle_thresh = BALL_ANGLE_THRESHOLD if careful else ANGLE_MATCH_THRESHOLD
 
     if backwards_ok and abs(angle) > pi/2:
@@ -88,13 +92,13 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
         else:
             speed = log(displacement, 10) * MAX_DISPLACEMENT_SPEED
             speed = -speed if moving_backwards else speed
-            return {'left_motor': speed, 'right_motor': speed, 'kicker': 0, 'catcher': 0, 'speed': 1000/(1+10**(-0.1*(displacement-150)))}
+            return {'left_motor': speed, 'right_motor': speed, 'kicker': 0, 'catcher': 0, 'speed': 1000/(1+10**(-0.1*(displacement-100)))}
 
     else:
 
         if abs(angle) > angle_thresh:
             speed = (angle/pi) * MAX_ANGLE_SPEED
-            return {'left_motor': -speed, 'right_motor': speed, 'kicker': 0, 'catcher': 0, 'speed': general_speed}
+            return {'left_motor': -speed * 10 , 'right_motor': speed * 10, 'kicker': 0, 'catcher': 0, 'speed': general_speed}
 
         else:
             return {'left_motor': 0, 'right_motor': 0, 'kicker': 0, 'catcher': 0, 'speed': general_speed}
