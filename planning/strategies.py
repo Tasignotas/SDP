@@ -1,4 +1,5 @@
 from utilities import *
+import math
 
 class Strategy(object):
 
@@ -313,11 +314,13 @@ class AttackerScoreDynamic(Strategy):
     CONFUSE1, CONFUSE2, SHOOT = 'CONFUSE1', 'CONFUSE2', 'SHOOT'
     STATES = [GRABBED, POSITION, CONFUSE1, CONFUSE2, SHOOT]
 
+    PRECISE_BALL_ANGLE_THRESHOLD = math.pi / 25
+
     UP, DOWN = 'UP', 'DOWN'
     GOAL_SIDES = [UP, DOWN]
 
-    SHOOTING_X_OFFSET = 70
-    GOAL_CORNER_OFFSET = 50
+    SHOOTING_X_OFFSET = 85
+    GOAL_CORNER_OFFSET = 35
 
     def __init__(self, world):
         super(AttackerScoreDynamic, self).__init__(world, self.STATES)
@@ -414,7 +417,7 @@ class AttackerScoreDynamic(Strategy):
 
         print 'OTHER SIDE ANGLE:', angle
 
-        if has_matched(self.our_attacker, angle=angle, threshold=BALL_ANGLE_THRESHOLD):
+        if has_matched(self.our_attacker, angle=angle, threshold=self.PRECISE_BALL_ANGLE_THRESHOLD):
             # We've finished CONFUSE2
             self.current_state = self.SHOOT
             return self.shoot()

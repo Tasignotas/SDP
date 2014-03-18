@@ -58,7 +58,7 @@ def has_matched(robot, x=None, y=None, angle=None, threshold=ANGLE_MATCH_THRESHO
         angle_matched = abs(angle) < threshold
 
     print 'HAS MATCHED:', dist_matched, angle_matched
-    print 'HAS MATCHED ANGLE:', angle, ANGLE_MATCH_THRESHOLD
+    print 'HAS MATCHED ANGLE:', angle, threshold
 
     return dist_matched and angle_matched
 
