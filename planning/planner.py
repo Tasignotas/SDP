@@ -9,22 +9,39 @@ class Planner:
     def __init__(self, our_side):
         self._world = World(our_side)
         self._world.our_defender.catcher_area = {'width' : 30, 'height' : 15, 'front_offset' : 20}
-        self._world.our_attacker.catcher_area = {'width' : 30, 'height' : 25, 'front_offset' : 10}
+        self._world.our_attacker.catcher_area = {'width' : 30, 'height' : 30, 'front_offset' : 10}
+        
         self._defender_defence_strat = DefaultDefenderDefence(self._world)
         self._defender_attack_strat = DefaultDefenderAttack(self._world)
-        self._attacker_defence_strat = DefaultAttackerDefend(self._world)
-        # self._attacker_attack_strat = DefaultAttackerAttack(self._world)
-        self._attacker_attack_strat = AttackerScoreDynamic(self._world)
+
+        # self._attacker_defence_strat = DefaultAttackerDefend(self._world)
+
+        # self._attacker_attack_strat = AttackerGrab(self._world)
+        # self._attacker_attack_strat = AttackerScoreDynamic(self._world)
         # self._attacker_attack_strat = AttackerGrabGeneral(self._world)
+
+        self._attacker_strategies = {'defence' : [DefaultAttackerDefend],
+                                     'grab' : [AttackerGrab],
+                                     'score' : [AttackerScoreDynamic]}
+        
         self._defender_state = 'defence'
+        
         self._attacker_state = 'defence'
+        start_strategy = self.choose_attacker_strategy()
+        self._attacker_current_strategy = start_strategy(self._world)
+
+    def choose_attacker_strategy(self):
+        # Provisional. Choose the first strategy in the applicable list.
+        return self._attacker_strategies[self._attacker_state][0]
+
 
     @property
     def attacker_strat_state(self):
-        if self.attacker_state == 'defence':
-            return self._attacker_defence_strat.current_state
-        else:
-            return self._attacker_attack_strat.current_state
+        # if self.attacker_state == 'defence':
+        #     return self._attacker_defence_strat.current_state
+        # else:
+        #     return self._attacker_attack_strat.current_state
+        return self._attacker_current_strategy.current_state
 
     @property
     def defender_strat_state(self):
@@ -78,14 +95,26 @@ class Planner:
             # If ball is not in our defender or attacker zones, defend:
             if self._world.pitch.zones[their_defender.zone].isInside(ball.x, ball.y):
                 if not self._attacker_state == 'defence':
-                    self._attacker_defence_strat.reset_current_state()
                     self._attacker_state = 'defence'
-                return self._attacker_defence_strat.generate()
-            # If it's in the attacker zone, then go grab it:
+                    next_strategy = self.choose_attacker_strategy()
+                    self._attacker_current_strategy = next_strategy(self._world)
+                return self._attacker_current_strategy.generate()
+
+            # If ball is in our attacker zone, then grab the ball and score:
             elif self._world.pitch.zones[our_attacker.zone].isInside(ball.x, ball.y):
-                if not self._attacker_state == 'attack':
-                    self._attacker_attack_strat.reset_current_state()
-                    self._attacker_state = 'attack'
-                return self._attacker_attack_strat.generate()
+
+                # Check if we should switch from a grabbing to a scoring strategy.
+                if  self._attacker_state == 'grab' and self._attacker_current_strategy.current_state == 'GRABBED':
+                    self._attacker_state = 'score'
+                    next_strategy = self.choose_attacker_strategy()
+                    self._attacker_current_strategy = next_strategy(self._world)
+
+                # Check if we should switch from a defence to a grabbing strategy.
+                elif self._attacker_state == 'defence':
+                    self._attacker_state = 'grab'
+                    next_strategy = self.choose_attacker_strategy()
+                    self._attacker_current_strategy = next_strategy(self._world)
+
+                return self._attacker_current_strategy.generate()
             else:
                 return calculate_motor_speed(0, 0)

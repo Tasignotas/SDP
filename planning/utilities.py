@@ -87,7 +87,7 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
         else:
             speed = log(displacement, 10) * MAX_DISPLACEMENT_SPEED
             speed = -speed if moving_backwards else speed
-            return {'left_motor': speed, 'right_motor': speed, 'kicker': 0, 'catcher': 0, 'speed': 1000/(1+10**(-0.1*(displacement-150)))}
+            return {'left_motor': speed, 'right_motor': speed, 'kicker': 0, 'catcher': 0, 'speed': 1000/(1+10**(-0.1*(displacement-100)))}
 
     else:
 

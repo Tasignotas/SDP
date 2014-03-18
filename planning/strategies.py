@@ -19,6 +19,9 @@ class Strategy(object):
     def reset_current_state(self):
         self.current_state = self.states[0]
 
+    def is_last_state(self):
+        return self._current_state == self.states[-1]
+
 
 class DefaultDefenderDefence(Strategy):
 
@@ -200,48 +203,73 @@ class AttackerGrabGeneral(Strategy):
         return calculate_motor_speed(0, 0)
 
 
+# class DefaultAttackerAttack(Strategy):
 
-class DefaultAttackerAttack(Strategy):
+#     def __init__(self, world):
+#         super(DefaultAttackerAttack, self).__init__(world, ['go_to_ball', 'grab_ball', 'rotate_to_goal', 'shoot'])
+
+#     def generate(self):
+#         our_attacker = self.world.our_attacker
+#         their_goal = self.world.their_goal
+#         ball = self.world.ball
+#         if self.current_state == 'go_to_ball':
+#             # We open our catcher:
+#             # if our_attacker.catcher == 'closed':
+#             #     our_attacker.catcher = 'open'
+#             #     return open_catcher()
+#             # If we don't need to move or rotate, we advance to grabbing:
+#             displacement, angle = our_attacker.get_direction_to_point(ball.x, ball.y)
+#             if our_attacker.can_catch_ball(ball):
+#                 self.current_state = 'grab_ball'
+#             else:
+#                 return calculate_motor_speed(displacement, angle, careful=True)
+#         if self.current_state == 'grab_ball':
+#             if our_attacker.has_ball(ball):
+#                 self.current_state = 'rotate_to_goal'
+#             else:
+#                 our_attacker.catcher = 'closed'
+#                 return grab_ball()
+#         if self.current_state == 'rotate_to_goal':
+#             if not(our_attacker.has_ball(ball)):
+#                 self.current_state = 'go_to_ball'
+#                 our_attacker.catcher = 'open'
+#                 return open_catcher()
+#             else:
+#                 _, angle = our_attacker.get_direction_to_point(their_goal.x, their_goal.y)
+#                 if has_matched(our_attacker, angle=angle):
+#                     self.current_state = 'shoot'
+#                 else:
+#                     return calculate_motor_speed(None, angle)
+#         if self.current_state == 'shoot':
+#             # self.current_state = 'defence_block'
+#             our_attacker.catcher = 'open'
+#             return kick_ball()
+
+
+class AttackerGrab(Strategy):
 
     def __init__(self, world):
-        super(DefaultAttackerAttack, self).__init__(world, ['go_to_ball', 'grab_ball', 'rotate_to_goal', 'shoot'])
+        super(AttackerGrab, self).__init__(world, ['GO_TO_BALL', 'GRAB_BALL', 'GRABBED'])
 
     def generate(self):
         our_attacker = self.world.our_attacker
-        their_goal = self.world.their_goal
         ball = self.world.ball
-        if self.current_state == 'go_to_ball':
-            # We open our catcher:
-            # if our_attacker.catcher == 'closed':
-            #     our_attacker.catcher = 'open'
-            #     return open_catcher()
-            # If we don't need to move or rotate, we advance to grabbing:
+        print self.current_state
+        if self.current_state == 'GO_TO_BALL':
             displacement, angle = our_attacker.get_direction_to_point(ball.x, ball.y)
             if our_attacker.can_catch_ball(ball):
-                self.current_state = 'grab_ball'
+                self.current_state = 'GRAB_BALL'
             else:
                 return calculate_motor_speed(displacement, angle, careful=True)
-        if self.current_state == 'grab_ball':
+        if self.current_state == 'GRAB_BALL':
             if our_attacker.has_ball(ball):
-                self.current_state = 'rotate_to_goal'
+                self.current_state = 'GRABBED'
             else:
                 our_attacker.catcher = 'closed'
                 return grab_ball()
-        if self.current_state == 'rotate_to_goal':
-            if not(our_attacker.has_ball(ball)):
-                self.current_state = 'go_to_ball'
-                our_attacker.catcher = 'open'
-                return open_catcher()
-            else:
-                _, angle = our_attacker.get_direction_to_point(their_goal.x, their_goal.y)
-                if has_matched(our_attacker, angle=angle):
-                    self.current_state = 'shoot'
-                else:
-                    return calculate_motor_speed(None, angle)
-        if self.current_state == 'shoot':
-            self.current_state = 'defence_block'
-            our_attacker.catcher = 'open'
-            return kick_ball()
+        if self.current_state == 'GRABBED':
+            pass
+        return grab_ball()
 
 
 class AttackerScoreDynamic(Strategy):
@@ -302,8 +330,6 @@ class AttackerScoreDynamic(Strategy):
             self.SHOOT: self.shoot
         }
 
-        self.grabbed = False
-
         self.our_attacker = self.world.our_attacker
         self.their_defender = self.world.their_defender
 
@@ -327,10 +353,6 @@ class AttackerScoreDynamic(Strategy):
         """
         ideal_x, ideal_y = self.shooting_pos
         distance, angle = self.our_attacker.get_direction_to_point(ideal_x, ideal_y)
-
-        if not self.grabbed:
-            self.grabbed = True
-            return grab_ball()
 
         if has_matched(self.our_attacker, x=ideal_x, y=ideal_y):
             # We've reached the POSITION state.
