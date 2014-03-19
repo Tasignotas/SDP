@@ -637,7 +637,8 @@ class AttackerDriveBy(Strategy):
         """
         Get the x coordinate already offset
         """
-        middle_x = self.get_zone_attack_x(0)
+        our_attacker = self.world.our_attacker
+        middle_x = self.get_zone_attack_x()
         if our_attacker.zone == 2:
             middle_x -= self.X_OFFSET
         else:

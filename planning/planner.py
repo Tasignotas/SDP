@@ -10,7 +10,7 @@ class Planner:
         self._world = World(our_side)
         self._world.our_defender.catcher_area = {'width' : 30, 'height' : 15, 'front_offset' : 20}
         self._world.our_attacker.catcher_area = {'width' : 30, 'height' : 30, 'front_offset' : 10}
-        
+
         self._defender_defence_strat = DefaultDefenderDefence(self._world)
         self._defender_attack_strat = DefaultDefenderAttack(self._world)
 
@@ -22,11 +22,11 @@ class Planner:
         self._defender_strategies = {'defence' : [DefaultDefenderDefence],
                                      'grab' : [DefenderGrab],
                                      'pass' : [DefenderBouncePass]} #[DefaultDefenderAttack]}
-        
+
         self._defender_state = 'defence'
         start_strategy = self.choose_defender_strategy()
         self._defender_current_strategy = start_strategy(self._world)
-        
+
         self._attacker_state = 'defence'
         start_strategy = self.choose_attacker_strategy()
         self._attacker_current_strategy = start_strategy(self._world)
@@ -85,7 +85,7 @@ class Planner:
                     next_strategy = self.choose_defender_strategy()
                     self._defender_current_strategy = next_strategy(self._world)
                 return self._defender_current_strategy.generate()
-            
+
             # We have the ball in our zone, so we grab and pass:
             else:
                 # Check if we should switch from a grabbing to a scoring strategy.
