@@ -9,27 +9,41 @@ class Planner:
     def __init__(self, our_side):
         self._world = World(our_side)
         self._world.our_defender.catcher_area = {'width' : 30, 'height' : 15, 'front_offset' : 20}
-        self._world.our_attacker.catcher_area = {'width' : 30, 'height' : 15, 'front_offset' : 20}
+        self._world.our_attacker.catcher_area = {'width' : 30, 'height' : 30, 'front_offset' : 10}
+        
         self._defender_defence_strat = DefaultDefenderDefence(self._world)
         self._defender_attack_strat = DefaultDefenderAttack(self._world)
-        self._attacker_defence_strat = DefaultAttackerDefend(self._world)
-        self._attacker_attack_strat = DefaultAttackerAttack(self._world)
+
+        self._attacker_strategies = {'defence' : [DefaultAttackerDefend],
+                                     'grab' : [AttackerGrab],
+                                     'score' : [AttackerScoreDynamic]}
+
+        self._defender_strategies = {'defence' : [DefaultDefenderDefence],
+                                     'attack' : [DefaultDefenderAttack]}
+        
         self._defender_state = 'defence'
+        start_strategy = self.choose_defender_strategy()
+        self._defender_current_strategy = start_strategy(self._world)
+        
         self._attacker_state = 'defence'
+        start_strategy = self.choose_attacker_strategy()
+        self._attacker_current_strategy = start_strategy(self._world)
+
+    # Provisional. Choose the first strategy in the applicable list.
+    def choose_attacker_strategy(self):
+        return self._attacker_strategies[self._attacker_state][0]
+
+    # Provisional. Choose the first strategy in the applicable list.
+    def choose_defender_strategy(self):
+        return self._defender_strategies[self._defender_state][0]
 
     @property
     def attacker_strat_state(self):
-        if self.attacker_state == 'defence':
-            return self._attacker_defence_strat.current_state
-        else:
-            return self._attacker_attack_strat.current_state
+        return self._attacker_current_strategy.current_state
 
     @property
     def defender_strat_state(self):
-        if self.defender_state == 'defence':
-            return self._defender_defence_strat.current_state
-        else:
-            return self._defender_attack_strat.current_state
+        return self._defender_current_strategy.current_state
 
     @property
     def attacker_state(self):
@@ -63,27 +77,44 @@ class Planner:
             if not (self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y)):
                 # If we need to switch from defending to attacking:
                 if not self._defender_state == 'defence':
-                    self._defender_defence_strat.reset_current_state()
+                    # self._defender_defence_strat.reset_current_state()
                     self._defender_state = 'defence'
-                return self._defender_defence_strat.generate()
+                    next_strategy = self.choose_defender_strategy()
+                    self._defender_current_strategy = next_strategy(self._world)
+                return self._defender_current_strategy.generate()
+            
             # We have the ball in our zone, so we attack:
             else:
                 if not self._defender_state == 'attack':
-                    self._defender_attack_strat.reset_current_state()
+                    # self._defender_attack_strat.reset_current_state()
                     self._defender_state = 'attack'
-                return self._defender_attack_strat.generate()
+                    next_strategy = self.choose_defender_strategy()
+                    self._defender_current_strategy = next_strategy(self._world)
+                return self._defender_current_strategy.generate()
         else:
             # If ball is not in our defender or attacker zones, defend:
             if self._world.pitch.zones[their_defender.zone].isInside(ball.x, ball.y):
                 if not self._attacker_state == 'defence':
-                    self._attacker_defence_strat.reset_current_state()
                     self._attacker_state = 'defence'
-                return self._attacker_defence_strat.generate()
-            # If it's in the attacker zone, then go grab it:
+                    next_strategy = self.choose_attacker_strategy()
+                    self._attacker_current_strategy = next_strategy(self._world)
+                return self._attacker_current_strategy.generate()
+
+            # If ball is in our attacker zone, then grab the ball and score:
             elif self._world.pitch.zones[our_attacker.zone].isInside(ball.x, ball.y):
-                if not self._attacker_state == 'attack':
-                    self._attacker_attack_strat.reset_current_state()
-                    self._attacker_state = 'attack'
-                return self._attacker_attack_strat.generate()
+
+                # Check if we should switch from a grabbing to a scoring strategy.
+                if  self._attacker_state == 'grab' and self._attacker_current_strategy.current_state == 'GRABBED':
+                    self._attacker_state = 'score'
+                    next_strategy = self.choose_attacker_strategy()
+                    self._attacker_current_strategy = next_strategy(self._world)
+
+                # Check if we should switch from a defence to a grabbing strategy.
+                elif self._attacker_state == 'defence':
+                    self._attacker_state = 'grab'
+                    next_strategy = self.choose_attacker_strategy()
+                    self._attacker_current_strategy = next_strategy(self._world)
+
+                return self._attacker_current_strategy.generate()
             else:
                 return calculate_motor_speed(0, 0)

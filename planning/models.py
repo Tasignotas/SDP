@@ -15,7 +15,7 @@ BALL_WIDTH = 5
 BALL_LENGTH = 5
 BALL_HEIGHT = 5
 
-GOAL_WIDTH = 150
+GOAL_WIDTH = 140
 GOAL_LENGTH = 1
 GOAL_HEIGHT = 10
 
@@ -192,10 +192,6 @@ class Robot(PitchObject):
         return self._zone
 
     @property
-    def state(self):
-        return self._state
-
-    @property
     def catcher_area(self):
         front_left = (self.x + self._catcher_area['front_offset'] + self._catcher_area['height'], self.y + self._catcher_area['width']/2.0)
         front_right = (self.x + self._catcher_area['front_offset'] + self._catcher_area['height'], self.y - self._catcher_area['width']/2.0)
@@ -208,10 +204,6 @@ class Robot(PitchObject):
     @catcher_area.setter
     def catcher_area(self, area_dict):
         self._catcher_area = area_dict
-
-    @state.setter
-    def state(self, new_state):
-        self._state = new_state
 
     @property
     def catcher(self):
