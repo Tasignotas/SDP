@@ -209,7 +209,7 @@ class DefenderBouncePass(Strategy):
     '''
     Once the defender grabs the ball, move to the center of the zone and shoot towards
     the wall of the center of the opposite attacker zone, in order to reach our_attacker
-    attacker zone. 
+    attacker zone.
     '''
 
     GRABBED, POSITION, ROTATE, SHOOT = 'GRABBED', 'POSITION', 'ROTATE', 'SHOOT'
@@ -545,6 +545,9 @@ class AttackerDriveBy(Strategy):
     STATES = [GRABBED, ALIGNED_CENTER, DRIVE1, DRIVE2, ALIGNED_GOAL, SHOT]
 
     X_OFFSET = 85
+    Y_OFFSET = 40
+
+    UP, DOWN = 'UP', 'DOWN'
 
     def __init__(self, world):
         super(AttackerDriveBy, self).__init__(world, self.STATES)
@@ -558,15 +561,15 @@ class AttackerDriveBy(Strategy):
             self.SHOT: self.finish
         }
 
+        self.drive_first_side = None
+
     def generate(self):
         return self.NEXT_ACTION_MAP[self.current_state]()
 
     def align_center(self):
         our_attacker = self.world.our_attacker
         middle_y = self.world.pitch.height / 2
-        middle_x = self.get_zone_attack_x()
-
-        print middle_x, middle_y
+        middle_x = self.get_zone_attack_x_offset()
 
         distance, angle = our_attacker.get_direction_to_point(middle_x, middle_y)
 
@@ -577,6 +580,25 @@ class AttackerDriveBy(Strategy):
         return calculate_motor_speed(distance, angle, backwards_ok=True)
 
     def drive_one(self):
+        # Assign side if not yet assigned.
+        if self.drive_first_side is None:
+            self.drive_first_side = self.pick_side()
+
+        x = self.get_zone_attack_x_offset()
+        y = self.world.pitch.height
+
+        # offset the y
+        if self.drive_first_side == self.UP:
+            y -= self.Y_OFFSET
+        else:
+            y += self.Y_OFFSET
+
+        distance, angle = our_attacker.get_direction_to_point(x, y)
+
+        if has_matched(x=x, y=y):
+            self.current_state = self.DRIVE1
+            return self.drive_two()
+
         print 'Doing nothing.'
         return calculate_motor_speed(0, 0)
 
@@ -601,6 +623,23 @@ class AttackerDriveBy(Strategy):
 
         f = max if attacker.zone == 2 else min
         return f(zone_poly, key=lambda x: x[0])[0]
+
+    def get_zone_attack_x_offset(self):
+        """
+        Get the x coordinate already offset
+        """
+        middle_x = self.get_zone_attack_x(0)
+        if our_attacker.zone == 2:
+            middle_x -= self.X_OFFSET
+        else:
+            middle_x += self.X_OFFSET
+        return middle_x
+
+    def pick_side(self):
+        middle_y = self.world.pitch.height / 2
+        if self.world.their_defender.y < middle_y:
+            return self.DOWN
+        return self.UP
 
 
 
