@@ -7,9 +7,14 @@ MAX_DISPLACEMENT_SPEED = 690
 MAX_ANGLE_SPEED = 50
 
 
-def is_shot_blocked(world, our_attacker, their_defender):
-    predicted_y = predict_y_intersection(world, their_defender.x, our_attacker, full_width=True, bounce=True)
-    return abs(predicted_y - their_defender.y) < their_defender.length
+def is_shot_blocked(world, our_robot, their_robot):
+    '''
+    Checks if our robot could shoot past their robot
+    '''
+    predicted_y = predict_y_intersection(world, their_robot.x, our_robot, full_width=True, bounce=True)
+    if predicted_y is None:
+        return True
+    return abs(predicted_y - their_robot.y) < their_robot.length
 
 
 def predict_y_intersection(world, predict_for_x, robot, full_width=False, bounce=False):
@@ -62,8 +67,8 @@ def has_matched(robot, x=None, y=None, angle=None, threshold=ANGLE_MATCH_THRESHO
     if not(angle is None):
         angle_matched = abs(angle) < threshold
 
-    print 'HAS MATCHED:', dist_matched, angle_matched
-    print 'HAS MATCHED ANGLE:', angle, threshold
+    #print 'HAS MATCHED:', dist_matched, angle_matched
+    #print 'HAS MATCHED ANGLE:', angle, threshold
 
     return dist_matched and angle_matched
 

@@ -252,11 +252,21 @@ class DefenderBouncePass(Strategy):
         return calculate_motor_speed(distance, angle)
 
     def rotate(self):
-        angle = self.our_defender.get_rotation_to_point(0, 0)
-        return calculate_motor_speed(0, angle)
+        angle = self.our_defender.get_rotation_to_point(306, 294)
+
+        if has_matched(self.our_defender, angle=angle, threshold=pi/7):
+            # print calculate_motor_speed(0, angle)
+            self.current_state = self.ROTATE
+            return self.shoot()
+
+        return calculate_motor_speed(None, angle, careful=True)
 
     def shoot(self):
-        pass
+        """
+        Kick.
+        """
+        self.current_state = self.SHOOT
+        return kick_ball()
 
     def _get_shooting_coordinates(self, robot):
         """

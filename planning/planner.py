@@ -16,7 +16,8 @@ class Planner:
 
         self._attacker_strategies = {'defence' : [DefaultAttackerDefend],
                                      'grab' : [AttackerGrab],
-                                     'score' : [AttackerScoreDynamic]}
+                                     'score' : [AttackerDriveBy, AttackerScoreDynamic]}
+
 
         self._defender_strategies = {'defence' : [DefaultDefenderDefence],
                                      'grab' : [DefenderGrab],
@@ -72,6 +73,7 @@ class Planner:
         our_defender = self._world.our_defender
         our_attacker = self._world.our_attacker
         their_defender = self._world.their_defender
+        their_attacker = self._world.their_attacker
         ball = self._world.ball
         if robot == 'defender':
             # If the ball is in not in our defender zone, we defend:
