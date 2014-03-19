@@ -16,12 +16,12 @@ class Planner:
 
         self._attacker_strategies = {'defence' : [DefaultAttackerDefend],
                                      'grab' : [AttackerGrab],
-                                     'score' : [AttackerDriveBy, AttackerScoreDynamic]}
-
+                                     'score' : [AttackerDriveBy, AttackerScoreDynamic],
+                                     'catch' : [AttackerCatchStrategy]}
 
         self._defender_strategies = {'defence' : [DefaultDefenderDefence],
                                      'grab' : [DefenderGrab],
-                                     'pass' : [DefenderBouncePass]} #[DefaultDefenderAttack]}
+                                     'pass' : [DefenderBouncePass]}
 
         self._defender_state = 'defence'
         start_strategy = self.choose_defender_strategy()
