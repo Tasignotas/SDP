@@ -79,7 +79,12 @@ class Planner:
             # If the ball is in not in our defender zone, we defend:
             if not (self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y)):
                 # If we need to switch from defending to attacking:
-                if not self._defender_state == 'defence':
+                if self._defender_state == 'pass' and self._defender_current_strategy.current_state == 'SHOOT':
+                    self._attacker_state = 'catch'
+                    next_strategy = self.choose_defender_strategy()
+                    self._defender_current_strategy = next_strategy(self._world)
+
+                elif not self._defender_state == 'defence':
                     # self._defender_defence_strat.reset_current_state()
                     self._defender_state = 'defence'
                     next_strategy = self.choose_defender_strategy()
@@ -105,7 +110,7 @@ class Planner:
         else:
             # If ball is not in our defender or attacker zones, defend:
             if self._world.pitch.zones[their_defender.zone].isInside(ball.x, ball.y):
-                if not self._attacker_state == 'defence':
+                if not self._attacker_state in ['defence', 'catch'] :
                     self._attacker_state = 'defence'
                     next_strategy = self.choose_attacker_strategy()
                     self._attacker_current_strategy = next_strategy(self._world)
@@ -121,11 +126,15 @@ class Planner:
                     self._attacker_current_strategy = next_strategy(self._world)
 
                 # Check if we should switch from a defence to a grabbing strategy.
-                elif self._attacker_state == 'defence':
+                elif self._attacker_state in ['defence', 'catch'] :
                     self._attacker_state = 'grab'
                     next_strategy = self.choose_attacker_strategy()
                     self._attacker_current_strategy = next_strategy(self._world)
 
                 return self._attacker_current_strategy.generate()
             else:
+                if self._attacker_state == 'catch':
+                    next_strategy = self.choose_attacker_strategy()
+                    self._attacker_current_strategy = next_strategy(self._world)
+                    return self._attacker_current_strategy.generate()
                 return calculate_motor_speed(0, 0)

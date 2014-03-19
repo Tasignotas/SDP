@@ -160,10 +160,17 @@ class DefaultAttackerDefend(Strategy):
 
 class AttackerCatchStrategy(Strategy):
     def __init__(self, world):
-        super(AttackerCatchStrategy, self).__init__(world, ['position'])
+        super(AttackerCatchStrategy, self).__init__(world, ['CATCH'])
+
+        self.our_attacker = self.world.our_attacker
+        self.ball = self.world.ball
 
     def generate(self):
-        return calculate_motor_speed(0, 0)        
+        ideal_x = self.our_attacker.x
+        ideal_y = self.ball.y
+
+        displacement, angle = self.our_attacker.get_direction_to_point(ideal_x, ideal_y)
+        return calculate_motor_speed(displacement, angle, defence=True, backwards_ok=True, catch=True)      
 
 
 class AttackerGrabGeneral(Strategy):
