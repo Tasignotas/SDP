@@ -65,7 +65,7 @@ class DefaultDefenderDefence(Strategy):
 
         displacement, angle = our_defender.get_direction_to_point(
             self.goal_front_x, self.our_goal.y)
-        return calculate_motor_speed(displacement, angle)
+        return calculate_motor_speed(displacement, angle, defence=True)
 
     def defend_goal(self):
         """
@@ -79,7 +79,7 @@ class DefaultDefenderDefence(Strategy):
         if predicted_y is not None:
             displacement, angle = our_defender.get_direction_to_point(
                 self.goal_front_x, predicted_y)
-            return calculate_motor_speed(displacement, angle, backwards_ok=True)
+            return calculate_motor_speed(displacement, angle, backwards_ok=True, defence=True)
 
         return calculate_motor_speed(0, 0)
 
