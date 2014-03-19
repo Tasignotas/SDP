@@ -606,7 +606,7 @@ class AttackerDriveBy(Strategy):
 
         distance, angle = our_attacker.get_direction_to_point(x, y)
 
-        if has_matched(x=x, y=y):
+        if has_matched(our_attacker, x=x, y=y):
             self.current_state = self.DRIVE1
             return self.drive_two()
 
