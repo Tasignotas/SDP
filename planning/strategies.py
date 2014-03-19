@@ -592,6 +592,7 @@ class AttackerDriveBy(Strategy):
         return calculate_motor_speed(distance, angle, backwards_ok=True)
 
     def drive_one(self):
+        our_attacker = self.world.our_attacker
         # Assign side if not yet assigned.
         if self.drive_first_side is None:
             self.drive_first_side = self.pick_side()
@@ -639,7 +640,8 @@ class AttackerDriveBy(Strategy):
         """
         Get the x coordinate already offset
         """
-        middle_x = self.get_zone_attack_x(0)
+        our_attacker = self.world.our_attacker
+        middle_x = self.get_zone_attack_x()
         if our_attacker.zone == 2:
             middle_x -= self.X_OFFSET
         else:
