@@ -492,17 +492,68 @@ class AttackerDriveBy(Strategy):
         4) Shoot
     """
 
-    GRABBED, ALIGN_CENTER = 'GRABBED', 'ALIGN_CENTER'
-    DRIVE1, DRIVE2, ALIGN_GOAL, SHOOT = 'DRIVE1', 'DRIVE2', 'ALIGN_GOAL', 'SHOOT'
-    STATES = [GRABBED, ALIGN_CENTER, DRIVE1, DRIVE2, ALIGN_GOAL, SHOOT]
+    GRABBED, ALIGNED_CENTER = 'GRABBED', 'ALIGNED_CENTER'
+    DRIVE1, DRIVE2, ALIGNED_GOAL, SHOT = 'DRIVE1', 'DRIVE2', 'ALIGNED_GOAL', 'SHOT'
+    STATES = [GRABBED, ALIGNED_CENTER, DRIVE1, DRIVE2, ALIGNED_GOAL, SHOT]
+
+    X_OFFSET = 85
 
     def __init__(self, world):
         super(AttackerDriveBy, self).__init__(world, self.STATES)
 
         self.NEXT_ACTION_MAP = {
-            GRABBED: self.align_center,
-            # ALIGN_CENTER:
+            self.GRABBED: self.align_center,
+            self.ALIGNED_CENTER: self.drive_one,
+            self.DRIVE1: self.drive_two,
+            self.DRIVE2: self.align_to_goal,
+            self.ALIGNED_GOAL: self.shoot,
+            self.SHOT: self.finish
         }
+
+    def generate(self):
+        return self.NEXT_ACTION_MAP[self.current_state]()
+
+    def align_center(self):
+        our_attacker = self.world.our_attacker
+        middle_y = self.world.pitch.height / 2
+        middle_x = self.get_zone_attack_x()
+
+        print middle_x, middle_y
+
+        distance, angle = our_attacker.get_direction_to_point(middle_x, middle_y)
+
+        if has_matched(our_attacker, x=middle_x, y=middle_y):
+            self.current_state = self.ALIGNED_CENTER
+            return self.drive_one()
+
+        return calculate_motor_speed(distance, angle, backwards_ok=True)
+
+    def drive_one(self):
+        print 'Doing nothing.'
+        return calculate_motor_speed(0, 0)
+
+    def drive_two(self):
+        pass
+
+    def align_to_goal(self):
+        pass
+
+    def shoot(self):
+        pass
+
+    def finish(self):
+        pass
+
+    def get_zone_attack_x(self):
+        """
+        Find the border coordinate for our attacker zone and their defender.
+        """
+        attacker = self.world.our_attacker
+        zone_poly = self.world.pitch.zones[attacker.zone][0]
+
+        f = max if attacker.zone == 2 else min
+        return f(zone_poly, key=lambda x: x[0])[0]
+
 
 
 '''
