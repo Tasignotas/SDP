@@ -110,7 +110,7 @@ class Planner:
         else:
             # If ball is not in our defender or attacker zones, defend:
             if self._world.pitch.zones[their_defender.zone].isInside(ball.x, ball.y):
-                if not self._attacker_state in ['defence', 'catch'] :
+                if not self._attacker_state == 'defence':
                     self._attacker_state = 'defence'
                     next_strategy = self.choose_attacker_strategy()
                     self._attacker_current_strategy = next_strategy(self._world)
