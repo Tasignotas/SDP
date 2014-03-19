@@ -7,6 +7,11 @@ MAX_DISPLACEMENT_SPEED = 690
 MAX_ANGLE_SPEED = 50
 
 
+def is_shot_blocked(world, our_attacker, their_defender):
+    predicted_y = predict_y_intersection(world, their_defender.x, our_attacker, full_width=True, bounce=True)
+    return abs(predicted_y - their_defender.y) < their_defender.length
+
+
 def predict_y_intersection(world, predict_for_x, robot, full_width=False, bounce=False):
         '''
         Predicts the (x, y) coordinates of the ball shot by the robot
