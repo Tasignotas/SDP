@@ -590,6 +590,7 @@ class AttackerDriveBy(Strategy):
         return calculate_motor_speed(distance, angle, backwards_ok=True)
 
     def drive_one(self):
+        our_attacker = self.world.our_attacker
         # Assign side if not yet assigned.
         if self.drive_first_side is None:
             self.drive_first_side = self.pick_side()
