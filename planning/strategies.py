@@ -259,20 +259,11 @@ class DefenderBouncePass(Strategy):
         return calculate_motor_speed(distance, angle)
 
     def rotate(self):
-<<<<<<< HEAD
-        up_point = (306, 294)
-        # down_point =
-        angle = self.our_defender.get_rotation_to_point(306, 294)
-=======
         """
         Once the robot is in position, rotate to one side or the other in order
-        to bounce the ball into the attacker zone. If one side is blocked by their 
+        to bounce the ball into the attacker zone. If one side is blocked by their
         attacker, then rotate to the other side.
         """
-        shooting_points = self._get_bounce_points(self.our_defender)
-        x, y = shooting_points[self.point][0], shooting_points[self.point][1]
-        angle = self.our_defender.get_rotation_to_point(x, y)
->>>>>>> 4ae697e8f0b751751ff21a5e3871e586ab0ed046
 
         if has_matched(self.our_defender, angle=angle, threshold=pi/7):
             if not is_shot_blocked(self.world, self.our_defender, self.world.their_attacker):
@@ -309,7 +300,7 @@ class DefenderBouncePass(Strategy):
 
     def _get_bounce_points(self, robot):
         """
-        Get the points in the opponent's attacker zone where our defender needs to shoot 
+        Get the points in the opponent's attacker zone where our defender needs to shoot
         in order to bounce the ball to our attacker zone.
         """
         attacker_zone = {0:1, 3:2}
