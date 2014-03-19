@@ -73,7 +73,7 @@ def has_matched(robot, x=None, y=None, angle=None, threshold=ANGLE_MATCH_THRESHO
     return dist_matched and angle_matched
 
 
-def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False):
+def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False, defence=False):
     '''
     Simplistic view of calculating the speed: no modes or trying to be careful
     '''
@@ -97,8 +97,10 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
         else:
             speed = log(displacement, 10) * MAX_DISPLACEMENT_SPEED
             speed = -speed if moving_backwards else speed
-            return {'left_motor': speed, 'right_motor': speed, 'kicker': 0, 'catcher': 0, 'speed': 1000/(1+10**(-0.1*(displacement-100)))}
-
+            if defence == False:
+                return {'left_motor': speed, 'right_motor': speed, 'kicker': 0, 'catcher': 0, 'speed': 1000/(1+10**(-0.1*(displacement-100)))}
+            else:
+                return {'left_motor': speed, 'right_motor': speed, 'kicker': 0, 'catcher': 0, 'speed': 600}
     else:
 
         if abs(angle) > angle_thresh:
