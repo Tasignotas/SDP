@@ -252,6 +252,8 @@ class DefenderBouncePass(Strategy):
         return calculate_motor_speed(distance, angle)
 
     def rotate(self):
+        up_point = (306, 294)
+        # down_point = 
         angle = self.our_defender.get_rotation_to_point(306, 294)
 
         if has_matched(self.our_defender, angle=angle, threshold=pi/7):
