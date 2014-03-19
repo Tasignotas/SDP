@@ -237,7 +237,6 @@ class DefenderBouncePass(Strategy):
 
         # Find the position to shoot from and cache it
         self.shooting_pos = self._get_shooting_coordinates(self.our_defender)
-        print self.shooting_pos
 
     def generate(self):
         return self.NEXT_ACTION_MAP[self.current_state]()
@@ -251,7 +250,6 @@ class DefenderBouncePass(Strategy):
         distance, angle = self.our_defender.get_direction_to_point(ideal_x, ideal_y)
 
         if has_matched(self.our_defender, x=ideal_x, y=ideal_y):
-            # We've reached the POSITION state.
             self.current_state = self.POSITION
             return self.rotate()
 
