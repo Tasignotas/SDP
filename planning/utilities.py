@@ -14,7 +14,7 @@ def is_shot_blocked(world, our_robot, their_robot):
     predicted_y = predict_y_intersection(world, their_robot.x, our_robot, full_width=True, bounce=True)
     if predicted_y is None:
         return True
-    return abs(predicted_y - their_robot.y) < their_robot.length + 80
+    return abs(predicted_y - their_robot.y) < their_robot.length + 40
 
 
 def predict_y_intersection(world, predict_for_x, robot, full_width=False, bounce=False):
