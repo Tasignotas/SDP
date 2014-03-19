@@ -19,7 +19,8 @@ class Planner:
                                      'score' : [AttackerDriveBy]}
 
         self._defender_strategies = {'defence' : [DefaultDefenderDefence],
-                                     'attack' : [DefaultDefenderAttack]}
+                                     'grab' : [DefenderGrab],
+                                     'pass' : [DefenderBouncePass]} #[DefaultDefenderAttack]}
         
         self._defender_state = 'defence'
         start_strategy = self.choose_defender_strategy()
@@ -84,14 +85,22 @@ class Planner:
                     self._defender_current_strategy = next_strategy(self._world)
                 return self._defender_current_strategy.generate()
             
-            # We have the ball in our zone, so we attack:
+            # We have the ball in our zone, so we grab and pass:
             else:
-                if not self._defender_state == 'attack':
-                    # self._defender_attack_strat.reset_current_state()
-                    self._defender_state = 'attack'
+                # Check if we should switch from a grabbing to a scoring strategy.
+                if  self._defender_state == 'grab' and self._defender_current_strategy.current_state == 'GRABBED':
+                    self._defender_state = 'pass'
                     next_strategy = self.choose_defender_strategy()
                     self._defender_current_strategy = next_strategy(self._world)
+
+                # Check if we should switch from a defence to a grabbing strategy.
+                elif self._defender_state == 'defence':
+                    self._defender_state = 'grab'
+                    next_strategy = self.choose_defender_strategy()
+                    self._defender_current_strategy = next_strategy(self._world)
+
                 return self._defender_current_strategy.generate()
+
         else:
             # If ball is not in our defender or attacker zones, defend:
             if self._world.pitch.zones[their_defender.zone].isInside(ball.x, ball.y):
