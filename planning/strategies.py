@@ -585,8 +585,8 @@ class AttackerDriveBy(Strategy):
     DRIVE, ALIGNED_GOAL, SHOT = 'DRIVE1', 'ALIGNED_GOAL', 'SHOT'
     STATES = [GRABBED, ALIGNED_CENTER, DRIVE, ALIGNED_GOAL, SHOT]
 
-    X_OFFSET = 50
-    Y_OFFSET = -100
+    X_OFFSET = 70
+    Y_OFFSET = 100
 
     UP, DOWN = 'UP', 'DOWN'
 
@@ -625,14 +625,21 @@ class AttackerDriveBy(Strategy):
         if self.drive_first_side is None:
             self.drive_first_side = self.pick_side()
 
+        print 'PICKED SIDE:', self.drive_first_side
+
         x = self.get_zone_attack_x_offset()
-        y = self.world.pitch.height
+        if self.drive_first_side == self.UP:
+            y = self.world.pitch.height
+        else:
+            y = 0
 
         # offset the y
         if self.drive_first_side == self.UP:
-            y += self.Y_OFFSET
-        else:
             y -= self.Y_OFFSET
+        else:
+            y += self.Y_OFFSET
+
+        print 'XY', x, y
 
         distance, angle = our_attacker.get_direction_to_point(x, y)
 
@@ -644,7 +651,7 @@ class AttackerDriveBy(Strategy):
 
     def align_to_goal(self):
         our_attacker = self.world.our_attacker
-        other_side = self.UP if self.drive_first_side == self.UP else self.DOWN
+        other_side = self.UP if self.drive_first_side == self.DOWN else self.DOWN
         goal_y = self._get_goal_corner_y(other_side)
         goal_x = self.world.their_goal.x
 
@@ -656,7 +663,7 @@ class AttackerDriveBy(Strategy):
             self.current_state = self.ALIGNED_GOAL
             return self.shoot()
 
-        return calculate_motor_speed(None, angle)
+        return calculate_motor_speed(None, angle, careful=True)
 
 
     def shoot(self):
@@ -701,8 +708,8 @@ class AttackerDriveBy(Strategy):
         assert side in [self.UP, self.DOWN]
         if side == self.UP:
             # y coordinate of the goal is DOWN, offset by the width
-            return self.world.their_goal.y + self.world.their_goal.width / 2
-        return self.world.their_goal.y - self.world.their_goal.width / 2
+            return self.world.their_goal.y + self.world.their_goal.width / 2 - 50
+        return self.world.their_goal.y - self.world.their_goal.width / 2 + 50
 
 
 
