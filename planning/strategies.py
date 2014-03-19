@@ -3,6 +3,8 @@ import math
 
 class Strategy(object):
 
+    PRECISE_BALL_ANGLE_THRESHOLD = math.pi / 15.0
+
     def __init__(self, world, states):
         self.world = world
         self.states = states
@@ -253,7 +255,7 @@ class DefenderBouncePass(Strategy):
 
     def rotate(self):
         up_point = (306, 294)
-        # down_point = 
+        # down_point =
         angle = self.our_defender.get_rotation_to_point(306, 294)
 
         if has_matched(self.our_defender, angle=angle, threshold=pi/7):
@@ -374,8 +376,6 @@ class AttackerScoreDynamic(Strategy):
     GRABBED, POSITION = 'GRABBED', 'POSITION'
     CONFUSE1, CONFUSE2, SHOOT = 'CONFUSE1', 'CONFUSE2', 'SHOOT'
     STATES = [GRABBED, POSITION, CONFUSE1, CONFUSE2, SHOOT]
-
-    PRECISE_BALL_ANGLE_THRESHOLD = math.pi / 25
 
     UP, DOWN = 'UP', 'DOWN'
     GOAL_SIDES = [UP, DOWN]
@@ -553,11 +553,11 @@ class AttackerDriveBy(Strategy):
     """
 
     GRABBED, ALIGNED_CENTER = 'GRABBED', 'ALIGNED_CENTER'
-    DRIVE1, DRIVE2, ALIGNED_GOAL, SHOT = 'DRIVE1', 'DRIVE2', 'ALIGNED_GOAL', 'SHOT'
-    STATES = [GRABBED, ALIGNED_CENTER, DRIVE1, DRIVE2, ALIGNED_GOAL, SHOT]
+    DRIVE, ALIGNED_GOAL, SHOT = 'DRIVE1', 'ALIGNED_GOAL', 'SHOT'
+    STATES = [GRABBED, ALIGNED_CENTER, DRIVE, ALIGNED_GOAL, SHOT]
 
-    X_OFFSET = 85
-    Y_OFFSET = 100
+    X_OFFSET = 50
+    Y_OFFSET = -100
 
     UP, DOWN = 'UP', 'DOWN'
 
@@ -567,8 +567,7 @@ class AttackerDriveBy(Strategy):
         self.NEXT_ACTION_MAP = {
             self.GRABBED: self.align_center,
             self.ALIGNED_CENTER: self.drive_one,
-            self.DRIVE1: self.drive_two,
-            self.DRIVE2: self.align_to_goal,
+            self.DRIVE: self.align_to_goal,
             self.ALIGNED_GOAL: self.shoot,
             self.SHOT: self.finish
         }
@@ -609,22 +608,34 @@ class AttackerDriveBy(Strategy):
         distance, angle = our_attacker.get_direction_to_point(x, y)
 
         if has_matched(our_attacker, x=x, y=y):
-            self.current_state = self.DRIVE1
-            return self.drive_two()
+            self.current_state = self.DRIVE
+            return self.align_to_goal()
 
         return calculate_motor_speed(distance, angle)
 
-    def drive_two(self):
-        return calculate_motor_speed(0, 0)
-
     def align_to_goal(self):
-        pass
+        our_attacker = self.world.our_attacker
+        other_side = self.UP if self.drive_first_side == self.UP else self.DOWN
+        goal_y = self._get_goal_corner_y(other_side)
+        goal_x = self.world.their_goal.x
+
+        angle = our_attacker.get_rotation_to_point(goal_x, goal_y)
+
+        print angle, has_matched(our_attacker, angle=angle)
+
+        if has_matched(our_attacker, angle=angle):
+            self.current_state = self.ALIGNED_GOAL
+            return self.shoot()
+
+        return calculate_motor_speed(None, angle)
+
 
     def shoot(self):
-        pass
+        self.current_state = self.SHOT
+        return kick_ball()
 
     def finish(self):
-        pass
+        return calculate_motor_speed(0, 0)
 
     def get_zone_attack_x(self):
         """
@@ -653,6 +664,16 @@ class AttackerDriveBy(Strategy):
         if self.world.their_defender.y < middle_y:
             return self.DOWN
         return self.UP
+
+    def _get_goal_corner_y(self, side):
+        """
+        Get the coordinates of where to aim / shoot.
+        """
+        assert side in [self.UP, self.DOWN]
+        if side == self.UP:
+            # y coordinate of the goal is DOWN, offset by the width
+            return self.world.their_goal.y + self.world.their_goal.width / 2
+        return self.world.their_goal.y - self.world.their_goal.width / 2
 
 
 
