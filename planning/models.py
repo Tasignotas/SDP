@@ -7,8 +7,8 @@ from math import pow, cos, sin, hypot, pi, atan2
 # Width measures the front and back of an object
 # Length measures along the sides of an object
 
-ROBOT_WIDTH = 20
-ROBOT_LENGTH = 20
+ROBOT_WIDTH = 30
+ROBOT_LENGTH = 45
 ROBOT_HEIGHT = 10
 
 BALL_WIDTH = 5
