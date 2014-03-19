@@ -42,3 +42,5 @@ nosetests.xml
 *.*~
 #Xcode projects
 *.xcodeproj
+
+vision/calibrations/calibrations.json
