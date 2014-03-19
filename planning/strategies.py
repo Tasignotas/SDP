@@ -158,6 +158,13 @@ class DefaultAttackerDefend(Strategy):
                 return calculate_motor_speed(displacement, angle, backwards_ok=True)
         return calculate_motor_speed(0, 0)
 
+class AttackerCatchStrategy(Strategy):
+    def __init__(self, world):
+        super(AttackerCatchStrategy, self).__init__(world, ['position'])
+
+    def generate(self):
+        return calculate_motor_speed(0, 0)        
+
 
 class AttackerGrabGeneral(Strategy):
 
@@ -262,6 +269,9 @@ class DefenderBouncePass(Strategy):
         to bounce the ball into the attacker zone. If one side is blocked by their
         attacker, then rotate to the other side.
         """
+        shooting_points = self._get_bounce_points(self.our_defender)
+        x, y = shooting_points[self.point][0], shooting_points[self.point][1]
+        angle = self.our_defender.get_rotation_to_point(x, y)
 
         if has_matched(self.our_defender, angle=angle, threshold=pi/7):
             if not is_shot_blocked(self.world, self.our_defender, self.world.their_attacker):
