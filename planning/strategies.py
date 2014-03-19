@@ -555,7 +555,7 @@ class AttackerDriveBy(Strategy):
     STATES = [GRABBED, ALIGNED_CENTER, DRIVE1, DRIVE2, ALIGNED_GOAL, SHOT]
 
     X_OFFSET = 85
-    Y_OFFSET = 40
+    Y_OFFSET = 100
 
     UP, DOWN = 'UP', 'DOWN'
 
@@ -600,9 +600,9 @@ class AttackerDriveBy(Strategy):
 
         # offset the y
         if self.drive_first_side == self.UP:
-            y -= self.Y_OFFSET
-        else:
             y += self.Y_OFFSET
+        else:
+            y -= self.Y_OFFSET
 
         distance, angle = our_attacker.get_direction_to_point(x, y)
 
@@ -613,7 +613,7 @@ class AttackerDriveBy(Strategy):
         return calculate_motor_speed(distance, angle)
 
     def drive_two(self):
-        pass
+        return calculate_motor_speed(0, 0)
 
     def align_to_goal(self):
         pass
