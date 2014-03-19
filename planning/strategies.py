@@ -609,8 +609,7 @@ class AttackerDriveBy(Strategy):
             self.current_state = self.DRIVE1
             return self.drive_two()
 
-        print 'Doing nothing.'
-        return calculate_motor_speed(0, 0)
+        return calculate_motor_speed(distance, angle)
 
     def drive_two(self):
         pass
