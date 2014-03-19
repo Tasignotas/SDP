@@ -1,5 +1,6 @@
 from utilities import *
 import math
+from random import randint
 
 class Strategy(object):
 
@@ -229,8 +230,12 @@ class DefenderBouncePass(Strategy):
         self.our_defender = self.world.our_defender
         self.ball = self.world.ball
 
+        # Choose a random side to bounce off
+        self.point = randint(0,1)
+
         # Find the position to shoot from and cache it
         self.shooting_pos = self._get_shooting_coordinates(self.our_defender)
+        print self.shooting_pos
 
     def generate(self):
         return self.NEXT_ACTION_MAP[self.current_state]()
@@ -252,14 +257,23 @@ class DefenderBouncePass(Strategy):
         return calculate_motor_speed(distance, angle)
 
     def rotate(self):
-        up_point = (306, 294)
-        # down_point = 
-        angle = self.our_defender.get_rotation_to_point(306, 294)
+        """
+        Once the robot is in position, rotate to one side or the other in order
+        to bounce the ball into the attacker zone. If one side is blocked by their 
+        attacker, then rotate to the other side.
+        """
+        shooting_points = self._get_bounce_points(self.our_defender)
+        x, y = shooting_points[self.point][0], shooting_points[self.point][1]
+        angle = self.our_defender.get_rotation_to_point(x, y)
 
         if has_matched(self.our_defender, angle=angle, threshold=pi/7):
-            # print calculate_motor_speed(0, angle)
-            self.current_state = self.ROTATE
-            return self.shoot()
+            if not is_shot_blocked(self.world, self.our_defender, self.world.their_attacker):
+                self.current_state = self.SHOOT
+                return self.shoot()
+            else:
+                self.point = 1 - self.point
+                x, y = shooting_points[self.point][0], shooting_points[self.point][1]
+                angle = self.our_defender.get_rotation_to_point(x, y)
 
         return calculate_motor_speed(None, angle, careful=True)
 
@@ -284,6 +298,24 @@ class DefenderBouncePass(Strategy):
         y =  self.world.pitch.height / 2
 
         return (x, y)
+
+    def _get_bounce_points(self, robot):
+        """
+        Get the points in the opponent's attacker zone where our defender needs to shoot 
+        in order to bounce the ball to our attacker zone.
+        """
+        attacker_zone = {0:1, 3:2}
+        zone_index = attacker_zone[robot.zone]
+        zone_poly = self.world.pitch.zones[zone_index][0]
+
+        min_x = int(min(zone_poly, key=lambda z: z[0])[0])
+        max_x = int(max(zone_poly, key=lambda z: z[0])[0])
+        bounce_x = min_x + (max_x - min_x) / 2
+
+        min_y = int(min(zone_poly, key=lambda z: z[1])[1])
+        max_y = int(max(zone_poly, key=lambda z: z[1])[1])
+
+        return [(bounce_x, min_y), (bounce_x, max_y)]
 
 
 class AttackerGrab(Strategy):
