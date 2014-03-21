@@ -1,7 +1,6 @@
 import numpy as np
 import cv2
 import json
-import thread
 import socket
 import os
 import cPickle
@@ -23,8 +22,8 @@ YELLOW_LOWER = np.array([9, 50, 50])
 YELLOW_HIGHER = np.array([11, 255, 255])
 
 
-def get_zones(width, height, path=PATH+'/calibrations/calibrate.json'):
-    calibration = get_calibration(path)
+def get_zones(width, height, filename=PATH+'/calibrations/croppings.json', pitch=0):
+    calibration = get_croppings(filename, pitch)
     zones_poly = [calibration[key] for key in ['Zone_0', 'Zone_1', 'Zone_2', 'Zone_3']]
 
     maxes = [max(zone, key=lambda x: x[0])[0] for zone in zones_poly[:3]]
@@ -36,8 +35,10 @@ def get_zones(width, height, path=PATH+'/calibrations/calibrate.json'):
     return [(mids[i], mids[i+1], 0, height) for i in range(4)]
 
 
-def get_calibration(filename=PATH+'/calibrations/calibrate.json'):
-    return get_json(filename)
+def get_croppings(filename=PATH+'/calibrations/croppings.json', pitch=0):
+    pitches = ['Pitch_0', 'Pitch_1']
+    croppings = get_json(filename)
+    return croppings[pitches[pitch]]
 
 
 def get_json(filename=PATH+'calibrate.json'):

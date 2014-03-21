@@ -1,5 +1,4 @@
 import cv2
-from vision import tools
 
 
 class Preprocessing(object):

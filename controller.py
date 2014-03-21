@@ -37,11 +37,13 @@ class Controller:
         assert color in ['yellow', 'blue']
         assert our_side in ['left', 'right']
 
+        self.pitch = pitch
+
         # Set up the Arduino communications
         self.arduino = Arduino(comm_port, 115200, 1, comms)
 
         # Set up camera for frames
-        self.camera = Camera(port=video_port)
+        self.camera = Camera(port=video_port, pitch=self.pitch)
         frame = self.camera.get_frame()
         center_point = self.camera.get_adjusted_center(frame)
 
@@ -56,17 +58,15 @@ class Controller:
         self.postprocessing = Postprocessing()
 
         # Set up main planner
-        self.planner = Planner(our_side=our_side)
+        self.planner = Planner(our_side=our_side, pitch_num=pitch)
 
         # Set up GUI
-        self.GUI = GUI(calibration=self.calibration, arduino=self.arduino)
+        self.GUI = GUI(calibration=self.calibration, arduino=self.arduino, pitch=self.pitch)
 
         self.color = color
         self.side = our_side
 
         self.preprocessing = Preprocessing()
-
-        self.pitch = pitch
 
         self.attacker = Attacker_Controller()
         self.defender = Defender_Controller()

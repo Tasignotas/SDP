@@ -38,8 +38,6 @@ class Configure:
 
 
 	def run(self, camera=False):
-		frame = cv2.namedWindow(FRAME_NAME)
-
 		# Set callback
 		cv2.setMouseCallback(FRAME_NAME, self.draw)
 

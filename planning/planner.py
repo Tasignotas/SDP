@@ -6,8 +6,8 @@ from utilities import *
 
 class Planner:
 
-    def __init__(self, our_side):
-        self._world = World(our_side)
+    def __init__(self, our_side, pitch_num):
+        self._world = World(our_side, pitch_num)
         self._world.our_defender.catcher_area = {'width' : 30, 'height' : 30, 'front_offset' : 10}
         self._world.our_attacker.catcher_area = {'width' : 30, 'height' : 30, 'front_offset' : 10}
 
