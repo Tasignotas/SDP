@@ -17,12 +17,13 @@ CMATRIX = distort_data['camera_matrix']
 DIST = distort_data['dist']
 
 
-class Configure:
+class Configure(object):
 
-	def __init__(self, width=640, height=480, pitch=0):
+	def __init__(self, pitch, width=640, height=480):
 		self.width = width
 		self.height = height
-		self.pitch = pitch
+		self.pitch = int(pitch)
+		print self.pitch
 		self.camera = cv2.VideoCapture(0)
 		self.new_polygon = True
 		self.polygon = self.polygons = []
@@ -40,6 +41,8 @@ class Configure:
 
 
 	def run(self, camera=False):
+		frame = cv2.namedWindow(FRAME_NAME)
+
 		# Set callback
 		cv2.setMouseCallback(FRAME_NAME, self.draw)
 
@@ -66,7 +69,7 @@ class Configure:
 
 		# Write out the data
 		# self.dump('calibrations/calibrate.json', self.data)
-		tools.save_croppings(self.pitch, self.data)
+		tools.save_croppings(pitch=self.pitch, data=self.data)
 
 	def reshape(self):
 		return np.array(self.data[self.drawing], np.int32).reshape((-1,1,2))
@@ -118,5 +121,5 @@ if __name__ == '__main__':
 	parser.add_argument('pitch', help='Select pitch to be cropped [0, 1]')
 	args = parser.parse_args()
 
-	c = Configure(args.pitch)
+	c = Configure(pitch=args.pitch)
 	c.run(camera=True)
