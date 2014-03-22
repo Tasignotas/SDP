@@ -22,8 +22,7 @@ class Configure(object):
 	def __init__(self, pitch, width=640, height=480):
 		self.width = width
 		self.height = height
-		self.pitch = int(pitch)
-		print self.pitch
+		self.pitch = pitch
 		self.camera = cv2.VideoCapture(0)
 		self.new_polygon = True
 		self.polygon = self.polygons = []
@@ -120,6 +119,8 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('pitch', help='Select pitch to be cropped [0, 1]')
 	args = parser.parse_args()
+	pitch_num = int(args.pitch)
+	assert pitch_num in [0, 1]
 
-	c = Configure(pitch=args.pitch)
+	c = Configure(pitch=pitch_num)
 	c.run(camera=True)

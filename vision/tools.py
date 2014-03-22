@@ -104,12 +104,16 @@ def save_colors(pitch, colors, filename=PATH+'/calibrations/calibrations.json'):
 
 
 def save_croppings(pitch, data, filename=PATH+'/calibrations/croppings.json'):
+    """
+    Open the current croppings file and only change the croppings
+    for the relevant pitch.
+    """
     croppings = get_json(filename)
     croppings[PITCHES[pitch]] = data
     write_json(filename, croppings)
 
 
-def write_json(filename='calibrate.json', data={}):
+def write_json(filename=PATH+'/calibrations/calibrations.json', data={}):
     _file = open(filename, 'w')
     _file.write(json.dumps(data))
     _file.close()

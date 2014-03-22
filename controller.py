@@ -58,7 +58,7 @@ class Controller:
         self.postprocessing = Postprocessing()
 
         # Set up main planner
-        self.planner = Planner(our_side=our_side, pitch_num=pitch)
+        self.planner = Planner(our_side=our_side, pitch_num=self.pitch)
 
         # Set up GUI
         self.GUI = GUI(calibration=self.calibration, arduino=self.arduino, pitch=self.pitch)
@@ -276,8 +276,8 @@ if __name__ == '__main__':
     parser.add_argument("color", help="The color of our team - ['yellow', 'blue'] allowed.")
     parser.add_argument(
         "-n", "--nocomms", help="Disables sending commands to the robot.", action="store_true")
+
     args = parser.parse_args()
-    # print args
     if args.nocomms:
         c = Controller(
             pitch=int(args.pitch), color=args.color, our_side=args.side, comms=0).wow()

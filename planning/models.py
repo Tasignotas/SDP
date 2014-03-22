@@ -299,9 +299,6 @@ class Pitch(object):
     '''
 
     def __init__(self, pitch_num):
-        # config_file = open('vision/calibrations/calibrate.json', 'r')
-        # config_json = load(config_file)
-        # config_file.close()
         config_json = tools.get_croppings(pitch=pitch_num)
 
         self._width = max([point[0] for point in config_json['outline']]) - min([point[0] for point in config_json['outline']])
