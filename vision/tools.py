@@ -21,6 +21,8 @@ RED_HIGHER = np.array([9, 255, 255])
 YELLOW_LOWER = np.array([9, 50, 50])
 YELLOW_HIGHER = np.array([11, 255, 255])
 
+PITCHES = ['Pitch_0', 'Pitch_1']
+
 
 def get_zones(width, height, filename=PATH+'/calibrations/croppings.json', pitch=0):
     calibration = get_croppings(filename, pitch)
@@ -36,12 +38,11 @@ def get_zones(width, height, filename=PATH+'/calibrations/croppings.json', pitch
 
 
 def get_croppings(filename=PATH+'/calibrations/croppings.json', pitch=0):
-    pitches = ['Pitch_0', 'Pitch_1']
     croppings = get_json(filename)
-    return croppings[pitches[pitch]]
+    return croppings[PITCHES[pitch]]
 
 
-def get_json(filename=PATH+'calibrate.json'):
+def get_json(filename=PATH+'/calibrations/calibrations.json'):
     _file = open(filename, 'r')
     content = json.loads(_file.read())
     _file.close()
@@ -99,10 +100,13 @@ def save_colors(pitch, colors, filename=PATH+'/calibrations/calibrations.json'):
         json_content[machine_name] = json_content['default']
         json_content[machine_name][pitch_name].update(colors)
 
-    _file = open(filename, 'w')
-    _file.write(json.dumps(json_content))
-    _file.close()
+    write_json(filename, json_content)
 
+
+def save_croppings(data, pitch, filename=PATH+'/calibrations/croppings.json'):
+    croppings = get_json(filename)
+    croppings[PITCHES[pitch]] = data
+    write_json(filename, croppings)
 
 def write_json(filename='calibrate.json', data={}):
     _file = open(filename, 'w')
