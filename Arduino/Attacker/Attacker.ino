@@ -6,39 +6,47 @@
 
 #include <SerialCommand.h>
 #include <AccelStepper.h>
-#include <AFMotor.h>
+#include <Wire.h>
+#include <Adafruit_MotorShield.h>
+#include "utility/Adafruit_PWMServoDriver.h"
 #include <Servo.h>
 
 
 // Communications
 SerialCommand comm;
 
+// Motorshield
+Adafruit_MotorShield AFMStop(0x60);
+
 // Steppers
-AF_Stepper left_motor(48, 1);
-AF_Stepper right_motor(48, 2);
+Adafruit_StepperMotor *left_motor = AFMStop.getStepper(48, 1);
+Adafruit_StepperMotor *right_motor = AFMStop.getStepper(48, 2);
+
+// Stepper Control Functions
+void left_forward() {  
+  left_motor->onestep(FORWARD, SINGLE);
+}
+void left_backward() {  
+  left_motor->onestep(BACKWARD, SINGLE);
+}
+void right_forward() {  
+  right_motor->onestep(FORWARD, SINGLE);
+}
+void right_backward() {  
+  right_motor->onestep(BACKWARD, SINGLE);
+}
+
+// AccelSteppers
 AccelStepper left_stepper(left_forward, left_backward);
 AccelStepper right_stepper(right_forward, right_backward);
 
 // Servo
 Servo grabber;
 
-// Stepper Control Functions
-
-void left_forward() {  
-  left_motor.onestep(FORWARD, SINGLE);
-}
-void left_backward() {  
-  left_motor.onestep(BACKWARD, SINGLE);
-}
-void right_forward() {  
-  right_motor.onestep(FORWARD, SINGLE);
-}
-void right_backward() {  
-  right_motor.onestep(BACKWARD, SINGLE);
-}
 
 void setup()
 {
+  AFMStop.begin();
   Serial.begin(115200);
   
   comm.addCommand("A_SET_ENGINE", set_engine);
@@ -64,8 +72,8 @@ void loop()
   
   if (left_stepper.distanceToGo() == 0 && right_stepper.distanceToGo() == 0)
   {
-    left_motor.release();
-    right_motor.release();
+    left_motor->release();
+    right_motor->release();
   }
   else
   {
