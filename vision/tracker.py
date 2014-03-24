@@ -1,10 +1,5 @@
 import cv2
 import numpy as np
-import math
-import tools
-import cPickle
-from colors import PITCH0, PITCH1, KMEANS0
-import scipy.optimize as optimization
 from collections import namedtuple
 import warnings
 

@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import tools
+import argparse
 
 FRAME_NAME = 'ConfigureWindow'
 
@@ -16,11 +17,12 @@ CMATRIX = distort_data['camera_matrix']
 DIST = distort_data['dist']
 
 
-class Configure:
+class Configure(object):
 
-	def __init__(self, width=640, height=480):
+	def __init__(self, pitch, width=640, height=480):
 		self.width = width
 		self.height = height
+		self.pitch = pitch
 		self.camera = cv2.VideoCapture(0)
 		self.new_polygon = True
 		self.polygon = self.polygons = []
@@ -65,7 +67,8 @@ class Configure:
 		cv2.destroyAllWindows()
 
 		# Write out the data
-		self.dump('calibrations/calibrate.json', self.data)
+		# self.dump('calibrations/calibrate.json', self.data)
+		tools.save_croppings(pitch=self.pitch, data=self.data)
 
 	def reshape(self):
 		return np.array(self.data[self.drawing], np.int32).reshape((-1,1,2))
@@ -111,9 +114,13 @@ class Configure:
 			cv2.circle(self.image, (x-1, y-1), 2, color, -1)
 			self.data[self.drawing].append((x,y))
 
-	def dump(self, filename='calibrations/calibrate.json', data={}):
-		tools.write_json(filename, data)
 
+if __name__ == '__main__':
+	parser = argparse.ArgumentParser()
+	parser.add_argument('pitch', help='Select pitch to be cropped [0, 1]')
+	args = parser.parse_args()
+	pitch_num = int(args.pitch)
+	assert pitch_num in [0, 1]
 
-c = Configure()
-c.run(camera=True)
+	c = Configure(pitch=pitch_num)
+	c.run(camera=True)

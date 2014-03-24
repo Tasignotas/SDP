@@ -1,7 +1,6 @@
 import numpy as np
 import cv2
 import json
-import thread
 import socket
 import os
 import cPickle
@@ -22,9 +21,11 @@ RED_HIGHER = np.array([9, 255, 255])
 YELLOW_LOWER = np.array([9, 50, 50])
 YELLOW_HIGHER = np.array([11, 255, 255])
 
+PITCHES = ['Pitch_0', 'Pitch_1']
 
-def get_zones(width, height, path=PATH+'/calibrations/calibrate.json'):
-    calibration = get_calibration(path)
+
+def get_zones(width, height, filename=PATH+'/calibrations/croppings.json', pitch=0):
+    calibration = get_croppings(filename, pitch)
     zones_poly = [calibration[key] for key in ['Zone_0', 'Zone_1', 'Zone_2', 'Zone_3']]
 
     maxes = [max(zone, key=lambda x: x[0])[0] for zone in zones_poly[:3]]
@@ -36,11 +37,12 @@ def get_zones(width, height, path=PATH+'/calibrations/calibrate.json'):
     return [(mids[i], mids[i+1], 0, height) for i in range(4)]
 
 
-def get_calibration(filename=PATH+'/calibrations/calibrate.json'):
-    return get_json(filename)
+def get_croppings(filename=PATH+'/calibrations/croppings.json', pitch=0):
+    croppings = get_json(filename)
+    return croppings[PITCHES[pitch]]
 
 
-def get_json(filename=PATH+'calibrate.json'):
+def get_json(filename=PATH+'/calibrations/calibrations.json'):
     _file = open(filename, 'r')
     content = json.loads(_file.read())
     _file.close()
@@ -98,12 +100,20 @@ def save_colors(pitch, colors, filename=PATH+'/calibrations/calibrations.json'):
         json_content[machine_name] = json_content['default']
         json_content[machine_name][pitch_name].update(colors)
 
-    _file = open(filename, 'w')
-    _file.write(json.dumps(json_content))
-    _file.close()
+    write_json(filename, json_content)
 
 
-def write_json(filename='calibrate.json', data={}):
+def save_croppings(pitch, data, filename=PATH+'/calibrations/croppings.json'):
+    """
+    Open the current croppings file and only change the croppings
+    for the relevant pitch.
+    """
+    croppings = get_json(filename)
+    croppings[PITCHES[pitch]] = data
+    write_json(filename, croppings)
+
+
+def write_json(filename=PATH+'/calibrations/calibrations.json', data={}):
     _file = open(filename, 'w')
     _file.write(json.dumps(data))
     _file.close()

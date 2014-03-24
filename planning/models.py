@@ -1,14 +1,12 @@
-from numpy import roots
-from json import load
 from Polygon.cPolygon import Polygon
-from Polygon.Utils import pointList
-from math import pow, cos, sin, hypot, pi, atan2
+from math import cos, sin, hypot, pi, atan2
+from vision import tools
 
 # Width measures the front and back of an object
 # Length measures along the sides of an object
 
-ROBOT_WIDTH = 20
-ROBOT_LENGTH = 20
+ROBOT_WIDTH = 30
+ROBOT_LENGTH = 45
 ROBOT_HEIGHT = 10
 
 BALL_WIDTH = 5
@@ -300,10 +298,9 @@ class Pitch(object):
     Class that describes the pitch
     '''
 
-    def __init__(self):
-        config_file = open('vision/calibrations/calibrate.json', 'r')
-        config_json = load(config_file)
-        config_file.close()
+    def __init__(self, pitch_num):
+        config_json = tools.get_croppings(pitch=pitch_num)
+
         self._width = max([point[0] for point in config_json['outline']]) - min([point[0] for point in config_json['outline']])
         self._height = max([point[1] for point in config_json['outline']]) - min([point[1] for point in config_json['outline']])
         # Getting the zones:
@@ -341,9 +338,9 @@ class World(object):
     This class describes the environment
     '''
 
-    def __init__(self, our_side):
+    def __init__(self, our_side, pitch_num):
         assert our_side in ['left', 'right']
-        self._pitch = Pitch()
+        self._pitch = Pitch(pitch_num)
         self._our_side = our_side
         self._their_side = 'left' if our_side == 'right' else 'right'
         self._ball = Ball(0, 0, 0, 0)

@@ -1,4 +1,3 @@
-import sys
 from planning.models import Vector
 from copy import deepcopy
 from math import atan2, pi, hypot

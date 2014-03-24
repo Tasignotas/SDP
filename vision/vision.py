@@ -1,15 +1,10 @@
 import cv2
 import tools
 from tracker import BallTracker, RobotTracker
-import math
 from multiprocessing import Process, Queue
-import sys
-from planning.models import Vector
 from colors import BGR_COMMON
 from collections import namedtuple
 import numpy as np
-from copy import deepcopy
-
 from findHSV import CalibrationGUI
 
 
@@ -91,7 +86,7 @@ class Vision:
             (0, width, 0, height), 0, pitch, calibration)
 
     def _get_zones(self, width, height):
-        return [(val[0], val[1], 0, height) for val in tools.get_zones(width, height)]
+        return [(val[0], val[1], 0, height) for val in tools.get_zones(width, height, pitch=self.pitch)]
 
     def _get_opponent_color(self, our_color):
         return (TEAM_COLORS - set([our_color])).pop()
@@ -244,9 +239,9 @@ class Camera(object):
     Camera access wrapper.
     """
 
-    def __init__(self, port=0):
+    def __init__(self, port=0, pitch=0):
         self.capture = cv2.VideoCapture(port)
-        calibration = tools.get_calibration()
+        calibration = tools.get_croppings(pitch=pitch)
         self.crop_values = tools.find_extremes(calibration['outline'])
 
         # Parameters used to fix radial distortion
@@ -288,10 +283,11 @@ class GUI(object):
     def nothing(self, x):
         pass
 
-    def __init__(self, calibration, arduino):
+    def __init__(self, calibration, arduino, pitch):
         self.zones = None
         self.calibration_gui = CalibrationGUI(calibration)
         self.arduino = arduino
+        self.pitch = pitch
 
         cv2.namedWindow(self.VISION)
 
@@ -392,7 +388,7 @@ class GUI(object):
     def draw_zones(self, frame, width, height):
         # Re-initialize zones in case they have not been initalized
         if self.zones is None:
-            self.zones = tools.get_zones(width, height)
+            self.zones = tools.get_zones(width, height, pitch=self.pitch)
 
         for zone in self.zones:
             cv2.line(frame, (zone[1], 0), (zone[1], height), BGR_COMMON['red'], 1)
