@@ -113,3 +113,6 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
 
         else:
             return {'left_motor': 0, 'right_motor': 0, 'kicker': 0, 'catcher': 0, 'speed': general_speed}
+
+def do_nothing():
+    return calculate_motor_speed(0, 0)
