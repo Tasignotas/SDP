@@ -111,6 +111,7 @@ class AttackerDefend(Strategy):
         self.center_y = (min_y + max_y)/2
         self.our_attacker = self.world.our_attacker
         self.their_defender = self.world.their_defender
+        self.our_defender = self.world.our_defender
 
     def align(self):
         """
@@ -172,11 +173,12 @@ class AttackerPositionCatch(Strategy):
             self.POSITION: self.position
         }
 
-        zone = self.world._pitch._zones[our_attacker.zone]
+        self.our_attacker = self.world.our_attacker
+        self.our_defender = self.world.our_defender
+        zone = self.world._pitch._zones[self.our_attacker.zone]
         min_x, max_x, min_y, max_y  = zone.boundingBox()
         self.center_x = (min_x + max_x)/2
         self.center_y = (min_y + max_y)/2
-        self.our_attacker = self.world.our_attacker
 
     def position(self):
         if has_matched(self.our_attacker, x=self.center_x, y=self.center_y):
@@ -748,12 +750,18 @@ class AttackerTurnScore(Strategy):
 
         self.their_goal = self.world.their_goal
         self.our_attacker = self.world.our_attacker
+        self.their_defender = self.world.their_defender
 
         # Distance that the attacker should keep from its boundary.
         self.offset = 55
 
+        # Opponent's goal edge where our attacker is currently heading.
+        self.point = 0
+
     def align(self):
-        # Go to the boundary of the attacker's zone and align with the goal line.
+        '''
+        Go to the boundary of the attacker's zone and align with the goal line.
+        '''
         ideal_x = self._get_alignment_x()
         ideal_y = self.their_goal.y
 
@@ -765,12 +773,31 @@ class AttackerTurnScore(Strategy):
             return calculate_motor_speed(distance, angle)
 
     def position(self):
-        # Go up an down the goal line waiting for the first opportunity to shoot.
-        return do_nothing()
+        '''
+        Go up an down the goal line waiting for the first opportunity to shoot.
+        '''
+        # Check if we have a clear shot
+        if not is_attacker_shot_blocked(self.world, self.our_attacker, self.their_defender):
+            self.current_state = self.KICK
+            return do_nothing()
+
+        else:
+            # If our shot is blocked, continue moving up and down the goal line.
+            goal_edges = [self.their_goal.y, self.their_goal.y + self.their_goal.width]
+            ideal_x = our_attacker.x
+            ideal_y = goal_edges[self.point]
+
+            if has_matched(self.our_attacker, x=self.our_attacker.x, y=ideal_y):
+                # Go to the other goal edge
+                self.point = 1 - self.point
+                ideal_y = goal_edges[self.point]
+
+            distance, angle = self.our_attacker.get_direction_to_point(ideal_x, ideal_y)
+            return calculate_motor_speed(distance, angle)
 
     def kick(self):
         # This will also include the 90 degree turn.
-        return do_nothing()
+        return kick_ball()
 
     def _get_alignment_x(self):
         # Get the polygon of our attacker's zone.       

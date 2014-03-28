@@ -17,6 +17,17 @@ def is_shot_blocked(world, our_robot, their_robot):
     return abs(predicted_y - their_robot.y) < their_robot.length + 40
 
 
+def is_attacker_shot_blocked(world, our_attacker, their_defender):
+    '''
+    Checks if our attacker would score if it would immediately turn and shoot.
+    '''
+
+    # Acceptable distance that the opponent defender can be relative to our
+    # shooting position in order for us to have a clear shot.
+    distance_threshold = 50
+    return abs(our_attacker.y - their_defender.y) > distance_threshold
+
+
 def predict_y_intersection(world, predict_for_x, robot, full_width=False, bounce=False):
         '''
         Predicts the (x, y) coordinates of the ball shot by the robot
