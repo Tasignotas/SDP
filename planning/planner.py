@@ -11,8 +11,8 @@ class Planner:
         self._world.our_defender.catcher_area = {'width' : 30, 'height' : 30, 'front_offset' : 10}
         self._world.our_attacker.catcher_area = {'width' : 30, 'height' : 30, 'front_offset' : 10}
 
-        self._defender_defence_strat = DefenderDefence(self._world)
-        self._defender_attack_strat = DefaultDefenderAttack(self._world)
+        # self._defender_defence_strat = DefenderDefence(self._world)
+        # self._defender_attack_strat = DefaultDefenderAttack(self._world)
 
         self._attacker_strategies = {'defence' : [AttackerDefend],
                                      'grab' : [AttackerGrab],

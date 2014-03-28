@@ -98,14 +98,14 @@ class AttackerDefend(Strategy):
     STATES = [UNALIGNED, BLOCK_PASS]
 
     def __init__(self, world):
-        super(DefaultAttackerDefend, self).__init__(world, self.STATES)
+        super(AttackerDefend, self).__init__(world, self.STATES)
 
         self.NEXT_ACTION_MAP = {
             self.UNALIGNED: self.align,
             self.BLOCK_PASS: self.block_pass
         }
 
-        zone = self.world._pitch._zones[our_attacker.zone]
+        zone = self.world._pitch._zones[self.world.our_attacker.zone]
         min_x, max_x, min_y, max_y  = zone.boundingBox()
         self.center_x = (min_x + max_x)/2
         self.center_y = (min_y + max_y)/2
