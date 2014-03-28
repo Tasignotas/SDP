@@ -38,7 +38,7 @@ class DefenderDefence(Strategy):
     LEFT, RIGHT = 'left', 'right'
     SIDES = [LEFT, RIGHT]
 
-    GOAL_ALIGN_OFFSET = 55
+    GOAL_ALIGN_OFFSET = 80
 
     def __init__(self, world):
         super(DefenderDefence, self).__init__(world, self.STATES)
@@ -79,7 +79,10 @@ class DefenderDefence(Strategy):
                                                                            predicted_y)
             return calculate_motor_speed(displacement, angle, backwards_ok=True, defence=True)
         else:
-            return do_nothing()
+            ball = self.world.ball
+            our_defender = self.world.our_defender
+            displacement, angle = self.our_defender.get_direction_to_point(our_defender.x, ball.y)
+            return calculate_motor_speed(displacement, angle, backwards_ok=True, defence=True)
 
     def get_alignment_position(self, side):
         """
@@ -800,7 +803,7 @@ class AttackerTurnScore(Strategy):
         return kick_ball()
 
     def _get_alignment_x(self):
-        # Get the polygon of our attacker's zone.       
+        # Get the polygon of our attacker's zone.
         zone = self.our_attacker.zone
         assert zone in [1,2]
         zone_poly = self.world.pitch.zones[zone][0]

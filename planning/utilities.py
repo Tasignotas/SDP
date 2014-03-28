@@ -3,8 +3,8 @@ from math import tan, pi, hypot, log
 DISTANCE_MATCH_THRESHOLD = 15
 ANGLE_MATCH_THRESHOLD = pi/9
 BALL_ANGLE_THRESHOLD = pi/15
-MAX_DISPLACEMENT_SPEED = 690
-MAX_ANGLE_SPEED = 50
+MAX_DISPLACEMENT_SPEED = 1000
+MAX_ANGLE_SPEED = 1000
 
 
 def is_shot_blocked(world, our_robot, their_robot):
