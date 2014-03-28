@@ -134,7 +134,6 @@ class AttackerDefend(Strategy):
         return calculate_motor_speed(0, 0)
 
 
-
 class AttackerCatch(Strategy):
 
     CATCH = 'CATCH'
@@ -728,6 +727,34 @@ class AttackerDriveBy(Strategy):
             return self.world.their_goal.y + self.world.their_goal.width / 2 - 50
         return self.world.their_goal.y - self.world.their_goal.width / 2 + 50
 
+
+class AttackerTurnScore(Strategy):
+    """
+    Move up and down the opponent's goal line and suddenly turn 90 degrees and kick if the
+    path is clear.
+    """
+
+    UNALIGNED, POSITION, KICK = 'UNALIGNED', 'POSITION', 'KICK'
+    STATES = [UNALIGNED, POSITION, KICK]
+
+    def __init__(self, world):
+        super(AttackerTurnScore, self).__init__(world, self.STATES)
+
+        self.NEXT_ACTION_MAP = {
+            self.UNALIGNED: self.align,
+            self.POSITION: self.position,
+            self.KICK: self.kick
+        }
+
+    def align(self):
+        pass
+
+    def position(self):
+        pass
+
+    def kick(self):
+        # This will also include the 90 degree turn.
+        pass
 
 class CarefulGrabAttacker(Strategy):
     """
