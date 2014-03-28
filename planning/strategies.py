@@ -746,15 +746,48 @@ class AttackerTurnScore(Strategy):
             self.KICK: self.kick
         }
 
+        self.their_goal = self.world.their_goal
+        self.our_attacker = self.world.our_attacker
+
+        # Distance that the attacker should keep from its boundary.
+        self.offset = 55
+
     def align(self):
-        pass
+        # Go to the boundary of the attacker's zone and align with the goal line.
+        ideal_x = self._get_alignment_x()
+        ideal_y = self.their_goal.y
+
+        if has_matched(self.our_attacker, x=ideal_x, y=ideal_y):
+            self.current_state = self.POSITION
+            return do_nothing()
+        else:
+            distance, angle = self.our_attacker.get_direction_to_point(ideal_x, ideal_y)
+            return calculate_motor_speed(distance, angle)
 
     def position(self):
-        pass
+        # Go up an down the goal line waiting for the first opportunity to shoot.
+        return do_nothing()
 
     def kick(self):
         # This will also include the 90 degree turn.
-        pass
+        return do_nothing()
+
+    def _get_alignment_x(self):
+        # Get the polygon of our attacker's zone.       
+        zone = self.our_attacker.zone
+        assert zone in [1,2]
+        zone_poly = self.world.pitch.zones[zone][0]
+
+        # Choose the appropriate function to determine the borderline of our
+        # attacker's zone facing the opponent's goal.
+        side = {1: min, 2: max}
+        f = side[zone]
+
+        # Get the x coordinate that our attacker needs to match.
+        offset = {1: self.offset, 2: -self.offset}
+        boundary_x = int(f(zone_poly, key=lambda z: z[0])[0]) + offset[zone]
+        return boundary_x
+
 
 class CarefulGrabAttacker(Strategy):
     """
