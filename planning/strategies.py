@@ -727,3 +727,33 @@ class AttackerDriveBy(Strategy):
             # y coordinate of the goal is DOWN, offset by the width
             return self.world.their_goal.y + self.world.their_goal.width / 2 - 50
         return self.world.their_goal.y - self.world.their_goal.width / 2 + 50
+
+
+class CarefulGrabAttacker(Strategy):
+    """
+    Carefully grabbing the ball when it is located by the wall.
+
+    Idea:
+        Approach perpendicular to the wall to avoid getting stuck by the wall.
+    """
+
+    UNALIGNED, ALIGNED, GRABBED = 'UNALIGNED', 'ALIGNED', 'GRABBED'
+    STATES = [UNALIGNED, ALIGNED, GRABBED]
+
+    def __init__(self, world):
+        super(CarefulGrabAttacker, self).__init__(world, self.STATES)
+
+        self.NEXT_ACTION_MAP = {
+            self.UNALIGNED = self.align,
+            self.ALIGNED = self.grab,
+            self.GRABBED = self.finish
+        }
+
+    def align(self):
+        pass
+
+    def grab(self):
+        pass
+
+    def finish(self):
+        pass
