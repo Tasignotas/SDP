@@ -741,6 +741,8 @@ class CarefulGrabAttacker(Strategy):
     UNALIGNED, ALIGNED, GRABBED = 'UNALIGNED', 'ALIGNED', 'GRABBED'
     STATES = [UNALIGNED, ALIGNED, GRABBED]
 
+    BALL_Y_OFFSET = 40
+
     def __init__(self, world):
         super(CarefulGrabAttacker, self).__init__(world, self.STATES)
 
@@ -750,8 +752,30 @@ class CarefulGrabAttacker(Strategy):
             self.GRABBED: self.finish
         }
 
+        self.ball_side = self.get_ball_side()
+
     def align(self):
-        pass
+        our_attacker = self.world.our_attacker
+        ball = self.world.ball
+
+        # Find ideal x and y
+        ideal_x = ball.x
+        if self.ball_side == self.UP:
+            ideal_y = ball.y - self.BALL_Y_OFFSET
+            angle = math.pi / 2.0   # 90 degrees, pointing up
+        else:
+            ideal_y = ball.y + self.BALL_Y_OFFSET
+            angle = 3 * math.pi / 2.0   # 270 degrees, pointing down
+
+        if has_matched(our_attacker, x=ideal_x, y=ideal_y, angle=angle):
+            self.current_state = self.ALIGNED
+            return self.grab()
+
+        return calculate_motor_speed()
+
+        distance, angle = self.our_defender.get_direction_to_point(ideal_x, ideal_y)
+        # if self.ball_side == self.UP:
+
 
     def grab(self):
         pass
