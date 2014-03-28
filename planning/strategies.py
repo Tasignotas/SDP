@@ -745,9 +745,9 @@ class CarefulGrabAttacker(Strategy):
         super(CarefulGrabAttacker, self).__init__(world, self.STATES)
 
         self.NEXT_ACTION_MAP = {
-            self.UNALIGNED = self.align,
-            self.ALIGNED = self.grab,
-            self.GRABBED = self.finish
+            self.UNALIGNED: self.align,
+            self.ALIGNED: self.grab,
+            self.GRABBED: self.finish
         }
 
     def align(self):
@@ -758,3 +758,10 @@ class CarefulGrabAttacker(Strategy):
 
     def finish(self):
         pass
+
+    def get_ball_side(self):
+        ball = self.world.ball
+        middle = self.world.pitch.height / 2
+        if ball.y < middle:
+            return self.DOWN
+        return self.UP
