@@ -14,10 +14,10 @@ class Planner:
         self._defender_defence_strat = DefenderDefence(self._world)
         self._defender_attack_strat = DefaultDefenderAttack(self._world)
 
-        self._attacker_strategies = {'defence' : [DefaultAttackerDefend],
+        self._attacker_strategies = {'defence' : [AttackerDefend],
                                      'grab' : [AttackerGrab],
                                      'score' : [AttackerDriveBy, AttackerScoreDynamic],
-                                     'catch' : [AttackerCatchStrategy]}
+                                     'catch' : [AttackerPositionCatch, AttackerCatch]}
 
         self._defender_strategies = {'defence' : [DefenderDefence],
                                      'grab' : [DefenderGrab],
@@ -97,16 +97,13 @@ class Planner:
                     self._defender_current_strategy = self.choose_defender_strategy(self._world)
 
                 elif self._defender_state == 'pass' and self._defender_current_strategy.current_state == 'FINISHED':
-                    # NOTE: Consdier doing this at an earlier stage in the defender's passing strategy.
-                    self._attacker_state = 'catch'
-                    
                     self._defender_state = 'grab'
                     self._defender_current_strategy = self.choose_defender_strategy(self._world)
 
                 return self._defender_current_strategy.generate()
 
         else:
-            # If ball is not in our defender or attacker zones, defend:
+            # If the ball is in their defender zone we defend:
             if self._world.pitch.zones[their_defender.zone].isInside(ball.x, ball.y):
                 if not self._attacker_state == 'defence':
                     self._attacker_state = 'defence'
@@ -117,7 +114,7 @@ class Planner:
             elif self._world.pitch.zones[our_attacker.zone].isInside(ball.x, ball.y):
 
                 # Check if we should switch from a grabbing to a scoring strategy.
-                if  self._attacker_state == 'grab' and self._attacker_current_strategy.current_state == 'GRABBED':
+                if self._attacker_state == 'grab' and self._attacker_current_strategy.current_state == 'GRABBED':
                     self._attacker_state = 'score'
                     self._attacker_current_strategy = self.choose_attacker_strategy(self._world)
 
@@ -126,9 +123,16 @@ class Planner:
                     self._attacker_state = 'grab'
                     self._attacker_current_strategy = self.choose_attacker_strategy(self._world)
 
+                elif self._attacker_state == 'score' and self._attacker_current_strategy.current_state == 'FINISHED':
+                    self.attacker_state = 'grab'
+                    self._attacker_current_strategy = self.choose_attacker_strategy(self._world)
+
+                return self._attacker_current_strategy.generate()
+            # If the ball is in our defender zone, prepare to catch the passed ball:
+            elif self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y):
+                if not self._attacker_state == 'catch':
+                    self._attacker_state = 'catch'
+                    self._attacker_current_strategy = self.choose_attacker_strategy(self._world)
                 return self._attacker_current_strategy.generate()
             else:
-                if self._attacker_state == 'catch':
-                    self._attacker_current_strategy = self.choose_attacker_strategy(self._world)
-                    return self._attacker_current_strategy.generate()
                 return calculate_motor_speed(0, 0)
