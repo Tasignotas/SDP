@@ -5,6 +5,7 @@ from random import randint
 class Strategy(object):
 
     PRECISE_BALL_ANGLE_THRESHOLD = math.pi / 15.0
+    UP, DOWN = 'UP', 'DOWN'
 
     def __init__(self, world, states):
         self.world = world
