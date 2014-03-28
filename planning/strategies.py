@@ -74,7 +74,7 @@ class DefenderDefence(Strategy):
         predicted_y = predict_y_intersection(self.world, self.goal_front_x, self.their_attacker)
 
         if predicted_y is not None:
-            displacement, angle = self.our_defender.get_direction_to_point(self.goal_front_x, 
+            displacement, angle = self.our_defender.get_direction_to_point(self.goal_front_x,
                                                                            predicted_y)
             return calculate_motor_speed(displacement, angle, backwards_ok=True, defence=True)
         else:
@@ -168,7 +168,7 @@ class AttackerCatchStrategy(Strategy):
         ideal_y = self.ball.y
 
         displacement, angle = self.our_attacker.get_direction_to_point(ideal_x, ideal_y)
-        return calculate_motor_speed(displacement, angle, defence=True, backwards_ok=True, catch=True)      
+        return calculate_motor_speed(displacement, angle, defence=True, backwards_ok=True, catch=True)
 
 
 class AttackerGrabGeneral(Strategy):
@@ -727,120 +727,3 @@ class AttackerDriveBy(Strategy):
             # y coordinate of the goal is DOWN, offset by the width
             return self.world.their_goal.y + self.world.their_goal.width / 2 - 50
         return self.world.their_goal.y - self.world.their_goal.width / 2 + 50
-
-
-
-'''
-class DefenderPassDynamic(Strategy):
-    Such strategy, much difficulty, but wow. Have to get used to how this works later.
-
-    def __init__(self, world):
-        super(DefenderPassDynamic, self).__init__(world, self.STATES)
-        # Map states into functions
-        self.NEXT_ACTION_MAP = {
-            self.GRABBED: self.position,
-            self.POSITION: self.confuse_one,
-            self.CONFUSE1: self.passing,
-            self.PASS: self.passing
-        }
-
-        self.grabbed = False
-
-        self.our_defender = self.world.our_defender
-        self.our_attacker = self.world.our_attacker
-        self.their_attacker = self.world.their_attacker
-
-        # Find the position to shoot from and cache it
-        self.passing_pos = self._get_passing_coordinates(self.our_defender)
-
-        # Remember which side we picked first
-        self.fake_shoot_side = None
-
-    def generate(self):
-        """
-        Pick an action based on current state.
-        """
-        print 'BALL', self.world.ball
-        return self.NEXT_ACTION_MAP[self.current_state]()
-
-    def position(self):
-        """
-        Position the robot in the middle close to the goal. Angle does not matter.
-        Executed initially when we've grabbed the ball and want to move.
-        """
-        ideal_x, ideal_y = self.passing_pos
-        distance, angle = self.our_defender.get_direction_to_point(ideal_x, ideal_y)
-
-        if not self.grabbed:
-            self.grabbed = True
-            return grab_ball()
-
-        if has_matched(self.our_attacker, x=ideal_x, y=ideal_y):
-            # We've reached the POSITION state.
-            self.current_state = self.POSITION
-            return self.confuse_one()
-
-        # We still need to drive
-        return calculate_motor_speed(distance, angle)
-
-
-    def confuse_one(self):
-        """
-        Pick a side and aim at it. Executed when we've reached the POSITION state.
-        """
-        # Initialize fake shoot side if not available
-        if self.fake_shoot_side is None:
-            self.fake_shoot_side = self._get_fake_shoot_side(self.their_defender)
-
-        target_x = self.world.their_goal.x
-        target_y = self._get_goal_corner_y(self.fake_shoot_side)
-
-        print 'SIDE:', self.fake_shoot_side
-
-        print 'TARGET_Y', target_y
-        print 'STATE:', self.current_state
-
-        distance, angle = self.our_attacker.get_direction_to_point(target_x, target_y)
-
-        print 'DIRECTION TO POINT', distance, angle
-
-        if has_matched(self.our_attacker, angle=angle):
-            # TODO: Shoot if we have a clear shot and the oppononet's velocity is favourable for us
-            y = self.their_defender.y
-            middle = self.world.pitch.height / 2
-
-            opp_robot_side = self._get_fake_shoot_side(self.their_defender)
-            if opp_robot_side != self.fake_shoot_side:
-                # We've finished CONFUSE1
-                self.current_state = self.CONFUSE1
-                return self.confuse_two()
-            else:
-                return calculate_motor_speed(0, 0)
-
-        # Rotate on the spot
-        return calculate_motor_speed(None, angle)
-
-
-    def shoot(self):
-        """
-        Kick.
-        """
-        self.current_state = self.PASS
-        return kick_ball()
-
-
-    def _get_passing_coordinates(self, robot):
-        """
-        Retrive coordinates of middle of the zone before we set up the confuse shot.
-        """
-        zone_index = robot.zone
-        zone_poly = self.world.pitch.zones[zone_index][0]
-
-        # Find the x coordinate which is in the middle of the zone
-        x = int(((max(zone_poly, key=lambda z: z[0])[0])+(min(zone_poly, key=lambda z: z[0])[0]))/2)
-
-        # y is simply middle of the pitch
-        y = self.world.pitch.height / 2
-
-        return (x, y)
-'''
