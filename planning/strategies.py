@@ -38,7 +38,7 @@ class DefenderDefence(Strategy):
     LEFT, RIGHT = 'left', 'right'
     SIDES = [LEFT, RIGHT]
 
-    GOAL_ALIGN_OFFSET = 80
+    GOAL_ALIGN_OFFSET = 60
 
     def __init__(self, world):
         super(DefenderDefence, self).__init__(world, self.STATES)

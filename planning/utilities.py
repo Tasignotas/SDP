@@ -60,15 +60,15 @@ def predict_y_intersection(world, predict_for_x, robot, full_width=False, bounce
 
 
 def grab_ball():
-    return {'left_motor': 0, 'right_motor': 0, 'kicker': 0, 'catcher': 1, 'speed': 1000}
+    return {'left_motor': 0, 'right_motor': 0, 'kicker': 0, 'catcher': 1, 'left_speed': 1000, 'right_speed': 1000}
 
 
 def kick_ball():
-    return {'left_motor': 0, 'right_motor': 0, 'kicker': 1, 'catcher': 0, 'speed': 1000}
+    return {'left_motor': 0, 'right_motor': 0, 'kicker': 1, 'catcher': 0, 'left_speed': 1000, 'right_speed': 1000}
 
 
 def open_catcher():
-    return {'left_motor': 0, 'right_motor': 0, 'kicker': 1, 'catcher': 0, 'speed': 1000}
+    return {'left_motor': 0, 'right_motor': 0, 'kicker': 1, 'catcher': 0, 'left_speed': 1000, 'right_speed': 1000}
 
 
 def has_matched(robot, x=None, y=None, angle=None, threshold=ANGLE_MATCH_THRESHOLD):
@@ -85,7 +85,7 @@ def has_matched(robot, x=None, y=None, angle=None, threshold=ANGLE_MATCH_THRESHO
     return dist_matched and angle_matched
 
 
-def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False, defence=False, catch=False):
+def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False, defence=False, catch=False, differential_ok=True):
     '''
     Simplistic view of calculating the speed: no modes or trying to be careful
     '''
@@ -100,11 +100,12 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
     if not (displacement is None):
 
         if displacement < DISTANCE_MATCH_THRESHOLD:
-            return {'left_motor': 0, 'right_motor': 0, 'kicker': 0, 'catcher': 0, 'speed': general_speed}
+            return {'left_motor': 0, 'right_motor': 0, 'kicker': 0, 'catcher': 0, 'left_speed': general_speed, 'right_speed': general_speed}
 
         elif abs(angle) > angle_thresh:
-            speed = (angle/pi) * MAX_ANGLE_SPEED
-            return {'left_motor': -speed, 'right_motor': speed, 'kicker': 0, 'catcher': 0, 'speed': general_speed}
+            left_speed, right_speed = differential(displacement, angle, moving_backwards)
+            return {'left_motor': left_speed, 'right_motor': right_speed, 'kicker': 0, 'catcher': 0, 'left_speed': left_speed, 'right_speed': right_speed}
+
 
         else:
             speed = log(displacement, 10) * MAX_DISPLACEMENT_SPEED
@@ -114,17 +115,17 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
 
             speed = -speed if moving_backwards else speed
             if defence == False:
-                return {'left_motor': speed, 'right_motor': speed, 'kicker': 0, 'catcher': 0, 'speed': 1000/(1+10**(-0.1*(displacement-100)))}
+                return {'left_motor': speed, 'right_motor': speed, 'kicker': 0, 'catcher': 0, 'right_speed': 1000/(1+10**(-0.1*(displacement-100))), 'left_speed': 1000/(1+10**(-0.1*(displacement-100)))}
             else:
-                return {'left_motor': speed, 'right_motor': speed, 'kicker': 0, 'catcher': 0, 'speed': 600}
+                return {'left_motor': speed, 'right_motor': speed, 'kicker': 0, 'catcher': 0, 'right_speed': 600, 'left_speed': 600}
     else:
 
         if abs(angle) > angle_thresh:
             speed = (angle/pi) * MAX_ANGLE_SPEED
-            return {'left_motor': -speed * 10 , 'right_motor': speed * 10, 'kicker': 0, 'catcher': 0, 'speed': general_speed}
+            return {'left_motor': -speed * 10 , 'right_motor': speed * 10, 'kicker': 0, 'catcher': 0, 'right_speed': general_speed, 'left_speed': general_speed}
 
         else:
-            return {'left_motor': 0, 'right_motor': 0, 'kicker': 0, 'catcher': 0, 'speed': general_speed}
+            return {'left_motor': 0, 'right_motor': 0, 'kicker': 0, 'catcher': 0, 'right_speed': general_speed, 'left_speed': general_speed}
 
 
 def do_nothing():
@@ -132,20 +133,14 @@ def do_nothing():
 
 
 def differential(
-        distance, angle, backwards=False, angle_thres=pi / 2, distance_thresh=150, speed=600):
+        distance, angle, backwards=True, angle_thres=pi / 4, distance_thresh=150, speed=600):
     """
     Idea: Keep speed on one wheel at 600 while reducing the other.
     The result should be scaled down based on distance.
     """
-    # Turn on the spot if we're too close
-    if distance < distance_thresh:
-        return (speed, -speed) if angle < 0 else (-speed, speed)
 
-    # Handle backwards case
-    moving_backwards = False
-    if backwards and abs(angle) > pi / 2:
-        angle = (-pi + angle) if angle > 0 else (pi + angle)
-        moving_backwards = True
+    if abs(angle) > angle_thres:
+        return (200, -200) if angle < 0 else (-200, 200)
 
     # Find the denominator of the angle if written in radians as a fraction.
     # If angle = pi/4 then denominator is 4
@@ -156,9 +151,11 @@ def differential(
     # angle is negative when turning right
     if angle < 0:
         right = speed
-        left = speed - speed_offset
+        left = speed - speed_offset * 1.5
     else:
         left = speed
-        right = speed - speed_offset
+        right = speed - speed_offset * 1.5
 
-    return (-left, -right) if moving_backwards else (left, right)
+    print left, right
+
+    return (-left, -right) if backwards else (left, right)

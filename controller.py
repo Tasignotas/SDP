@@ -176,10 +176,9 @@ class Defender_Controller(Robot_Controller):
         #print action
         left_motor = action['left_motor']
         right_motor = action['right_motor']
-        speed = int(action['speed'])
-        if not(speed == self.current_speed):
-            comm.write('D_SET_ENGINE %d %d\n' % (speed, speed))
-            self.current_speed = speed
+        left_speed = int(action['left_speed'])
+        right_speed = int(action['right_speed'])
+        comm.write('D_SET_ENGINE %d %d\n' % (abs(left_speed), abs(right_speed)))
         comm.write('D_RUN_ENGINE %d %d\n' % (int(-left_motor), int(right_motor)))
         if action['kicker'] != 0:
             try:
@@ -214,10 +213,9 @@ class Attacker_Controller(Robot_Controller):
         """
         left_motor = action['left_motor']
         right_motor = action['right_motor']
-        speed = int(action['speed'])
-        if not(speed == self.current_speed):
-            comm.write('A_SET_ENGINE %d %d\n' % (speed, speed))
-            self.current_speed = speed
+        left_speed = int(action['left_speed'])
+        right_speed = int(action['right_speed'])
+        comm.write('A_SET_ENGINE %d %d\n' % (left_speed, right_speed))
         comm.write('A_RUN_ENGINE %d %d\n' % (int(left_motor), int(right_motor)))
         if action['kicker'] != 0:
             try:
