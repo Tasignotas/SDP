@@ -143,12 +143,15 @@ def differential(
 
     # Handle backwards case
     moving_backwards = False
-    if backwards and abs(angle) > pi/2:
+    if backwards and abs(angle) > pi / 2:
         angle = (-pi + angle) if angle > 0 else (pi + angle)
         moving_backwards = True
 
-    turn_ratio = 1.0 / abs(angle / pi)
-    speed_offset = int(speed / turn_ratio)
+    # Find the denominator of the angle if written in radians as a fraction.
+    # If angle = pi/4 then denominator is 4
+    denominator = abs(angle / pi)
+    turn_ratio = 1.0 / abs(angle / pi) if angle != 0 else 0
+    speed_offset = int(speed / turn_ratio) if turn_ratio != 0 else 0
 
     # angle is negative when turning right
     if angle < 0:
