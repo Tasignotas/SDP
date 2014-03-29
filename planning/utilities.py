@@ -11,7 +11,8 @@ def is_shot_blocked(world, our_robot, their_robot):
     '''
     Checks if our robot could shoot past their robot
     '''
-    predicted_y = predict_y_intersection(world, their_robot.x, our_robot, full_width=True, bounce=True)
+    predicted_y = predict_y_intersection(
+        world, their_robot.x, our_robot, full_width=True, bounce=True)
     if predicted_y is None:
         return True
     return abs(predicted_y - their_robot.y) < their_robot.length + 40
@@ -125,5 +126,36 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
         else:
             return {'left_motor': 0, 'right_motor': 0, 'kicker': 0, 'catcher': 0, 'speed': general_speed}
 
+
 def do_nothing():
     return calculate_motor_speed(0, 0)
+
+
+def differential(
+        distance, angle, backwards=False, angle_thres=pi / 2, distance_thresh=150, speed=600):
+    """
+    Idea: Keep speed on one wheel at 600 while reducing the other.
+    The result should be scaled down based on distance.
+    """
+    # Turn on the spot if the angle is too large or we're too close
+    if abs(angle) > angle_thres or distance < distance_thresh:
+        return (speed, -speed) if angle < 0 else (-speed, speed)
+
+    # Handle backwards case
+    moving_backwards = False
+    if backwards and abs(angle) > pi/2:
+        angle = (-pi + angle) if angle > 0 else (pi + angle)
+        moving_backwards = True
+
+    turn_ratio = 1.0 / abs(angle / pi)
+    speed_offset = int(speed / turn_ratio)
+
+    # angle is negative when turning right
+    if angle < 0:
+        right = speed
+        left = speed - speed_offset
+    else:
+        left = speed
+        right = speed - speed_offset
+
+    return (-left, -right) if moving_backwards else (left, right)
