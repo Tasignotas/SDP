@@ -7,8 +7,8 @@
     - Finer control over motors (?)
 
 #### Challenges of implementing Arduino
-    - Batteries
-    - Motors burning out
+- Batteries
+- Motors burning out
 - How we overcame them
     - New motor shield/driver chips
 
