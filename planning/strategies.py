@@ -787,7 +787,7 @@ class AttackerTurnScore(Strategy):
         else:
             # If our shot is blocked, continue moving up and down the goal line.
             goal_edges = [self.their_goal.y, self.their_goal.y + self.their_goal.width]
-            ideal_x = our_attacker.x
+            ideal_x = self.our_attacker.x
             ideal_y = goal_edges[self.point]
 
             if has_matched(self.our_attacker, x=self.our_attacker.x, y=ideal_y):
