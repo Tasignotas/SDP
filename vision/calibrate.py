@@ -62,6 +62,9 @@ class Configure(object):
 		self.get_zone('Zone_2', 'draw RIGHT Attacker')
 		self.get_zone('Zone_3', 'draw RIGHT Defender')
 
+		self.get_goal('Zone_0')
+		self.get_goal('Zone_3')
+
 		print 'Press any key to finish.'
 		cv2.waitKey(0)
 		cv2.destroyAllWindows()
@@ -113,6 +116,21 @@ class Configure(object):
 			color = self.color
 			cv2.circle(self.image, (x-1, y-1), 2, color, -1)
 			self.data[self.drawing].append((x,y))
+
+	def get_goal(self,zone):
+		"""
+		Returns the top and bottom corner of the goal in zone.
+		"""
+		coords = self.data[zone]
+		reverse = int(zone[-1])%2
+		goal_coords = sorted(coords, reverse=reverse)[:2]
+		if goal_coords[0][1] > goal_coords[1][1]:
+			topCorner = goal_coords[1]
+			bottomCorner = goal_coords[0]
+		else:
+			topCorner = goal_coords[0]
+			bottomCorner = goal_coords[1]
+		self.data[zone+'_goal']= [topCorner, bottomCorner]
 
 
 if __name__ == '__main__':
