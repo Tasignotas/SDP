@@ -137,8 +137,8 @@ def differential(
     Idea: Keep speed on one wheel at 600 while reducing the other.
     The result should be scaled down based on distance.
     """
-    # Turn on the spot if the angle is too large or we're too close
-    if abs(angle) > angle_thres or distance < distance_thresh:
+    # Turn on the spot if we're too close
+    if distance < distance_thresh:
         return (speed, -speed) if angle < 0 else (-speed, speed)
 
     # Handle backwards case
