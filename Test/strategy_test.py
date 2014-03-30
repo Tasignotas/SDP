@@ -1,6 +1,6 @@
 import unittest
 from planning.models import World, Robot
-from planning.strategies import AttackerScoreDynamic, DefaultDefenderDefence
+from planning.strategies import *
 import math
 from planning import utilities
 
