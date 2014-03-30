@@ -66,6 +66,7 @@ void setup()
   comm.addCommand("A_SET_ENGINE", set_engine);
   comm.addCommand("A_SET_CATCH", set_catch);
   comm.addCommand("A_SET_KICK", set_kick);
+  comm.addCommand("A_SET_GRAB", set_grab);
   comm.addCommand("A_RUN_ENGINE", run_engine);
   comm.addCommand("A_RUN_CATCH", run_catch); 
   comm.addCommand("A_RUN_KICK", run_kick);
@@ -90,7 +91,10 @@ void loop()
   {
     Serial.flush();
   }
-  comm.readSerial();
+  else
+  {
+    comm.readSerial();
+  }
   
   if (left_stepper.distanceToGo() == 0 && right_stepper.distanceToGo() == 0)
   {
@@ -170,16 +174,26 @@ void set_catch()
 void set_kick()
 {
     char *kick_in;
-    char *grab_in;
     
     kick_in = comm.next();
-    grab_in = comm.next();
     
-    if (kick_in != NULL && grab_in != NULL)
+    if (kick_in != NULL)
     {
       KICK_POS = atoi(kick_in);
-      GRAB_POS = atoi(grab_in);
       EEPROM.write(1, KICK_POS);
+    }
+}
+
+
+void set_grab()
+{
+    char *grab_in;
+    
+    grab_in = comm.next();
+    
+    if (grab_in != NULL)
+    {
+      GRAB_POS = atoi(grab_in);
       EEPROM.write(2, GRAB_POS);
     }
 }
@@ -259,14 +273,20 @@ void run_shoot()
       {
         left_stepper.move(-TURN_STEP);
         right_stepper.move(TURN_STEP);
-        SHOOTING = 1;
       }
-      if (turn_direction == -1)
+      else
       {
         left_stepper.move(TURN_STEP);
         right_stepper.move(-TURN_STEP);
-        SHOOTING = 1;
       } 
+      SHOOTING = 1;
+      
+      left_stepper.setMaxSpeed(MAX_SPEED);
+      left_stepper.setAcceleration(MAX_SPEED);
+      
+      right_stepper.setMaxSpeed(MAX_SPEED);
+      right_stepper.setAcceleration(MAX_SPEED);
+      
     }
 }
 
