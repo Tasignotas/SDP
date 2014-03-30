@@ -120,6 +120,7 @@ class Tracker(object):
         """
         cnts = []
         for i, cnt in enumerate(contours):
+            if cv2.contourArea(cnt) > 100:
                 cnts.append(cnt)
         return reduce(lambda x, y: np.concatenate((x, y)), cnts) if len(cnts) else None
 
