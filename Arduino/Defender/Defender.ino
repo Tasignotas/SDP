@@ -11,6 +11,15 @@
 #include "utility/Adafruit_PWMServoDriver.h"
 #include <Servo.h>
 
+// Speed Constants
+int MAX_SPEED = 1000;
+int MIN_SPEED = 50;
+int MIN_STEP = 50;
+int TURN_STEP = 130;
+int SHOOTING = 0;
+int CATCH_POS = 0;
+int KICK_POS = 180;
+int GRAB_POS = 170;
 
 // Communications
 SerialCommand comm;
@@ -24,20 +33,20 @@ Adafruit_StepperMotor *right_motor = AFMS.getStepper(48, 2);
 
 // Stepper Control Functions
 void left_forward() {  
-  left_motor->onestep(FORWARD, SINGLE);
+  left_motor->onestep(FORWARD, DOUBLE);
 }
 void left_backward() {  
-  left_motor->onestep(BACKWARD, SINGLE);
+  left_motor->onestep(BACKWARD, DOUBLE);
 }
 void right_forward() {  
-  right_motor->onestep(FORWARD, SINGLE);
+  right_motor->onestep(FORWARD, DOUBLE);
 }
 void right_backward() {  
-  right_motor->onestep(BACKWARD, SINGLE);
+  right_motor->onestep(BACKWARD, DOUBLE);
 }
 
 // AccelSteppers
-AccelStepper left_stepper(left_forward, left_backward);
+AccelStepper left_stepper(left_backward, left_forward);
 AccelStepper right_stepper(right_forward, right_backward);
 
 // Servo
@@ -45,21 +54,25 @@ Servo grabber;
 
 
 void setup()
-{ 
+{
+  
   AFMS.begin();
   Serial.begin(115200);
   
   comm.addCommand("D_SET_ENGINE", set_engine);
+  comm.addCommand("D_SET_CATCH", set_catch);
+  comm.addCommand("D_SET_KICK", set_kick);
   comm.addCommand("D_RUN_ENGINE", run_engine);
   comm.addCommand("D_RUN_CATCH", run_catch); 
-  comm.addCommand("D_RUN_KICK", run_kick); 
+  comm.addCommand("D_RUN_KICK", run_kick);
+  comm.addCommand("D_RUN_SHOOT", run_shoot); 
   comm.setDefaultHandler(invalid_command);
   
-  left_stepper.setMaxSpeed(1000.0);
-  left_stepper.setAcceleration(1000.0);
+  left_stepper.setMaxSpeed(MAX_SPEED);
+  left_stepper.setAcceleration(MAX_SPEED);
    
-  right_stepper.setMaxSpeed(1000.0);
-  right_stepper.setAcceleration(1000.0);
+  right_stepper.setMaxSpeed(MAX_SPEED);
+  right_stepper.setAcceleration(MAX_SPEED);
   
   grabber.attach(10);
   run_kick();
@@ -68,12 +81,22 @@ void setup()
 
 void loop()
 {
+  if (SHOOTING == 1)
+  {
+    Serial.flush();
+  }
   comm.readSerial();
   
   if (left_stepper.distanceToGo() == 0 && right_stepper.distanceToGo() == 0)
   {
     left_motor->release();
     right_motor->release();
+    
+    if (SHOOTING == 1)
+    {
+      run_kick();
+      SHOOTING = 0;
+    }
   }
   else
   {
@@ -85,58 +108,152 @@ void loop()
 
 void set_engine()
 {
-  char *left_speed;
-  char *right_speed;
+  char *left_in;
+  char *right_in;
+  int left_speed;
+  int right_speed;
   
-  left_speed = comm.next();
-  right_speed = comm.next();
+  left_in = comm.next();
+  right_in = comm.next();
   
-  if (left_speed != NULL && 50 <= atoi(left_speed) && atoi(left_speed) <= 1000)
+  if (left_in != NULL && right_in != NULL)
   {
-    left_stepper.setMaxSpeed(atof(left_speed));
-    right_stepper.setAcceleration(atof(left_speed));
+      left_speed = atof(left_in);
+      right_speed = atof(right_in);
+      
+      if (left_speed < MIN_SPEED)
+      {
+        left_speed = MIN_SPEED;
+      }
+      if (left_speed > MAX_SPEED)
+      {
+        left_speed = MAX_SPEED;
+      }
+      if (right_speed < MIN_SPEED)
+      {
+        right_speed = MIN_SPEED;
+      }
+      if (right_speed > MAX_SPEED)
+      {
+        right_speed = MAX_SPEED;
+      }
+      
+      left_stepper.setMaxSpeed(left_speed);
+      left_stepper.setAcceleration(left_speed);
+      
+      right_stepper.setMaxSpeed(right_speed);
+      right_stepper.setAcceleration(right_speed);
+      
   }
-  
-  if (right_speed != NULL && 50 <= atoi(left_speed) && atoi(left_speed) <= 1000)
-  {
-    right_stepper.setMaxSpeed(atof(right_speed)); 
-    right_stepper.setAcceleration(atof(right_speed)); 
-  }
+}
+
+
+void set_catch()
+{
+    char *catch_in;
+    
+    catch_in = comm.next();
+    
+    if (catch_in != NULL)
+    {
+      CATCH_POS = atoi(catch_in);
+    }
+}
+
+
+void set_kick()
+{
+    char *kick_in;
+    char *grab_in;
+    
+    kick_in = comm.next();
+    grab_in = comm.next();
+    
+    if (kick_in != NULL && grab_in != NULL)
+    {
+      KICK_POS = atoi(kick_in);
+      GRAB_POS = atoi(grab_in);
+    }
 }
 
 
 void run_engine()
 {
-  char *left_steps;
-  char *right_steps;
+  char *left_in;
+  char *right_in;
+  int left_step;
+  int right_step;
   
-  left_steps = comm.next();
-  right_steps = comm.next();
-  
-  if (left_steps != NULL)
+  left_in = comm.next();
+  right_in = comm.next();
+
+  if (left_in != NULL && right_in != NULL)
   {
-    left_stepper.move(atoi(left_steps)); 
+    left_step = atoi(left_in); 
+    right_step = atoi(right_in);
+    
+    if (left_step < MIN_STEP && left_step > 0)
+    {
+      left_step = MIN_STEP; 
+    }
+    if (left_step > -MIN_STEP && left_step < 0)
+    {
+      left_step = -MIN_STEP; 
+    }
+    if (right_step < MIN_STEP && right_step > 0)
+    {
+      right_step = MIN_STEP; 
+    }
+    if (right_step > -MIN_STEP && right_step < 0)
+    {
+      right_step = -MIN_STEP; 
+    }
+    
+    left_stepper.move(left_step);
+    right_stepper.move(right_step);
+    
   }
-  
-  if (right_steps != NULL)
-  {
-    right_stepper.move(atoi(right_steps)); 
-  }
-  
 }
 
 
 void run_catch()
 {
-  grabber.write(180);
+  grabber.write(CATCH_POS);
 }
 
 
 void run_kick()
 {
-  grabber.write(0);
+  grabber.write(KICK_POS);
   delay(500);
-  grabber.write(165);
+  grabber.write(GRAB_POS);
+}
+
+
+void run_shoot()
+{
+    char *turn_in;
+    int turn_direction;
+    
+    turn_in = comm.next();
+    
+    if (turn_in != NULL)
+    {
+      turn_direction = atoi(turn_in);
+      
+      if (turn_direction == 1)
+      {
+        left_stepper.move(-TURN_STEP);
+        right_stepper.move(TURN_STEP);
+        SHOOTING = 1;
+      }
+      if (turn_direction == -1)
+      {
+        left_stepper.move(TURN_STEP);
+        right_stepper.move(-TURN_STEP);
+        SHOOTING = 1;
+      } 
+    }
 }
 
 
