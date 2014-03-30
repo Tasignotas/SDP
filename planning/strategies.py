@@ -65,24 +65,24 @@ class DefenderDefence(Strategy):
         else:
             displacement, angle = self.our_defender.get_direction_to_point(
                 self.goal_front_x, self.our_goal.y)
-            return calculate_motor_speed(displacement, angle, backwards_ok=True, defence=True)
+            return calculate_motor_speed(displacement, angle, backwards_ok=True)
 
     def defend_goal(self):
         """
         Run around, blocking shots.
         """
         # Predict where they are aiming.
-        predicted_y = predict_y_intersection(self.world, self.goal_front_x, self.their_attacker)
+        predicted_y = predict_y_intersection(self.world, self.our_defender.x, self.their_attacker, bounce=True)
 
         if predicted_y is not None:
-            displacement, angle = self.our_defender.get_direction_to_point(self.goal_front_x,
-                                                                           predicted_y)
-            return calculate_motor_speed(displacement, angle, backwards_ok=True, defence=True)
+            displacement, angle = self.our_defender.get_direction_to_point(self.our_defender.x,
+                                                                           predicted_y - 10*math.sin(self.our_defender.angle))
+            return calculate_motor_speed(displacement, angle, backwards_ok=True)
         else:
             ball = self.world.ball
             our_defender = self.world.our_defender
             displacement, angle = self.our_defender.get_direction_to_point(our_defender.x, ball.y)
-            return calculate_motor_speed(displacement, angle, backwards_ok=True, defence=True)
+            return calculate_motor_speed(displacement, angle, backwards_ok=True)
 
     def get_alignment_position(self, side):
         """
@@ -130,12 +130,12 @@ class AttackerDefend(Strategy):
             return calculate_motor_speed(displacement, angle, backwards_ok=True)
 
     def block_pass(self):
-        predicted_y = predict_y_intersection(self.world, self.our_attacker.x, self.their_defender, True)
+        predicted_y = predict_y_intersection(self.world, self.our_attacker.x, self.their_defender, full_width=True, bounce=True)
         if not (predicted_y == None):
             displacement, angle = self.our_attacker.get_direction_to_point(self.our_attacker.x, predicted_y)
             #if displacement > 30:
-            return calculate_motor_speed(displacement, angle, defence=True, backwards_ok=True, catch=True)
-        return calculate_motor_speed(0, 0)
+            return calculate_motor_speed(displacement, angle, backwards_ok=True)
+        return do_nothing()
 
 
 class AttackerCatch(Strategy):
@@ -158,7 +158,7 @@ class AttackerCatch(Strategy):
         ideal_y = self.ball.y
 
         displacement, angle = self.our_attacker.get_direction_to_point(ideal_x, ideal_y)
-        return calculate_motor_speed(displacement, angle, defence=True, backwards_ok=True, catch=True)
+        return calculate_motor_speed(displacement, angle, backwards_ok=True)
 
 
 class AttackerPositionCatch(Strategy):
@@ -246,7 +246,7 @@ class DefenderBouncePass(Strategy):
         x, y = bounce_points[self.point][0], bounce_points[self.point][1]
         angle = self.our_defender.get_rotation_to_point(x, y)
 
-        if has_matched(self.our_defender, angle=angle, threshold=pi/7):
+        if has_matched(self.our_defender, angle=angle, angle_threshold=pi/7):
             if not is_shot_blocked(self.world, self.our_defender, self.world.their_attacker):
                 self.current_state = self.SHOOT
                 return do_nothing()
@@ -528,7 +528,7 @@ class AttackerScoreDynamic(Strategy):
 
         print 'OTHER SIDE ANGLE:', angle
 
-        if has_matched(self.our_attacker, angle=angle, threshold=self.PRECISE_BALL_ANGLE_THRESHOLD):
+        if has_matched(self.our_attacker, angle=angle, angle_threshold=self.PRECISE_BALL_ANGLE_THRESHOLD):
             # We've finished CONFUSE2
             self.current_state = self.SHOOT
             return self.shoot()

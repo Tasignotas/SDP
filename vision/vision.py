@@ -368,17 +368,17 @@ class GUI(object):
         frame_with_blank = np.vstack((frame, blank))
         self.draw_states(frame_with_blank, aState, dState, (frame_width, frame_height))
 
-        # if model_positions and regular_positions:
-        #     for key in ['ball', 'our_defender', 'our_attacker', 'their_defender', 'their_attacker']:
-        #         if model_positions[key] and regular_positions[key]:
-        #             self.data_text(
-        #                 frame_with_blank, (frame_width, frame_height), our_side, key,
-        #                 model_positions[key].x, model_positions[key].y,
-        #                 model_positions[key].angle, model_positions[key].velocity, a_action, d_action)
-        #             self.draw_velocity(
-        #                 frame_with_blank, (frame_width, frame_height),
-        #                 model_positions[key].x, model_positions[key].y,
-        #                 model_positions[key].angle, model_positions[key].velocity)
+        if model_positions and regular_positions:
+            for key in ['ball', 'our_defender', 'our_attacker', 'their_defender', 'their_attacker']:
+                if model_positions[key] and regular_positions[key]:
+                    self.data_text(
+                        frame_with_blank, (frame_width, frame_height), our_side, key,
+                        model_positions[key].x, model_positions[key].y,
+                        model_positions[key].angle, model_positions[key].velocity, a_action, d_action)
+                    self.draw_velocity(
+                        frame_with_blank, (frame_width, frame_height),
+                        model_positions[key].x, model_positions[key].y,
+                        model_positions[key].angle, model_positions[key].velocity)
 
         # Draw center of uncroppped frame (test code)
         # cv2.circle(frame_with_blank, (266,147), 1, BGR_COMMON['black'], 1)
