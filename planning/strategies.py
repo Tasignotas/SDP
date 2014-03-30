@@ -739,8 +739,8 @@ class AttackerTurnScore(Strategy):
     path is clear.
     """
 
-    UNALIGNED, POSITION, KICK, DUMMY = 'UNALIGNED', 'POSITION', 'KICK', 'DUMMY'
-    STATES = [UNALIGNED, POSITION, KICK, DUMMY]
+    UNALIGNED, POSITION, KICK, FINISHED = 'UNALIGNED', 'POSITION', 'KICK', 'FINISHED'
+    STATES = [UNALIGNED, POSITION, KICK, FINISHED]
 
     def __init__(self, world):
         super(AttackerTurnScore, self).__init__(world, self.STATES)
@@ -749,7 +749,7 @@ class AttackerTurnScore(Strategy):
             self.UNALIGNED: self.align,
             self.POSITION: self.position,
             self.KICK: self.kick,
-            self.DUMMY: do_nothing
+            self.FINISHED: do_nothing
         }
 
         self.their_goal = self.world.their_goal
@@ -807,16 +807,8 @@ class AttackerTurnScore(Strategy):
             return calculate_motor_speed(distance, angle)
 
     def kick(self):
-        # This will also include the 90 degree turn.
-        # up (0, pi)
-        #     right up -> 1
-        #     right down -> -1
-        #     1  -> positive
-        #     -1 -> negative
-        # down (pi, 2pi)
-        #     left up -> -1
-        #     left down -> 1
-
+        # Decide the direction of the right angle turn, based on our position and
+        # side on the pitch.
         if self.world._our_side == 'left':
             if self.our_attacker.angle > 0 and self.our_attacker.angle < math.pi:
                 orientation = -1
@@ -827,8 +819,8 @@ class AttackerTurnScore(Strategy):
                 orientation = 1
             else:
                 orientation = -1
-        print 'ORIENTATAAAAAAAAAATION ', orientation
-        self.current_state = self.DUMMY
+
+        self.current_state = self.FINISHED
         return turn_shoot(orientation)
 
     def _get_alignment_x(self):
