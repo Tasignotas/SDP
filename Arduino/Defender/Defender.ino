@@ -16,11 +16,11 @@
 SerialCommand comm;
 
 // Motorshield
-Adafruit_MotorShield AFMStop(0x60);
+Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 
 // Steppers
-Adafruit_StepperMotor *left_motor = AFMStop.getStepper(48, 1);
-Adafruit_StepperMotor *right_motor = AFMStop.getStepper(48, 2);
+Adafruit_StepperMotor *left_motor = AFMS.getStepper(48, 1);
+Adafruit_StepperMotor *right_motor = AFMS.getStepper(48, 2);
 
 // Stepper Control Functions
 void left_forward() {  
@@ -45,8 +45,8 @@ Servo grabber;
 
 
 void setup()
-{
-  AFMStop.begin();
+{ 
+  AFMS.begin();
   Serial.begin(115200);
   
   comm.addCommand("D_SET_ENGINE", set_engine);

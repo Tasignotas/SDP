@@ -16,28 +16,28 @@
 SerialCommand comm;
 
 // Motorshield
-Adafruit_MotorShield AFMStop(0x60);
+Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 
 // Steppers
-Adafruit_StepperMotor *left_motor = AFMStop.getStepper(48, 1);
-Adafruit_StepperMotor *right_motor = AFMStop.getStepper(48, 2);
+Adafruit_StepperMotor *left_motor = AFMS.getStepper(48, 1);
+Adafruit_StepperMotor *right_motor = AFMS.getStepper(48, 2);
 
 // Stepper Control Functions
 void left_forward() {  
-  left_motor->onestep(FORWARD, SINGLE);
+  left_motor->onestep(FORWARD, DOUBLE);
 }
 void left_backward() {  
-  left_motor->onestep(BACKWARD, SINGLE);
+  left_motor->onestep(BACKWARD, DOUBLE);
 }
 void right_forward() {  
-  right_motor->onestep(FORWARD, SINGLE);
+  right_motor->onestep(FORWARD, DOUBLE);
 }
 void right_backward() {  
-  right_motor->onestep(BACKWARD, SINGLE);
+  right_motor->onestep(BACKWARD, DOUBLE);
 }
 
 // AccelSteppers
-AccelStepper left_stepper(left_forward, left_backward);
+AccelStepper left_stepper(left_backward, left_forward);
 AccelStepper right_stepper(right_forward, right_backward);
 
 // Servo
@@ -46,7 +46,8 @@ Servo grabber;
 
 void setup()
 {
-  AFMStop.begin();
+  
+  AFMS.begin();
   Serial.begin(115200);
   
   comm.addCommand("A_SET_ENGINE", set_engine);
@@ -55,11 +56,11 @@ void setup()
   comm.addCommand("A_RUN_KICK", run_kick); 
   comm.setDefaultHandler(invalid_command);
   
-  left_stepper.setMaxSpeed(1000.0);
-  left_stepper.setAcceleration(1000.0);
+  left_stepper.setMaxSpeed(1000);
+  left_stepper.setAcceleration(1000);
    
-  right_stepper.setMaxSpeed(1000.0);
-  right_stepper.setAcceleration(1000.0);
+  right_stepper.setMaxSpeed(1000);
+  right_stepper.setAcceleration(1000);
   
   grabber.attach(10);
   run_kick();
