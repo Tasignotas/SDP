@@ -25,8 +25,11 @@ def is_attacker_shot_blocked(world, our_attacker, their_defender):
 
     # Acceptable distance that the opponent defender can be relative to our
     # shooting position in order for us to have a clear shot.
-    distance_threshold = 50
-    return abs(our_attacker.y - their_defender.y) > distance_threshold
+    distance_threshold = 40
+
+    # Return True if attacker and defender ar close to each other on
+    # the y dimension
+    return abs(our_attacker.y - their_defender.y) < distance_threshold
 
 
 def predict_y_intersection(world, predict_for_x, robot, full_width=False, bounce=False):

@@ -786,7 +786,11 @@ class AttackerTurnScore(Strategy):
 
         else:
             # If our shot is blocked, continue moving up and down the goal line.
-            goal_edges = [self.their_goal.y, self.their_goal.y + self.their_goal.width]
+            # We want the center of the robot to be inside the goal line.
+            goal_width = self.their_goal.width/2 - 35
+            goal_edges = [self.their_goal.y - goal_width, 
+                          self.their_goal.y + goal_width]
+            print goal_edges, self.our_attacker.y
             ideal_x = self.our_attacker.x
             ideal_y = goal_edges[self.point]
 
