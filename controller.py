@@ -176,9 +176,11 @@ class Defender_Controller(Robot_Controller):
         #print action
         left_motor = int(action['left_motor'])
         right_motor = int(action['right_motor'])
-        speed = int(action['speed'])
+        speed = action['speed']
+
+        print 'SPEED', speed
         comm.write('D_SET_ENGINE %d %d\n' % (speed, speed))
-        comm.write('D_RUN_ENGINE %d %d\n' % (-left_motor, right_motor))
+        comm.write('D_RUN_ENGINE %d %d\n' % (left_motor, right_motor))
         if action['kicker'] != 0:
             try:
                 comm.write('D_RUN_KICK\n')
