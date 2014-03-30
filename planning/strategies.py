@@ -789,7 +789,7 @@ class AttackerTurnScore(Strategy):
             # If our shot is blocked, continue moving up and down the goal line.
             # We want the center of the robot to be inside the goal line.
             goal_width = self.their_goal.width/2
-            goal_edges = [self.their_goal.y - goal_width + 45, 
+            goal_edges = [self.their_goal.y - goal_width + 45,
                           self.their_goal.y + goal_width - 10]
             ideal_x = self.our_attacker.x
             ideal_y = goal_edges[self.point]
@@ -823,7 +823,7 @@ class AttackerTurnScore(Strategy):
         return boundary_x
 
 
-class CarefulGrabAttacker(Strategy):
+class AttackerGrabCareful(Strategy):
     """
     Carefully grabbing the ball when it is located by the wall.
 
@@ -831,23 +831,24 @@ class CarefulGrabAttacker(Strategy):
         Approach perpendicular to the wall to avoid getting stuck by the wall.
     """
 
-    UNALIGNED, ALIGNED, GRABBED = 'UNALIGNED', 'ALIGNED', 'GRABBED'
-    STATES = [UNALIGNED, ALIGNED, GRABBED]
+    UNALIGNED, POSITIONED, ALIGNED, GRABBED = 'UNALIGNED', 'POSITIONED', 'ALIGNED', 'GRABBED'
+    STATES = [UNALIGNED, POSITIONED, ALIGNED, GRABBED]
 
-    BALL_Y_OFFSET = 40
+    BALL_Y_OFFSET = 60
 
     def __init__(self, world):
-        super(CarefulGrabAttacker, self).__init__(world, self.STATES)
+        super(AttackerGrabCareful, self).__init__(world, self.STATES)
 
         self.NEXT_ACTION_MAP = {
-            self.UNALIGNED: self.align,
+            self.UNALIGNED: self.position,
+            self.POSITIONED: self.align,
             self.ALIGNED: self.grab,
             self.GRABBED: self.finish
         }
 
         self.ball_side = self.get_ball_side()
 
-    def align(self):
+    def position(self):
         our_attacker = self.world.our_attacker
         ball = self.world.ball
 
@@ -855,26 +856,46 @@ class CarefulGrabAttacker(Strategy):
         ideal_x = ball.x
         if self.ball_side == self.UP:
             ideal_y = ball.y - self.BALL_Y_OFFSET
-            angle = math.pi / 2.0   # 90 degrees, pointing up
         else:
             ideal_y = ball.y + self.BALL_Y_OFFSET
-            angle = 3 * math.pi / 2.0   # 270 degrees, pointing down
 
-        if has_matched(our_attacker, x=ideal_x, y=ideal_y, angle=angle):
+        if has_matched(our_attacker, x=ideal_x, y=ideal_y):
+            self.current_state = self.POSITIONED
+            return self.align()
+
+        distance, angle = our_attacker.get_direction_to_point(ideal_x, ideal_y)
+        return calculate_motor_speed(distance, angle)
+
+    def align(self):
+        our_attacker = self.world.our_attacker
+        ball = self.world.ball
+
+        print 'BALL SIDE', self.ball_side
+
+        distance, angle = our_attacker.get_direction_to_point(ball.x, ball.y)
+
+        if has_matched(our_attacker, angle=angle):
             self.current_state = self.ALIGNED
             return self.grab()
 
-        return calculate_motor_speed()
-
-        distance, angle = self.our_defender.get_direction_to_point(ideal_x, ideal_y)
-        # if self.ball_side == self.UP:
+        motors = calculate_motor_speed(None, angle)
+        print 'MOTORS', motors
+        return motors
 
 
     def grab(self):
-        pass
+        our_attacker = self.world.our_attacker
+        ball = self.world.ball
+
+        if our_attacker.can_catch_ball(ball):
+            self.current_state = self.GRABBED
+            return grab_ball()
+
+        distance, angle = our_attacker.get_direction_to_point(ball.x, ball.y)
+        return calculate_motor_speed(distance, angle, careful=True)
 
     def finish(self):
-        pass
+        return do_nothing()
 
     def get_ball_side(self):
         ball = self.world.ball

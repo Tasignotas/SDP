@@ -15,7 +15,7 @@ class Planner:
         # self._defender_attack_strat = DefaultDefenderAttack(self._world)
 
         self._attacker_strategies = {'defence' : [AttackerDefend],
-                                     'grab' : [AttackerGrab],
+                                     'grab' : [AttackerGrab, AttackerGrabCareful],
                                      'score' : [AttackerTurnScore, AttackerDriveBy, AttackerScoreDynamic],
                                      'catch' : [AttackerPositionCatch, AttackerCatch]}
 
@@ -117,6 +117,15 @@ class Planner:
                 if self._attacker_state == 'grab' and self._attacker_current_strategy.current_state == 'GRABBED':
                     self._attacker_state = 'score'
                     self._attacker_current_strategy = self.choose_attacker_strategy(self._world)
+
+                elif self._attacker_state == 'grab':
+                    # Switch to careful mode if the ball is too close to the wall.
+                    if abs(self._world.ball.y - self._world.pitch.height) < 30 or abs(self._world.ball.y) < 30:
+                        if isinstance(self._attacker_current_strategy, AttackerGrab):
+                            self._attacker_current_strategy = AttackerGrabCareful(self._world)
+                    else:
+                        if isinstance(self._attacker_current_strategy, AttackerGrabCareful):
+                            self._attacker_current_strategy = AttackerGrab(self._world)
 
                 # Check if we should switch from a defence to a grabbing strategy.
                 elif self._attacker_state in ['defence', 'catch'] :

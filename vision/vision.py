@@ -391,7 +391,7 @@ class GUI(object):
             self.zones = tools.get_zones(width, height, pitch=self.pitch)
 
         for zone in self.zones:
-            cv2.line(frame, (zone[1], 0), (zone[1], height), BGR_COMMON['red'], 1)
+            cv2.line(frame, (zone[1], 0), (zone[1], height), BGR_COMMON['orange'], 1)
 
     def draw_ball(self, frame, position_dict):
         if position_dict and position_dict['x'] and position_dict['y']:
