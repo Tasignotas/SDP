@@ -41,8 +41,8 @@ def predict_y_intersection(world, predict_for_x, robot, full_width=False, bounce
         '''
         x = robot.x
         y = robot.y
-        top_y = world._pitch.height if full_width else world.our_goal.y + (world.our_goal.width/2) - 30
-        bottom_y = 0 if full_width else world.our_goal.y - (world.our_goal.width/2) + 30
+        top_y = world._pitch.height if full_width else world.our_goal.y + (world.our_goal.width/2) - 40
+        bottom_y = 0 if full_width else world.our_goal.y - (world.our_goal.width/2) + 40
         angle = robot.angle
         if (robot.x < predict_for_x and not (pi/2 < angle < 3*pi/2)) or (robot.x > predict_for_x and (3*pi/2 > angle > pi/2)):
             if bounce:
@@ -110,7 +110,8 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
         else:
             speed = log(displacement, 10) * MAX_DISPLACEMENT_SPEED
             speed = -speed if moving_backwards else speed
-            return {'left_motor': speed, 'right_motor': speed, 'kicker': 0, 'catcher': 0, 'speed': 1000/(1+10**(-0.1*(displacement-100)))}
+            print 'DISP:', displacement
+            return {'left_motor': speed, 'right_motor': speed, 'kicker': 0, 'catcher': 0, 'speed': 1000/(1+10**(-0.1*(displacement-30)))}
 
     else:
 

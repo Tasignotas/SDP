@@ -76,7 +76,7 @@ class DefenderDefence(Strategy):
 
         if predicted_y is not None:
             displacement, angle = self.our_defender.get_direction_to_point(self.our_defender.x,
-                                                                           predicted_y - 10*math.sin(self.our_defender.angle))
+                                                                           predicted_y - 7*math.sin(self.our_defender.angle))
             return calculate_motor_speed(displacement, angle, backwards_ok=True)
         else:
             ball = self.world.ball
