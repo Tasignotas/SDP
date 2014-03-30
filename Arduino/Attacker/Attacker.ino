@@ -3,7 +3,7 @@
 // February 2014
 // Attacker Code
 
-
+#include <EEPROM.h>
 #include <SerialCommand.h>
 #include <AccelStepper.h>
 #include <Wire.h>
@@ -14,12 +14,12 @@
 // Speed Constants
 int MAX_SPEED = 1000;
 int MIN_SPEED = 50;
-int MIN_STEP = 50;
+int MIN_STEP = 10;
 int TURN_STEP = 130;
 int SHOOTING = 0;
-int CATCH_POS = 0;
-int KICK_POS = 180;
-int GRAB_POS = 170;
+int CATCH_POS;
+int KICK_POS;
+int GRAB_POS;
 
 // Communications
 SerialCommand comm;
@@ -59,12 +59,17 @@ void setup()
   AFMS.begin();
   Serial.begin(115200);
   
+  CATCH_POS = EEPROM.read(0);
+  KICK_POS = EEPROM.read(1);
+  GRAB_POS = EEPROM.read(2);
+  
   comm.addCommand("A_SET_ENGINE", set_engine);
   comm.addCommand("A_SET_CATCH", set_catch);
   comm.addCommand("A_SET_KICK", set_kick);
   comm.addCommand("A_RUN_ENGINE", run_engine);
   comm.addCommand("A_RUN_CATCH", run_catch); 
   comm.addCommand("A_RUN_KICK", run_kick);
+  comm.addCommand("A_RUN_GRAB", run_grab);
   comm.addCommand("A_RUN_SHOOT", run_shoot); 
   comm.setDefaultHandler(invalid_command);
   
@@ -75,7 +80,7 @@ void setup()
   right_stepper.setAcceleration(MAX_SPEED);
   
   grabber.attach(10);
-  run_kick();
+  run_grab();
 }
 
 
@@ -157,6 +162,7 @@ void set_catch()
     if (catch_in != NULL)
     {
       CATCH_POS = atoi(catch_in);
+      EEPROM.write(0, CATCH_POS);
     }
 }
 
@@ -173,6 +179,8 @@ void set_kick()
     {
       KICK_POS = atoi(kick_in);
       GRAB_POS = atoi(grab_in);
+      EEPROM.write(1, KICK_POS);
+      EEPROM.write(2, GRAB_POS);
     }
 }
 
@@ -226,6 +234,12 @@ void run_kick()
 {
   grabber.write(KICK_POS);
   delay(500);
+  run_grab();
+}
+
+
+void run_grab()
+{
   grabber.write(GRAB_POS);
 }
 
