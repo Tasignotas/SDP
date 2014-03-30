@@ -756,14 +756,15 @@ class AttackerTurnScore(Strategy):
         self.their_defender = self.world.their_defender
 
         # Distance that the attacker should keep from its boundary.
-        self.offset = 55
+        self.offset = 60
 
         # Opponent's goal edge where our attacker is currently heading.
         self.point = 0
 
     def align(self):
         '''
-        Go to the boundary of the attacker's zone and align with the goal line.
+        Go to the boundary of the attacker's zone and align with the center
+        of the goal line.
         '''
         ideal_x = self._get_alignment_x()
         ideal_y = self.their_goal.y
@@ -787,10 +788,9 @@ class AttackerTurnScore(Strategy):
         else:
             # If our shot is blocked, continue moving up and down the goal line.
             # We want the center of the robot to be inside the goal line.
-            goal_width = self.their_goal.width/2 - 35
-            goal_edges = [self.their_goal.y - goal_width, 
-                          self.their_goal.y + goal_width]
-            print goal_edges, self.our_attacker.y
+            goal_width = self.their_goal.width/2
+            goal_edges = [self.their_goal.y - goal_width + 45, 
+                          self.their_goal.y + goal_width - 10]
             ideal_x = self.our_attacker.x
             ideal_y = goal_edges[self.point]
 
@@ -818,8 +818,8 @@ class AttackerTurnScore(Strategy):
         f = side[zone]
 
         # Get the x coordinate that our attacker needs to match.
-        offset = {1: self.offset, 2: -self.offset}
-        boundary_x = int(f(zone_poly, key=lambda z: z[0])[0]) + offset[zone]
+        sign = {1: 1, 2: -1}
+        boundary_x = int(f(zone_poly, key=lambda z: z[0])[0]) + sign[zone]*self.offset
         return boundary_x
 
 
