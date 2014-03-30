@@ -739,8 +739,8 @@ class AttackerTurnScore(Strategy):
     path is clear.
     """
 
-    UNALIGNED, POSITION, KICK = 'UNALIGNED', 'POSITION', 'KICK'
-    STATES = [UNALIGNED, POSITION, KICK]
+    UNALIGNED, POSITION, KICK, DUMMY = 'UNALIGNED', 'POSITION', 'KICK', 'DUMMY'
+    STATES = [UNALIGNED, POSITION, KICK, DUMMY]
 
     def __init__(self, world):
         super(AttackerTurnScore, self).__init__(world, self.STATES)
@@ -748,7 +748,8 @@ class AttackerTurnScore(Strategy):
         self.NEXT_ACTION_MAP = {
             self.UNALIGNED: self.align,
             self.POSITION: self.position,
-            self.KICK: self.kick
+            self.KICK: self.kick,
+            self.DUMMY: do_nothing
         }
 
         self.their_goal = self.world.their_goal
@@ -780,16 +781,19 @@ class AttackerTurnScore(Strategy):
         '''
         Go up an down the goal line waiting for the first opportunity to shoot.
         '''
+        our_attacker = self.our_attacker
         # Check if we have a clear shot
-        if not is_attacker_shot_blocked(self.world, self.our_attacker, self.their_defender):
+        if not is_attacker_shot_blocked(self.world, self.our_attacker, self.their_defender) and \
+               (abs(our_attacker.angle - math.pi / 2) < math.pi / 20 or \
+               abs(our_attacker.angle - 3*math.pi/2) < math.pi / 20):
             self.current_state = self.KICK
-            return do_nothing()
+            return self.kick()
 
         else:
             # If our shot is blocked, continue moving up and down the goal line.
             # We want the center of the robot to be inside the goal line.
             goal_width = self.their_goal.width/2
-            goal_edges = [self.their_goal.y - goal_width + 45,
+            goal_edges = [self.their_goal.y - goal_width + 10,
                           self.their_goal.y + goal_width - 10]
             ideal_x = self.our_attacker.x
             ideal_y = goal_edges[self.point]
@@ -804,7 +808,28 @@ class AttackerTurnScore(Strategy):
 
     def kick(self):
         # This will also include the 90 degree turn.
-        return kick_ball()
+        # up (0, pi)
+        #     right up -> 1
+        #     right down -> -1
+        #     1  -> positive
+        #     -1 -> negative
+        # down (pi, 2pi)
+        #     left up -> -1
+        #     left down -> 1
+
+        if self.world._our_side == 'left':
+            if self.our_attacker.angle > 0 and self.our_attacker.angle < math.pi:
+                orientation = -1
+            else:
+                orientation = 1
+        else:
+            if self.our_attacker.angle > 0 and self.our_attacker.angle < math.pi:
+                orientation = 1
+            else:
+                orientation = -1
+        print 'ORIENTATAAAAAAAAAATION ', orientation
+        self.current_state = self.DUMMY
+        return turn_shoot(orientation)
 
     def _get_alignment_x(self):
         # Get the polygon of our attacker's zone.

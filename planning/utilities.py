@@ -41,8 +41,8 @@ def predict_y_intersection(world, predict_for_x, robot, full_width=False, bounce
         '''
         x = robot.x
         y = robot.y
-        top_y = world._pitch.height if full_width else world.our_goal.y + (world.our_goal.width/2) - 40
-        bottom_y = 0 if full_width else world.our_goal.y - (world.our_goal.width/2) + 40
+        top_y = world._pitch.height if full_width else world.our_goal.y + (world.our_goal.width/2) - 30
+        bottom_y = 0 if full_width else world.our_goal.y - (world.our_goal.width/2) + 30
         angle = robot.angle
         if (robot.x < predict_for_x and not (pi/2 < angle < 3*pi/2)) or (robot.x > predict_for_x and (3*pi/2 > angle > pi/2)):
             if bounce:
@@ -74,6 +74,10 @@ def open_catcher():
     return {'left_motor': 0, 'right_motor': 0, 'kicker': 1, 'catcher': 0, 'speed': 1000}
 
 
+def turn_shoot(orientation):
+    return {'turn_90': orientation, 'left_motor': 0, 'right_motor': 0, 'kicker': 1, 'catcher': 0, 'speed': 1000}
+
+
 def has_matched(robot, x=None, y=None, angle=None,
                 angle_threshold=ANGLE_MATCH_THRESHOLD, distance_threshold=DISTANCE_MATCH_THRESHOLD):
     dist_matched = True
@@ -83,7 +87,6 @@ def has_matched(robot, x=None, y=None, angle=None,
     if not(angle is None):
         angle_matched = abs(angle) < angle_threshold
     return dist_matched and angle_matched
-
 
 
 def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False):

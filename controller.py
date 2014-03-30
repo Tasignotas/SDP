@@ -173,6 +173,11 @@ class Defender_Controller(Robot_Controller):
         """
         Execute robot action.
         """
+
+        if 'turn_90' in action:
+            comm.write('D_RUN_SHOOT %d\n' % action['turn_90']) 
+            return
+
         #print action
         left_motor = int(action['left_motor'])
         right_motor = int(action['right_motor'])
@@ -212,21 +217,25 @@ class Attacker_Controller(Robot_Controller):
         """
         Execute robot action.
         """
-        left_motor = int(action['left_motor'])
-        right_motor = int(action['right_motor'])
-        speed = int(action['speed'])
-        comm.write('A_SET_ENGINE %d %d\n' % (speed, speed))
-        comm.write('A_RUN_ENGINE %d %d\n' % (left_motor, right_motor))
-        if action['kicker'] != 0:
-            try:
-                comm.write('A_RUN_KICK\n')
-            except StandardError:
-                pass
-        elif action['catcher'] != 0:
-            try:
-                comm.write('A_RUN_CATCH\n')
-            except StandardError:
-                pass
+        if 'turn_90' in action:
+            print 'Victor ', action['turn_90']
+            comm.write('A_RUN_SHOOT %d\n' % int(action['turn_90']))
+        else:
+            left_motor = int(action['left_motor'])
+            right_motor = int(action['right_motor'])
+            speed = int(action['speed'])
+            comm.write('A_SET_ENGINE %d %d\n' % (speed, speed))
+            comm.write('A_RUN_ENGINE %d %d\n' % (left_motor, right_motor))
+            if action['kicker'] != 0:
+                try:
+                    comm.write('A_RUN_KICK\n')
+                except StandardError:
+                    pass
+            elif action['catcher'] != 0:
+                try:
+                    comm.write('A_RUN_CATCH\n')
+                except StandardError:
+                    pass
 
     def shutdown(self, comm):
         comm.write('A_RUN_KICK\n')
