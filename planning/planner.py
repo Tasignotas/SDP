@@ -76,8 +76,8 @@ class Planner:
         their_attacker = self._world.their_attacker
         ball = self._world.ball
         if robot == 'defender':
-            # If the ball is in not in our defender zone
-            if not (self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y)):
+            # If the ball is in their attacker zone:
+            if self._world.pitch.zones[their_attacker.zone].isInside(ball.x, ball.y):
                 # If the bal is not in the defender's zone, the state should always be 'defend'.
                 if not self._defender_state == 'defence':
                     self._defender_state = 'defence'
@@ -85,7 +85,7 @@ class Planner:
                 return self._defender_current_strategy.generate()
 
             # We have the ball in our zone, so we grab and pass:
-            else:
+            elif self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y):
                 # Check if we should switch from a grabbing to a scoring strategy.
                 if  self._defender_state == 'grab' and self._defender_current_strategy.current_state == 'GRABBED':
                     self._defender_state = 'pass'
@@ -101,6 +101,10 @@ class Planner:
                     self._defender_current_strategy = self.choose_defender_strategy(self._world)
 
                 return self._defender_current_strategy.generate()
+            # Otherwise, chillax:
+            else:
+
+                return do_nothing()
 
         else:
             # If the ball is in their defender zone we defend:
@@ -120,7 +124,7 @@ class Planner:
 
                 elif self._attacker_state == 'grab':
                     # Switch to careful mode if the ball is too close to the wall.
-                    if abs(self._world.ball.y - self._world.pitch.height) < 30 or abs(self._world.ball.y) < 30:
+                    if abs(self._world.ball.y - self._world.pitch.height) < 50 or abs(self._world.ball.y) < 30:
                         if isinstance(self._attacker_current_strategy, AttackerGrab):
                             self._attacker_current_strategy = AttackerGrabCareful(self._world)
                     else:
@@ -138,7 +142,9 @@ class Planner:
 
                 return self._attacker_current_strategy.generate()
             # If the ball is in our defender zone, prepare to catch the passed ball:
-            elif self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y):
+            elif self._world.pitch.zones[our_defender.zone].isInside(ball.x, ball.y) or \
+                 self._attacker_state == 'catch':
+                 # self._world.pitch.zones[their_attacker.zone].isInside(ball.x, ball.y):
                 if not self._attacker_state == 'catch':
                     self._attacker_state = 'catch'
                     self._attacker_current_strategy = self.choose_attacker_strategy(self._world)
