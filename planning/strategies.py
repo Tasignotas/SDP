@@ -53,6 +53,7 @@ class DefenderDefence(Strategy):
         self.goal_front_x = self.get_alignment_position(self.world._our_side)
         self.their_attacker = self.world.their_attacker
         self.our_defender = self.world.our_defender
+        self.ball = self.world.ball
 
     def align(self):
         """
@@ -72,7 +73,11 @@ class DefenderDefence(Strategy):
         Run around, blocking shots.
         """
         # Predict where they are aiming.
-        predicted_y = predict_y_intersection(self.world, self.our_defender.x, self.their_attacker, bounce=True)
+        if self.ball.velocity > 10:
+            predicted_y = predict_y_intersection(self.world, self.our_defender.x, self.ball, bounce=True)
+
+        if predicted_y is None or self.ball.velocity <= 10: 
+            predicted_y = predict_y_intersection(self.world, self.our_defender.x, self.their_attacker, bounce=True)
 
         if predicted_y is not None:
             displacement, angle = self.our_defender.get_direction_to_point(self.our_defender.x,
