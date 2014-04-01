@@ -669,36 +669,17 @@ class AttackerDriveBy(Strategy):
         super(AttackerDriveBy, self).__init__(world, self.STATES)
 
         self.NEXT_ACTION_MAP = {
-            self.GRABBED: self.align_center,
-            self.ALIGNED_CENTER: self.drive_one,
-            self.DRIVE: self.align_to_goal,
-            self.ALIGNED_GOAL: self.shoot,
-            self.SHOT: self.finish
+            self.DRIVE: self.drive,
+            self.ALIGN_GOAL: self.align_to_goal,
+            self.SHOOT: self.shoot
         }
 
-        self.drive_first_side = None
+        self.our_attacker = self.world.our_attacker
+        self.their_defender = self.world.their_defender
 
-    def generate(self):
-        return self.NEXT_ACTION_MAP[self.current_state]()
-
-    def align_center(self):
-        our_attacker = self.world.our_attacker
-        middle_y = self.world.pitch.height / 2
-        middle_x = self.get_zone_attack_x_offset()
-
-        distance, angle = our_attacker.get_direction_to_point(middle_x, middle_y)
-
-        if has_matched(our_attacker, x=middle_x, y=middle_y):
-            self.current_state = self.ALIGNED_CENTER
-            return self.drive_one()
-
-        return calculate_motor_speed(distance, angle, backwards_ok=True)
-
-    def drive_one(self):
-        our_attacker = self.world.our_attacker
+    def drive(self):
         # Assign side if not yet assigned.
-        if self.drive_first_side is None:
-            self.drive_first_side = self.pick_side()
+        self.drive_side = self.pick_side()
 
         print 'PICKED SIDE:', self.drive_first_side
 
@@ -716,37 +697,35 @@ class AttackerDriveBy(Strategy):
 
         print 'XY', x, y
 
-        distance, angle = our_attacker.get_direction_to_point(x, y)
+        distance, angle = self.our_attacker.get_direction_to_point(x, y)
 
-        if has_matched(our_attacker, x=x, y=y):
-            self.current_state = self.DRIVE
-            return self.align_to_goal()
+        if has_matched(self.our_attacker, x=x, y=y):
+            self.current_state = self.ALIGN_GOAL
+            return do_nothing()
 
         return calculate_motor_speed(distance, angle)
 
     def align_to_goal(self):
-        our_attacker = self.world.our_attacker
         other_side = self.UP if self.drive_first_side == self.DOWN else self.DOWN
         goal_y = self._get_goal_corner_y(other_side)
         goal_x = self.world.their_goal.x
 
-        angle = our_attacker.get_rotation_to_point(goal_x, goal_y)
+        angle = self.our_attacker.get_rotation_to_point(goal_x, goal_y)
 
-        print angle, has_matched(our_attacker, angle=angle)
+        print angle, has_matched(self.our_attacker, angle=angle)
 
-        if has_matched(our_attacker, angle=angle):
-            self.current_state = self.ALIGNED_GOAL
-            return self.shoot()
+        if has_matched(self.our_attacker, angle=angle):
+            if is_shot_blocked(self.world, self.our_attacker, self.their_defender):
+                self.current_state = self.DRIVE
+            else:
+                self.current_state = self.SHOOT
+            return do_nothing()
 
         return calculate_motor_speed(None, angle)
 
 
     def shoot(self):
-        self.current_state = self.SHOT
         return kick_ball()
-
-    def finish(self):
-        return calculate_motor_speed(0, 0)
 
     def get_zone_attack_x(self):
         """

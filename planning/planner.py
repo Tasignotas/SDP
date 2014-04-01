@@ -16,7 +16,7 @@ class Planner:
 
         self._attacker_strategies = {'defence' : [AttackerDefend],
                                      'grab' : [AttackerGrab, AttackerGrabCareful],
-                                     'score' : [AttackerTurnScore, AttackerDriveBy, AttackerScoreDynamic],
+                                     'score' : [AttackerDriveBy, AttackerTurnScore, AttackerScoreDynamic],
                                      'catch' : [AttackerPositionCatch, AttackerCatch]}
 
         self._defender_strategies = {'defence' : [DefenderDefence],
