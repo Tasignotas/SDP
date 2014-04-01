@@ -1,6 +1,6 @@
 ##Systems Design Project - Group 7##
 
-![alt text](http://4.bp.blogspot.com/-5avCfUlUQdo/T22Ib2pl6PI/AAAAAAAAAEo/UNzBohzwXZk/s1600/Arduino-Logo.jpg "Too Innovative")
+![alt text](http://i.imgur.com/5zEjxX8.jpg "Too Innovative")
 ------
 
 ###Running the system
