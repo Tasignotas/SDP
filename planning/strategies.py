@@ -738,7 +738,7 @@ class AttackerDriveBy(Strategy):
             self.current_state = self.ALIGNED_GOAL
             return self.shoot()
 
-        return calculate_motor_speed(None, angle, careful=True)
+        return calculate_motor_speed(None, angle)
 
 
     def shoot(self):
@@ -858,7 +858,7 @@ class AttackerTurnScore(Strategy):
                 ideal_y = goal_edges[self.point]
 
             distance, angle = self.our_attacker.get_direction_to_point(ideal_x, ideal_y)
-            return calculate_motor_speed(distance, angle)
+            return calculate_motor_speed(distance, angle, backwards_ok=True)
 
     def kick(self):
         # Decide the direction of the right angle turn, based on our position and
@@ -905,7 +905,7 @@ class AttackerGrabCareful(Strategy):
     UNALIGNED, POSITIONED, ALIGNED, GRABBED = 'UNALIGNED', 'POSITIONED', 'ALIGNED', 'GRABBED'
     STATES = [UNALIGNED, POSITIONED, ALIGNED, GRABBED]
 
-    BALL_Y_OFFSET = 60
+    BALL_Y_OFFSET = 80
 
     def __init__(self, world):
         super(AttackerGrabCareful, self).__init__(world, self.STATES)
@@ -935,7 +935,7 @@ class AttackerGrabCareful(Strategy):
             return self.align()
 
         distance, angle = our_attacker.get_direction_to_point(ideal_x, ideal_y)
-        return calculate_motor_speed(distance, angle)
+        return calculate_motor_speed(distance, angle, careful=True)
 
     def align(self):
         our_attacker = self.world.our_attacker
@@ -949,7 +949,7 @@ class AttackerGrabCareful(Strategy):
             self.current_state = self.ALIGNED
             return self.grab()
 
-        motors = calculate_motor_speed(None, angle)
+        motors = calculate_motor_speed(None, angle, careful=True)
         print 'MOTORS', motors
         return motors
 
