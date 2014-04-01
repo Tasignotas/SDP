@@ -5,7 +5,7 @@ ANGLE_MATCH_THRESHOLD = pi/10
 BALL_ANGLE_THRESHOLD = pi/20
 MAX_DISPLACEMENT_SPEED = 690
 MAX_ANGLE_SPEED = 50
-BALL_VELOCITY = 5
+BALL_VELOCITY = 3
 
 
 def is_shot_blocked(world, our_robot, their_robot):
@@ -16,7 +16,9 @@ def is_shot_blocked(world, our_robot, their_robot):
         world, their_robot.x, our_robot, full_width=True, bounce=True)
     if predicted_y is None:
         return True
-    return abs(predicted_y - their_robot.y) < their_robot.length + 40
+    print '##########', predicted_y, their_robot.y, their_robot.length
+    print abs(predicted_y - their_robot.y) < their_robot.length
+    return abs(predicted_y - their_robot.y) < their_robot.length
 
 
 def is_attacker_shot_blocked(world, our_attacker, their_defender):
@@ -114,7 +116,7 @@ def calculate_motor_speed(displacement, angle, backwards_ok=False, careful=False
         else:
             speed = log(displacement, 10) * MAX_DISPLACEMENT_SPEED
             speed = -speed if moving_backwards else speed
-            print 'DISP:', displacement
+            # print 'DISP:', displacement
             if careful:
                 return {'left_motor': speed, 'right_motor': speed, 'kicker': 0, 'catcher': 0, 'speed': 1000/(1+10**(-0.1*(displacement-70)))}
             return {'left_motor': speed, 'right_motor': speed, 'kicker': 0, 'catcher': 0, 'speed': 1000/(1+10**(-0.1*(displacement-30)))}

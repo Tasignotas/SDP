@@ -171,15 +171,15 @@ class AttackerPositionCatch(Strategy):
     This catching strategy positions the robot in the middle of the zone
     so that (ideally) it does not need to do anything
     '''
-    ALIGN, POSITION = 'ALIGN', 'POSITION'
-    STATES = [ALIGN, POSITION]
+    ALIGN, ROTATE = 'ALIGN', 'ROTATE'
+    STATES = [ALIGN, ROTATE]
 
     def __init__(self, world):
         super(AttackerPositionCatch, self).__init__(world, self.STATES)
 
         self.NEXT_ACTION_MAP = {
             self.ALIGN: self.align,
-            self.POSITION: self.position
+            self.ROTATE: self.rotate
         }
 
         self.our_attacker = self.world.our_attacker
@@ -192,31 +192,40 @@ class AttackerPositionCatch(Strategy):
 
     def align(self):
         if has_matched(self.our_attacker, x=self.center_x, y=self.center_y):
-            self.current_state = self.POSITION
+            self.current_state = self.ROTATE
             return do_nothing()
         else:
             displacement, angle = self.our_attacker.get_direction_to_point(
                 self.center_x, self.center_y)
             return calculate_motor_speed(displacement, angle, backwards_ok=True)
 
-    def position(self):
+    def rotate(self):
         '''
-        if self.ball.velocity > 0:
-            predicted_y = predict_y_intersection(self.world, self.our_attacker.x, self.ball, bounce=True)
-            if not (predicted_y is None):
-                displacement, angle = self.our_attacker.get_direction_to_point(
-                                            self.our_attacker.x, predicted_y - 7*math.sin(self.our_attacker.angle))
-                return calculate_motor_speed(displacement, angle, backwards_ok=True)
+        Rotate in the center of the zone in order to intercept the pass of the defender.
+        Tries to match the correct angle given the angle of the defender.
         '''
-        if has_matched(self.our_attacker, x=self.our_attacker.x, y=self.ball.y):
-            return do_nothing()
+        defender_angle = self.our_defender.angle
+        attacker_angle = None
+        our_side = self.world._our_side
+        if our_side == 'left':
+            if defender_angle > 0 and defender_angle < pi / 2:
+                attacker_angle = 3 * pi / 4
+            elif defender_angle > 3 * pi / 2:
+                attacker_angle = 5 * pi / 4
         else:
-            y = self.ball.y
-            y = max([y, 60])
-            y = min([y, self.world._pitch.height - 60])
-            displacement, angle = self.our_attacker.get_direction_to_point(
-                self.our_attacker.x, y)
-            return calculate_motor_speed(displacement, angle, backwards_ok=True)
+            if defender_angle > pi / 2 and defender_angle < pi:
+                attacker_angle = pi / 4
+            elif defender_angle > pi and defender_angle < 3 * pi / 2:
+                attacker_angle = 7 * pi / 4
+
+        if attacker_angle:
+            # Offsets the attacker's position in the direction of the desired angled in order to calculate the
+            # required rotation.
+            displacement, angle = self.our_attacker.get_direction_to_point(self.our_attacker.x + 10 * math.cos(attacker_angle),
+                                                                           self.our_attacker.y + 10 * math.sin(attacker_angle))
+            return calculate_motor_speed(None, angle, careful=True)
+        
+        return do_nothing()
 
 
 class DefenderBouncePass(Strategy):
@@ -270,11 +279,11 @@ class DefenderBouncePass(Strategy):
         attacker, then rotate to the other side.
         """
         bounce_points = self._get_bounce_points(self.our_defender)
-        print '###########################', bounce_points
         x, y = bounce_points[self.point][0], bounce_points[self.point][1]
         angle = self.our_defender.get_rotation_to_point(x, y)
+        print '????????????', bounce_points[self.point]
 
-        if has_matched(self.our_defender, angle=angle, angle_threshold=pi/7):
+        if has_matched(self.our_defender, angle=angle, angle_threshold=pi/20):
             if not is_shot_blocked(self.world, self.our_defender, self.world.their_attacker):
                 self.current_state = self.SHOOT
                 return do_nothing()
