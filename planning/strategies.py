@@ -30,6 +30,49 @@ class Strategy(object):
     def generate(self):
         return self.NEXT_ACTION_MAP[self.current_state]()
 
+class DefenderPenalty(Strategy):
+
+
+    DEFEND_GOAL = 'DEFEND_GOAL'
+    STATES = [DEFEND_GOAL]
+    LEFT, RIGHT = 'left', 'right'
+    SIDES = [LEFT, RIGHT]
+
+
+    def __init__(self, world):
+        super(DefenderPenalty, self).__init__(world, self.STATES)
+
+        self.NEXT_ACTION_MAP = {
+            self.DEFEND_GOAL: self.defend_goal
+        }
+
+        self.their_attacker = self.world.their_attacker
+        self.our_defender = self.world.our_defender
+        self.ball = self.world.ball
+
+
+    def defend_goal(self):
+        """
+        Run around, blocking shots.
+        """
+        # Predict where they are aiming.
+        if self.ball.velocity > BALL_VELOCITY:
+            predicted_y = predict_y_intersection(self.world, self.our_defender.x, self.ball, bounce=False)
+
+        if self.ball.velocity <= BALL_VELOCITY or predicted_y is None: 
+            predicted_y = predict_y_intersection(self.world, self.our_defender.x, self.their_attacker, bounce=False)
+
+        if predicted_y is not None:
+            displacement, angle = self.our_defender.get_direction_to_point(self.our_defender.x,
+                                                                           predicted_y - 7*math.sin(self.our_defender.angle))
+            return calculate_motor_speed(displacement, angle, backwards_ok=True)
+        else:
+            y = self.ball.y
+            y = max([y, 60])
+            y = min([y, self.world._pitch.height - 60])
+            displacement, angle = self.our_defender.get_direction_to_point(self.our_defender.x, y)
+            return calculate_motor_speed(displacement, angle, backwards_ok=True)
+
 
 class DefenderDefence(Strategy):
 

@@ -19,7 +19,7 @@ class Planner:
                                      'score' : [AttackerDriveBy, AttackerTurnScore, AttackerScoreDynamic],
                                      'catch' : [AttackerPositionCatch, AttackerCatch]}
 
-        self._defender_strategies = {'defence' : [DefenderDefence],
+        self._defender_strategies = {'defence' : [DefenderPenalty, DefenderDefence],
                                      'grab' : [DefenderGrab],
                                      'pass' : [DefenderBouncePass]}
 
