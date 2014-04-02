@@ -304,6 +304,8 @@ void run_fkick()
 
 void run_grab()
 {
+  run_catch();
+  delay(175);
   grabber.write(GRAB_POS);
 }
 
