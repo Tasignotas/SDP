@@ -656,8 +656,8 @@ class AttackerDriveBy(Strategy):
         4) Shoot
     """
 
-    DRIVE, ALIGN_GOAL, SHOOT = 'DRIVE', 'ALIGN_GOAL', 'SHOOT'
-    STATES = [DRIVE, ALIGN_GOAL, SHOOT]
+    DRIVE, ALIGN_GOAL, SHOOT, FINISHED = 'DRIVE', 'ALIGN_GOAL', 'SHOOT', 'FINISHED'
+    STATES = [DRIVE, ALIGN_GOAL, SHOOT, FINISHED]
 
     X_OFFSET = 70
     Y_OFFSET = 100
@@ -670,7 +670,8 @@ class AttackerDriveBy(Strategy):
         self.NEXT_ACTION_MAP = {
             self.DRIVE: self.drive,
             self.ALIGN_GOAL: self.align_to_goal,
-            self.SHOOT: self.shoot
+            self.SHOOT: self.shoot,
+            self.FINISHED: do_nothing
         }
 
         self.our_attacker = self.world.our_attacker
@@ -727,6 +728,7 @@ class AttackerDriveBy(Strategy):
         return calculate_motor_speed(None, angle)
 
     def shoot(self):
+        self.current_state = self.FINISHED
         return kick_ball()
 
     def get_zone_attack_x(self):
