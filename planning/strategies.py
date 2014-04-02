@@ -766,7 +766,7 @@ class AttackerDriveBy(Strategy):
     def _get_goal_points(self):
         # Get the polygon of their defender's zone.
         zone_poly = self.world.pitch.zones[self.their_defender.zone][0]
-        goal_points = sorted(zone_poly, key=lambda z: z[0], reversed=(self.world.our_side=='left'))[:2]
+        goal_points = sorted(zone_poly, key=lambda z: z[0], reverse=(self.world._our_side=='left'))[:2]
         goal_points = sorted(goal_points, key=lambda z: z[1])
         self.goal_points = {self.DOWN: goal_points[0][1]+30, self.UP: goal_points[1][1]-30}
 

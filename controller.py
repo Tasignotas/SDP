@@ -18,7 +18,7 @@ class Controller:
     Primary source of robot control. Ties vision and planning together.
     """
 
-    def __init__(self, pitch, color, our_side, video_port=0, comm_port='/dev/ttyUSB0', comms=1):
+    def __init__(self, pitch, color, our_side, video_port=0, comm_port='/dev/ttyUSB1', comms=1):
         """
         Entry point for the SDP system.
 
