@@ -19,6 +19,7 @@ int SHOOTING = 0;
 int KICKING = 0;
 int KICK_STEP;
 int SHOOT_STEP;
+int TURN_STEP;
 int CATCH_POS;
 int KICK_POS;
 int GRAB_POS;
@@ -66,13 +67,15 @@ void setup()
   GRAB_POS = EEPROM.read(2);
   SHOOT_STEP = EEPROM.read(3);
   KICK_STEP = EEPROM.read(4);
+  TURN_STEP = EEPROM.read(5);
   
   comm.addCommand("A_SET_ENGINE", set_engine);
   comm.addCommand("A_SET_CATCH", set_catch);
   comm.addCommand("A_SET_KICK", set_kick);
+  comm.addCommand("A_SET_FKICK", set_fkick);
   comm.addCommand("A_SET_GRAB", set_grab);
   comm.addCommand("A_SET_SHOOT", set_shoot);
-  comm.addCommand("A_SET_FKICK", set_fkick);
+  comm.addCommand("A_SET_TSHOOT", set_tshoot);
   comm.addCommand("A_RUN_ENGINE", run_engine);
   comm.addCommand("A_RUN_CATCH", run_catch); 
   comm.addCommand("A_RUN_KICK", run_kick);
@@ -107,18 +110,21 @@ void loop()
   {
     left_motor->release();
     right_motor->release();
-    
-    if (SHOOTING == 1 || KICKING == 1)
-    {
-      run_kick();
-      SHOOTING = 0;
-      KICKING = 0;
-    } 
   }
   else
   {
     left_stepper.run();
     right_stepper.run(); 
+  }
+  
+  if (left_stepper.distanceToGo() == TURN_STEP || right_stepper.distanceToGo() == TURN_STEP)
+  {
+    if (SHOOTING == 1 || KICKING == 1)
+    {
+      run_kick();
+      SHOOTING = 0;
+      KICKING = 0;
+    }
   }
 }
 
@@ -231,6 +237,20 @@ void set_fkick()
     {
       KICK_STEP = atoi(fkick_in);
       EEPROM.write(4, KICK_STEP);
+    }
+}
+
+
+void set_tshoot()
+{
+    char *tshoot_in;
+    
+    tshoot_in = comm.next();
+    
+    if (tshoot_in != NULL)
+    {
+      TURN_STEP = atoi(tshoot_in);
+      EEPROM.write(5, TURN_STEP);
     }
 }
 
