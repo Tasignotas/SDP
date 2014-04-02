@@ -124,7 +124,7 @@ class Planner:
 
                 elif self._attacker_state == 'grab':
                     # Switch to careful mode if the ball is too close to the wall.
-                    if abs(self._world.ball.y - self._world.pitch.height) < 50 or abs(self._world.ball.y) < 30:
+                    if abs(self._world.ball.y - self._world.pitch.height) < 0 or abs(self._world.ball.y) < 0:
                         if isinstance(self._attacker_current_strategy, AttackerGrab):
                             self._attacker_current_strategy = AttackerGrabCareful(self._world)
                     else:
