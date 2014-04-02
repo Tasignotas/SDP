@@ -15,8 +15,10 @@
 int MAX_SPEED = 1000;
 int MIN_SPEED = 50;
 int MIN_STEP = 10;
-int TURN_STEP = 130;
 int SHOOTING = 0;
+int KICKING = 0;
+int KICK_STEP;
+int SHOOT_STEP;
 int CATCH_POS;
 int KICK_POS;
 int GRAB_POS;
@@ -62,14 +64,19 @@ void setup()
   CATCH_POS = EEPROM.read(0);
   KICK_POS = EEPROM.read(1);
   GRAB_POS = EEPROM.read(2);
+  SHOOT_STEP = EEPROM.read(3);
+  KICK_STEP = EEPROM.read(4);
   
   comm.addCommand("A_SET_ENGINE", set_engine);
   comm.addCommand("A_SET_CATCH", set_catch);
   comm.addCommand("A_SET_KICK", set_kick);
   comm.addCommand("A_SET_GRAB", set_grab);
+  comm.addCommand("A_SET_SHOOT", set_shoot);
+  comm.addCommand("A_SET_FKICK", set_fkick);
   comm.addCommand("A_RUN_ENGINE", run_engine);
   comm.addCommand("A_RUN_CATCH", run_catch); 
   comm.addCommand("A_RUN_KICK", run_kick);
+  comm.addCommand("A_RUN_FKICK", run_fkick);
   comm.addCommand("A_RUN_GRAB", run_grab);
   comm.addCommand("A_RUN_SHOOT", run_shoot); 
   comm.setDefaultHandler(invalid_command);
@@ -87,7 +94,7 @@ void setup()
 
 void loop()
 {
-  if (SHOOTING == 1)
+  if (SHOOTING == 1 || KICKING == 1)
   {
     Serial.flush();
   }
@@ -101,11 +108,12 @@ void loop()
     left_motor->release();
     right_motor->release();
     
-    if (SHOOTING == 1)
+    if (SHOOTING == 1 || KICKING == 1)
     {
       run_kick();
       SHOOTING = 0;
-    }
+      KICKING = 0;
+    } 
   }
   else
   {
@@ -199,6 +207,34 @@ void set_grab()
 }
 
 
+void set_shoot()
+{
+    char *shoot_in;
+    
+    shoot_in = comm.next();
+    
+    if (shoot_in != NULL)
+    {
+      SHOOT_STEP = atoi(shoot_in);
+      EEPROM.write(3, SHOOT_STEP);
+    }
+}
+
+
+void set_fkick()
+{
+    char *fkick_in;
+    
+    fkick_in = comm.next();
+    
+    if (fkick_in != NULL)
+    {
+      KICK_STEP = atoi(fkick_in);
+      EEPROM.write(4, KICK_STEP);
+    }
+}
+
+
 void run_engine()
 {
   char *left_in;
@@ -252,6 +288,20 @@ void run_kick()
 }
 
 
+void run_fkick()
+{
+  left_stepper.move(KICK_STEP);
+  right_stepper.move(KICK_STEP);
+  KICKING = 1;
+  
+  left_stepper.setMaxSpeed(MAX_SPEED);
+  left_stepper.setAcceleration(MAX_SPEED);
+      
+  right_stepper.setMaxSpeed(MAX_SPEED);
+  right_stepper.setAcceleration(MAX_SPEED);
+}
+
+
 void run_grab()
 {
   grabber.write(GRAB_POS);
@@ -271,13 +321,13 @@ void run_shoot()
       
       if (turn_direction == 1)
       {
-        left_stepper.move(-TURN_STEP);
-        right_stepper.move(TURN_STEP);
+        left_stepper.move(-SHOOT_STEP);
+        right_stepper.move(SHOOT_STEP);
       }
       else
       {
-        left_stepper.move(TURN_STEP);
-        right_stepper.move(-TURN_STEP);
+        left_stepper.move(SHOOT_STEP);
+        right_stepper.move(-SHOOT_STEP);
       } 
       SHOOTING = 1;
       
