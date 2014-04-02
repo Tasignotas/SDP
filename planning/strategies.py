@@ -281,7 +281,6 @@ class DefenderBouncePass(Strategy):
         bounce_points = self._get_bounce_points(self.our_defender)
         x, y = bounce_points[self.point][0], bounce_points[self.point][1]
         angle = self.our_defender.get_rotation_to_point(x, y)
-        print '????????????', bounce_points[self.point]
 
         if has_matched(self.our_defender, angle=angle, angle_threshold=pi/20):
             if not is_shot_blocked(self.world, self.our_defender, self.world.their_attacker):
@@ -650,15 +649,15 @@ class AttackerDriveBy(Strategy):
     Strategy where we drive forward and backwards, rotate and shoot.
 
     Idea:
-        1) Move to a location either in the UP or DOWN section
-        2) Drive backwards to a location opposite to the previous
+        1) Move to a location either in the UP or DOWN section, opposite to
+           the location of the opposite defender
+        2) If path is clear, proceed. Otherwise, switch sides.
         3) Rotate to face the goal
         4) Shoot
     """
 
-    GRABBED, ALIGNED_CENTER = 'GRABBED', 'ALIGNED_CENTER'
-    DRIVE, ALIGNED_GOAL, SHOT = 'DRIVE1', 'ALIGNED_GOAL', 'SHOT'
-    STATES = [GRABBED, ALIGNED_CENTER, DRIVE, ALIGNED_GOAL, SHOT]
+    DRIVE, ALIGN_GOAL, SHOOT = 'DRIVE', 'ALIGN_GOAL', 'SHOOT'
+    STATES = [DRIVE, ALIGN_GOAL, SHOOT]
 
     X_OFFSET = 70
     Y_OFFSET = 100
@@ -676,29 +675,33 @@ class AttackerDriveBy(Strategy):
 
         self.our_attacker = self.world.our_attacker
         self.their_defender = self.world.their_defender
+        self.drive_side = None
+        self._get_goal_points()
+        self.pick_side()
+
+    def pick_side(self):
+        '''
+        At first, choose side opposite to their defender.
+        '''
+        middle_y = self.world.pitch.height / 2
+        if self.world.their_defender.y < middle_y:
+            self.drive_side = self.UP
+        self.drive_side = self.DOWN
 
     def drive(self):
-        # Assign side if not yet assigned.
-        self.drive_side = self.pick_side()
-
-        print 'PICKED SIDE:', self.drive_first_side
-
         x = self.get_zone_attack_x_offset()
-        if self.drive_first_side == self.UP:
+        if self.drive_side == self.UP:
             y = self.world.pitch.height
         else:
             y = 0
 
         # offset the y
-        if self.drive_first_side == self.UP:
+        if self.drive_side == self.UP:
             y -= self.Y_OFFSET
         else:
             y += self.Y_OFFSET
 
-        print 'XY', x, y
-
         distance, angle = self.our_attacker.get_direction_to_point(x, y)
-
         if has_matched(self.our_attacker, x=x, y=y):
             self.current_state = self.ALIGN_GOAL
             return do_nothing()
@@ -706,23 +709,22 @@ class AttackerDriveBy(Strategy):
         return calculate_motor_speed(distance, angle)
 
     def align_to_goal(self):
-        other_side = self.UP if self.drive_first_side == self.DOWN else self.DOWN
-        goal_y = self._get_goal_corner_y(other_side)
+        other_side = self.UP if self.drive_side == self.DOWN else self.DOWN
         goal_x = self.world.their_goal.x
+        goal_y = self.goal_points[self.drive_side]
 
         angle = self.our_attacker.get_rotation_to_point(goal_x, goal_y)
 
-        print angle, has_matched(self.our_attacker, angle=angle)
-
-        if has_matched(self.our_attacker, angle=angle):
+        if has_matched(self.our_attacker, angle=angle, angle_threshold=math.pi/30):
             if is_shot_blocked(self.world, self.our_attacker, self.their_defender):
+                # Drive to the other side.
+                self.drive_side = other_side
                 self.current_state = self.DRIVE
             else:
                 self.current_state = self.SHOOT
             return do_nothing()
 
         return calculate_motor_speed(None, angle)
-
 
     def shoot(self):
         return kick_ball()
@@ -749,12 +751,6 @@ class AttackerDriveBy(Strategy):
             middle_x += self.X_OFFSET
         return middle_x
 
-    def pick_side(self):
-        middle_y = self.world.pitch.height / 2
-        if self.world.their_defender.y < middle_y:
-            return self.DOWN
-        return self.UP
-
     def _get_goal_corner_y(self, side):
         """
         Get the coordinates of where to aim / shoot.
@@ -762,8 +758,15 @@ class AttackerDriveBy(Strategy):
         assert side in [self.UP, self.DOWN]
         if side == self.UP:
             # y coordinate of the goal is DOWN, offset by the width
-            return self.world.their_goal.y + self.world.their_goal.width / 2 - 50
-        return self.world.their_goal.y - self.world.their_goal.width / 2 + 50
+            return self.world.their_goal.y + self.world.their_goal.width / 2
+        return self.world.their_goal.y - self.world.their_goal.width / 2
+
+    def _get_goal_points(self):
+        # Get the polygon of their defender's zone.
+        zone_poly = self.world.pitch.zones[self.their_defender.zone][0]
+        goal_points = sorted(zone_poly, key=lambda z: z[0])[:2]
+        goal_points = sorted(goal_points, key=lambda z: z[1])
+        self.goal_points = {self.DOWN: goal_points[0][1]+30, self.UP: goal_points[1][1]-30}
 
 
 class AttackerTurnScore(Strategy):
