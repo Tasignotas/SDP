@@ -28,6 +28,7 @@ class Strategy(object):
         return self._current_state == self.states[-1]
 
     def generate(self):
+        print self.current_state
         return self.NEXT_ACTION_MAP[self.current_state]()
 
 class DefenderPenalty(Strategy):
@@ -189,7 +190,6 @@ class AttackerDefend(Strategy):
             ideal_y = predicted_y - 7  *math.sin(self.our_attacker.angle)
 
         displacement, angle = self.our_attacker.get_direction_to_point(ideal_x, ideal_y)
-        print 'waaaaaaaaaaaat', ideal_x, ideal_y
         if not has_matched(self.our_attacker, ideal_x, ideal_y):
             return calculate_motor_speed(displacement, angle, backwards_ok=True)
         else:
@@ -409,7 +409,8 @@ class AttackerGrab(Strategy):
         if self.our_attacker.catcher == 'closed':
             self.our_attacker.catcher = 'open'
             self.current_state = self.GO_TO_BALL
-            return open_catcher()
+            # return open_catcher()
+            return do_nothing()
         else:
             self.current_state = self.GO_TO_BALL
             return do_nothing()
@@ -470,7 +471,8 @@ class DefenderGrab(Strategy):
         if self.our_defender.catcher == 'closed':
             self.our_defender.catcher = 'open'
             self.current_state = self.GO_TO_BALL
-            return open_catcher()
+            # return open_catcher()
+            return do_nothing()
         else:
             self.current_state = self.GO_TO_BALL
             return do_nothing()
@@ -822,6 +824,119 @@ class AttackerDriveBy(Strategy):
         goal_points = sorted(zone_poly, key=lambda z: z[0], reverse=(self.world._our_side=='left'))[:2]
         goal_points = sorted(goal_points, key=lambda z: z[1])
         self.goal_points = {self.DOWN: goal_points[0][1]+30, self.UP: goal_points[1][1]-30}
+
+
+class AttackerDriveByTurn(Strategy):
+
+    CENTER, ROTATE, DRIVE, SHOOT, FINISHED = 'CENTER', 'ROTATE', 'DRIVE', 'SHOOT', 'FINISHED'
+    STATES = [CENTER, ROTATE, DRIVE, SHOOT, FINISHED]
+
+    Y_OFFSET = 120
+
+    UP, DOWN = 'UP', 'DOWN'
+
+    def __init__(self, world):
+        super(AttackerDriveByTurn, self).__init__(world, self.STATES)
+
+        self.NEXT_ACTION_MAP = {
+            self.CENTER: self.center,
+            self.ROTATE: self.rotate,
+            self.DRIVE: self.drive,
+            self.SHOOT: self.shoot,
+            self.FINISHED: do_nothing
+        }
+
+        self.our_attacker = self.world.our_attacker
+        self.our_defender = self.world.our_defender
+        self.their_defender = self.world.their_defender
+        self.drive_side = None
+        self.align_y = None
+        self._get_goal_points()
+        self.pick_side()
+
+    def pick_side(self):
+        '''
+        At first, choose side opposite to their defender.
+        '''
+        middle_y = self.world.pitch.height / 2
+        if self.world.their_defender.y < middle_y:
+            self.drive_side = self.UP
+        self.drive_side = self.DOWN
+
+    def center(self):
+        if has_matched(self.our_attacker, x=self._get_zone_center_x(), y=self.our_attacker.y):
+            # We're there. Advance the states and formulate next action.
+            if self.our_attacker.angle < math.pi:
+                self.align_y = self.world.pitch.height
+            else:
+                self.align_y = 0
+            self.current_state = self.ROTATE
+            return do_nothing()
+        else:
+            displacement, angle = self.our_attacker.get_direction_to_point(
+                self._get_zone_center_x(), self.our_attacker.y)
+            return calculate_motor_speed(displacement, angle, backwards_ok=True, careful=True)
+
+    def rotate(self):
+        displacement, angle = self.our_attacker.get_direction_to_point(self.our_attacker.x, self.align_y)
+        if has_matched(self.our_attacker, angle=angle, angle_threshold=math.pi/30):
+            self.current_state = self.DRIVE
+            return do_nothing()
+        else:
+            return calculate_motor_speed(None, angle, careful=True)
+
+    def drive(self):
+        if self.drive_side == self.UP:
+            y = self.world.pitch.height
+        else:
+            y = 0
+
+        # offset the y
+        if self.drive_side == self.UP:
+            y -= self.Y_OFFSET
+        else:
+            y += self.Y_OFFSET
+
+        distance, angle = self.our_attacker.get_direction_to_point(self.our_attacker.x, y)
+        if has_matched(self.our_attacker, x=self.our_attacker.x, y=y):
+            print abs(self.our_attacker.y - self.their_defender.y)
+            if abs(self.our_attacker.y - self.their_defender.y) > 40:
+                self.current_state = self.SHOOT
+            else:
+                self.drive_side = self.UP if self.drive_side == self.DOWN else self.DOWN
+                self.current_state = self.ROTATE
+            return do_nothing()
+        else:
+            return calculate_motor_speed(distance, angle, backwards_ok=True)
+
+    def shoot(self):
+        # Decide the direction of the right angle turn, based on our position and
+        # side on the pitch.
+        if self.world._our_side == 'right':
+            if self.our_attacker.angle < math.pi:
+                orientation = 1
+            else:
+                orientation = -1
+        else:
+            if self.our_attacker.angle < math.pi:
+                orientation = -1
+            else:
+                orientation = 1
+        self.current_state = self.FINISHED
+        self.our_attacker.catcher = 'open'
+        return turn_shoot(orientation)
+
+    def _get_zone_center_x(self):
+        """
+        Find the border coordinate for our attacker zone and their defender.
+        """
+        attacker = self.world.our_attacker
+        zone_poly = self.world.pitch.zones[attacker.zone][0]
+
+        min_x = int(min(zone_poly, key=lambda z: z[0])[0])
+        max_x = int(max(zone_poly, key=lambda z: z[0])[0])
+
+        return (min_x + max_x) / 2
 
 
 class AttackerTurnScore(Strategy):
