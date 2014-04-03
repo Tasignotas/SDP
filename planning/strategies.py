@@ -28,7 +28,6 @@ class Strategy(object):
         return self._current_state == self.states[-1]
 
     def generate(self):
-        print self.current_state
         return self.NEXT_ACTION_MAP[self.current_state]()
 
 class DefenderPenalty(Strategy):

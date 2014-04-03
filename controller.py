@@ -175,7 +175,6 @@ class Defender_Controller(Robot_Controller):
         """
 
         if 'turn_90' in action:
-            print action['turn90']
             comm.write('D_RUN_SHOOT %d\n' % action['turn_90']) 
             return
 
