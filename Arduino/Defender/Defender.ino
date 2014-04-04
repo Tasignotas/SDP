@@ -110,21 +110,18 @@ void loop()
   {
     left_motor->release();
     right_motor->release();
-  }
-  else
-  {
-    left_stepper.run();
-    right_stepper.run(); 
-  }
-  
-  if (left_stepper.distanceToGo() == TURN_STEP || right_stepper.distanceToGo() == TURN_STEP)
-  {
+    
     if (SHOOTING == 1 || KICKING == 1)
     {
       run_kick();
       SHOOTING = 0;
       KICKING = 0;
     }
+  }
+  else
+  {
+    left_stepper.run();
+    right_stepper.run(); 
   }
 }
 
