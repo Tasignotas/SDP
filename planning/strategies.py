@@ -117,10 +117,10 @@ class DefenderDefence(Strategy):
         """
         # Predict where they are aiming.
         if self.ball.velocity > BALL_VELOCITY:
-            predicted_y = predict_y_intersection(self.world, self.our_defender.x, self.ball, bounce=True)
+            predicted_y = predict_y_intersection(self.world, self.our_defender.x, self.ball, bounce=False)
 
         if self.ball.velocity <= BALL_VELOCITY or predicted_y is None: 
-            predicted_y = predict_y_intersection(self.world, self.our_defender.x, self.their_attacker, bounce=True)
+            predicted_y = predict_y_intersection(self.world, self.our_defender.x, self.their_attacker, bounce=False)
 
         if predicted_y is not None:
             displacement, angle = self.our_defender.get_direction_to_point(self.our_defender.x,
@@ -197,18 +197,27 @@ class AttackerDefend(Strategy):
 
 class AttackerCatch(Strategy):
 
-    CATCH = 'CATCH'
-    STATES = [CATCH]
+    PREPARE, CATCH = 'PREPARE', 'CATCH'
+    STATES = [PREPARE, CATCH]
 
     def __init__(self, world):
         super(AttackerCatchStrategy, self).__init__(world, STATES)
 
         self.NEXT_ACTION_MAP = {
+            self.PREPARE: self.prepare,
             self.CATCH: self.catch
         }
 
         self.our_attacker = self.world.our_attacker
         self.ball = self.world.ball
+
+    def prepare(self):
+        self.current_state = self.CATCH
+        if self.our_attacker.catcher == 'closed':
+            self.our_attacker.catcher = 'open'
+            return open_catcher()
+        else:
+            return do_nothing()
 
     def catch(self):
         ideal_x = self.our_attacker.x
@@ -223,13 +232,14 @@ class AttackerPositionCatch(Strategy):
     This catching strategy positions the robot in the middle of the zone
     so that (ideally) it does not need to do anything
     '''
-    ALIGN, ROTATE = 'ALIGN', 'ROTATE'
-    STATES = [ALIGN, ROTATE]
+    PREPARE, ALIGN, ROTATE = 'PREPARE', 'ALIGN', 'ROTATE'
+    STATES = [PREPARE, ALIGN, ROTATE]
 
     def __init__(self, world):
         super(AttackerPositionCatch, self).__init__(world, self.STATES)
 
         self.NEXT_ACTION_MAP = {
+            self.PREPARE: self.prepare,
             self.ALIGN: self.align,
             self.ROTATE: self.rotate
         }
@@ -241,6 +251,14 @@ class AttackerPositionCatch(Strategy):
         min_x, max_x, min_y, max_y  = zone.boundingBox()
         self.center_x = (min_x + max_x)/2
         self.center_y = (min_y + max_y)/2
+
+    def prepare(self):
+        self.current_state = self.ALIGN
+        if self.our_attacker.catcher == 'closed':
+            self.our_attacker.catcher = 'open'
+            return open_catcher()
+        else:
+            return do_nothing()
 
     def align(self):
         if has_matched(self.our_attacker, x=self.center_x, y=self.center_y):
@@ -290,6 +308,8 @@ class DefenderBouncePass(Strategy):
     POSITION, ROTATE, SHOOT, FINISHED = 'POSITION', 'ROTATE', 'SHOOT', 'FINISHED'
     STATES = [POSITION, ROTATE, SHOOT, FINISHED]
 
+    UP, DOWN = 'UP', 'DOWN'
+
     def __init__(self, world):
         super(DefenderBouncePass, self).__init__(world, self.STATES)
 
@@ -302,6 +322,7 @@ class DefenderBouncePass(Strategy):
         }
 
         self.our_defender = self.world.our_defender
+        self.their_attacker = self.world.their_attacker
         self.ball = self.world.ball
 
         # Choose a random side to bounce off
@@ -309,6 +330,9 @@ class DefenderBouncePass(Strategy):
 
         # Find the position to shoot from and cache it
         self.shooting_pos = self._get_shooting_coordinates(self.our_defender)
+
+        # Maximum number of turns
+        self.laps_left = 4
 
     def position(self):
         """
@@ -322,27 +346,38 @@ class DefenderBouncePass(Strategy):
             self.current_state = self.ROTATE
             return do_nothing()
         else:
-            return calculate_motor_speed(distance, angle)
+            return calculate_motor_speed(distance, angle, careful=True)
 
     def rotate(self):
         """
         Once the robot is in position, rotate to one side or the other in order
         to bounce the ball into the attacker zone. If one side is blocked by their
-        attacker, then rotate to the other side.
+        attacker, turn 90 degrees and shoot to the other side.
         """
         bounce_points = self._get_bounce_points(self.our_defender)
         x, y = bounce_points[self.point][0], bounce_points[self.point][1]
         angle = self.our_defender.get_rotation_to_point(x, y)
 
         if has_matched(self.our_defender, angle=angle, angle_threshold=pi/20):
-            if not is_shot_blocked(self.world, self.our_defender, self.world.their_attacker):
+            # if not is_shot_blocked(self.world, self.our_defender, self.world.their_attacker) or \
+            their_attacker_side = self._get_robot_side(self.their_attacker)
+            if (self.point == 0 and their_attacker_side == self.UP) or \
+               (self.point == 1 and their_attacker_side == self.DOWN):
                 self.current_state = self.SHOOT
                 return do_nothing()
             else:
-                self.point = 1 - self.point
-                x, y = bounce_points[self.point][0], bounce_points[self.point][1]
-                angle = self.our_defender.get_rotation_to_point(x, y)
-        return calculate_motor_speed(None, angle, careful=True)
+                # self.point = 1 - self.point
+                # self.laps_left -= 1
+                # x, y = bounce_points[self.point][0], bounce_points[self.point][1]
+                # angle = self.our_defender.get_rotation_to_point(x, y)
+                if self.world._our_side == 'right':
+                    orientation = 1 if self.point == 1 else -1
+                else:
+                    orientation = 1 if self.point == 0 else -1
+                self.current_state = self.FINISHED
+                return turn_shoot(orientation)
+        else:
+            return calculate_motor_speed(None, angle, careful=True)
 
     def shoot(self):
         """
@@ -366,6 +401,14 @@ class DefenderBouncePass(Strategy):
         y =  self.world.pitch.height / 2
 
         return (x, y)
+
+    def _get_robot_side(self, robot):
+        height = self.world.pitch.height
+        if robot.y > height/2:
+            return self.UP
+        else:
+            return self.DOWN
+
 
     def _get_bounce_points(self, robot):
         """
@@ -405,13 +448,11 @@ class AttackerGrab(Strategy):
         self.ball = self.world.ball
 
     def prepare(self):
+        self.current_state = self.GO_TO_BALL
         if self.our_attacker.catcher == 'closed':
             self.our_attacker.catcher = 'open'
-            self.current_state = self.GO_TO_BALL
-            # return open_catcher()
-            return do_nothing()
+            return open_catcher()
         else:
-            self.current_state = self.GO_TO_BALL
             return do_nothing()
 
     def position(self):
@@ -467,13 +508,11 @@ class DefenderGrab(Strategy):
         return do_nothing()
 
     def prepare(self):
+        self.current_state = self.GO_TO_BALL
         if self.our_defender.catcher == 'closed':
             self.our_defender.catcher = 'open'
-            self.current_state = self.GO_TO_BALL
-            # return open_catcher()
-            return do_nothing()
+            return open_catcher()
         else:
-            self.current_state = self.GO_TO_BALL
             return do_nothing()
 
     def position(self):
@@ -830,7 +869,7 @@ class AttackerDriveByTurn(Strategy):
     CENTER, ROTATE, DRIVE, SHOOT, FINISHED = 'CENTER', 'ROTATE', 'DRIVE', 'SHOOT', 'FINISHED'
     STATES = [CENTER, ROTATE, DRIVE, SHOOT, FINISHED]
 
-    Y_OFFSET = 120
+    Y_OFFSET = 0
 
     UP, DOWN = 'UP', 'DOWN'
 
@@ -852,6 +891,7 @@ class AttackerDriveByTurn(Strategy):
         self.align_y = None
         self._get_goal_points()
         self.pick_side()
+        self.laps_left = 5
 
     def pick_side(self):
         '''
@@ -885,24 +925,16 @@ class AttackerDriveByTurn(Strategy):
             return calculate_motor_speed(None, angle, careful=True)
 
     def drive(self):
-        if self.drive_side == self.UP:
-            y = self.world.pitch.height
-        else:
-            y = 0
-
-        # offset the y
-        if self.drive_side == self.UP:
-            y -= self.Y_OFFSET
-        else:
-            y += self.Y_OFFSET
+        y = self.goal_points[self.drive_side] - 10 * math.sin(self.our_attacker.angle)
 
         distance, angle = self.our_attacker.get_direction_to_point(self.our_attacker.x, y)
         if has_matched(self.our_attacker, x=self.our_attacker.x, y=y):
             print abs(self.our_attacker.y - self.their_defender.y)
-            if abs(self.our_attacker.y - self.their_defender.y) > 40:
+            if abs(self.our_attacker.y - self.their_defender.y) > 30 or self.laps_left == 0:
                 self.current_state = self.SHOOT
             else:
                 self.drive_side = self.UP if self.drive_side == self.DOWN else self.DOWN
+                self.laps_left -= 1
                 self.current_state = self.ROTATE
             return do_nothing()
         else:
@@ -936,6 +968,13 @@ class AttackerDriveByTurn(Strategy):
         max_x = int(max(zone_poly, key=lambda z: z[0])[0])
 
         return (min_x + max_x) / 2
+
+    def _get_goal_points(self):
+        # Get the polygon of their defender's zone.
+        zone_poly = self.world.pitch.zones[self.their_defender.zone][0]
+        goal_points = sorted(zone_poly, key=lambda z: z[0], reverse=(self.world._our_side=='left'))[:2]
+        goal_points = sorted(goal_points, key=lambda z: z[1])
+        self.goal_points = {self.DOWN: goal_points[0][1]+40, self.UP: goal_points[1][1]-40}
 
 
 class AttackerTurnScore(Strategy):
