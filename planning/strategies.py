@@ -375,6 +375,7 @@ class DefenderBouncePass(Strategy):
                 else:
                     orientation = 1 if self.point == 0 else -1
                 self.current_state = self.FINISHED
+                print 'orientation', orientation
                 return turn_shoot(orientation)
         else:
             return calculate_motor_speed(None, angle, careful=True)
@@ -404,6 +405,7 @@ class DefenderBouncePass(Strategy):
 
     def _get_robot_side(self, robot):
         height = self.world.pitch.height
+        print '###########', height, robot.y
         if robot.y > height/2:
             return self.UP
         else:
@@ -474,15 +476,14 @@ class AttackerGrab(Strategy):
 
 class DefenderGrab(Strategy):
 
-    DEFEND, PREPARE, GO_TO_BALL, GRAB_BALL, GRABBED = 'DEFEND', 'PREPARE', 'GO_TO_BALL', 'GRAB_BALL', 'GRABBED'
-    STATES = [DEFEND, PREPARE, GO_TO_BALL, GRAB_BALL, GRABBED]
+    DEFEND, GO_TO_BALL, GRAB_BALL, GRABBED = 'DEFEND', 'GO_TO_BALL', 'GRAB_BALL', 'GRABBED'
+    STATES = [DEFEND, GO_TO_BALL, GRAB_BALL, GRABBED]
 
     def __init__(self, world):
         super(DefenderGrab, self).__init__(world, self.STATES)
 
         self.NEXT_ACTION_MAP = {
             self.DEFEND: self.defend,
-            self.PREPARE: self.prepare,
             self.GO_TO_BALL: self.position,
             self.GRAB_BALL: self.grab,
             self.GRABBED: do_nothing
@@ -504,16 +505,8 @@ class DefenderGrab(Strategy):
                                                                                predicted_y - 7*math.sin(self.our_defender.angle))
                 return calculate_motor_speed(displacement, angle, backwards_ok=True)
         
-        self.current_state = self.PREPARE
-        return do_nothing()
-
-    def prepare(self):
         self.current_state = self.GO_TO_BALL
-        if self.our_defender.catcher == 'closed':
-            self.our_defender.catcher = 'open'
-            return open_catcher()
-        else:
-            return do_nothing()
+        return do_nothing()
 
     def position(self):
         displacement, angle = self.our_defender.get_direction_to_point(self.ball.x, self.ball.y)
