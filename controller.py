@@ -175,8 +175,10 @@ class Defender_Controller(Robot_Controller):
         """
 
         if 'turn_90' in action:
-            comm.write('D_RUN_SHOOT %d\n' % action['turn_90']) 
-            return
+            comm.write('D_RUN_ENGINE %d %d\n' % (0, 0))
+            time.sleep(0.2)
+            comm.write('D_RUN_SHOOT %d\n' % int(action['turn_90']))
+            # time.sleep(1.2)
 
         #print action
         left_motor = int(action['left_motor'])
@@ -217,7 +219,10 @@ class Attacker_Controller(Robot_Controller):
         Execute robot action.
         """
         if 'turn_90' in action:
+            comm.write('A_RUN_ENGINE %d %d\n' % (0, 0))
+            time.sleep(0.2)
             comm.write('A_RUN_SHOOT %d\n' % int(action['turn_90']))
+            # time.sleep(1.2)
         else:
             left_motor = int(action['left_motor'])
             right_motor = int(action['right_motor'])
