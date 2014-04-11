@@ -20,6 +20,7 @@ class StrategyTestCase(unittest.TestCase):
         return Robot(zone, robot.x, robot.y, theta, robot.velocity)
 
 
+
 class AttackerScoreDynamicTestCase(StrategyTestCase):
 
     def setUp(self):
