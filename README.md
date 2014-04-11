@@ -7,7 +7,7 @@
 
 
 ###Future SDP teams
-Despite finishing at 5-6th place, the planner and vision are very good (We had issues with improper calibration in the first match).
+The planner and vision are very good.
 
 We used an Arduino powered robot but the vision and planning can be effectively used even with the default NXT Brick. All it takes is to modify the Controller class in `controller.py`. 
 
